@@ -30,6 +30,17 @@
 
 ---
 
+## 프로토타입 (UI 참조)
+
+기획·디자인 팀원이 만든 바닐라 HTML/CSS/JS 프로토타입이 **UI 마크업·스타일의 참조 소스**.
+
+- **위치**: `../prototype/` — 레포 **밖** (git 무관), 모든 fe 디렉터리의 형제. `.claude/settings.json` 의 `permissions.additionalDirectories: ["../prototype"]` 로 메인·슬롯 전부 프롬프트 없이 read
+- **지도**: [`docs/prototype-index.md`](docs/prototype-index.md) — 화면별 HTML 라인 범위 + 디자인 토큰 + 데이터 모델 + 백엔드 도메인 매핑. **2,000줄 HTML 전체를 읽지 말고** 여기서 위치를 찾아 필요한 부분만 read
+- **대응**: `consumer-v3-split/` → `apps/customer`, `owner-v3/` → `apps/seller` (admin 은 프로토타입 없음 — 별도 설계)
+- **원칙**: UI/스타일만 참조. 동작 로직은 React + 노션 명세로 새로 구현. 프로토타입의 어긋난 UI/CSS/네비게이션은 구현하며 교정 (거의 맞지만 조금씩 어긋남)
+
+---
+
 ## 작업 규칙
 
 ### 의사결정
@@ -197,5 +208,6 @@ git worktree add ../magampick-fe-wt3 --detach origin/develop
 | [`docs/test-convention.md`](docs/test-convention.md) | Vitest (jsdom) + RTL + Playwright + MSW / TDD red→green / 콜로케이션 / 한국어 표현 / 핵심 E2E 흐름 | ✅ 완료 |
 | [`docs/pwa-convention.md`](docs/pwa-convention.md) | vite-plugin-pwa + Workbox 캐싱 / Manifest / FCM / 설치 prompt / Geolocation / 앱별 차이 (customer/seller 만) | ✅ 완료 |
 | [`docs/accessibility.md`](docs/accessibility.md) | MVP 5룰 (시맨틱 / 키보드 / alt / 폼라벨 / 명도 대비) / shadcn 자동 처리 / 출시 후 보강 | ✅ 완료 |
+| [`docs/prototype-index.md`](docs/prototype-index.md) | 프로토타입(`../prototype`) 화면별 HTML 라인맵 / 디자인 토큰 / 데이터 모델 / 백엔드 도메인 매핑 | ✅ 완료 |
 
 > 새 문서가 추가되면 이 표에 한 줄로 등록. 도구 결정될 때 해당 docs 가 작성됨.
