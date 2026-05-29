@@ -1,0 +1,9 @@
+{
+  "name": "magampick-fe",
+  "version": "0.0.0",
+  "private": true,
+  "packageManager": "pnpm@11.1.2",
+  "engines": {
+    "node": ">=22"
+  }
+}
