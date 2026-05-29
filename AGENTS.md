@@ -187,15 +187,15 @@ git worktree add ../magampick-fe-wt3 --detach origin/develop
 | **외부 — 노션** | 기능 명세 / 정책 / 결정 / 화면 흐름 / 서비스 개요 (single source) | live |
 | [`docs/commit-convention.md`](docs/commit-convention.md) | 커밋 메시지 규칙 (백엔드와 동일 룰, 복사본) | 예정 (복사) |
 | [`docs/git-workflow.md`](docs/git-workflow.md) | 브랜치 / PR / 머지 / CI | 예정 |
-| [`docs/coding-convention.md`](docs/coding-convention.md) | 컴포넌트 / 폴더 / 훅 / 네이밍 / dev 포트 | 예정 |
-| [`docs/routing-convention.md`](docs/routing-convention.md) | React Router 구성 / 가드 / 코드 스플리팅 / 타입 안전 룰 (Zod) | 예정 |
-| [`docs/state-convention.md`](docs/state-convention.md) | TanStack Query (서버) / Zustand (전역) / 캐시 무효화 패턴 / 스토어 분리 룰 | 예정 |
-| [`docs/styling-convention.md`](docs/styling-convention.md) | Tailwind 토큰 매핑 / shadcn 사용 룰 / 통일감 강제 룰 (토큰 외 값 금지 / ESLint) | 예정 |
-| [`docs/api-client-convention.md`](docs/api-client-convention.md) | axios 인스턴스 / interceptor (토큰 / 401 refresh) / 에러 정규화 / Zod 응답 검증 | 예정 |
-| [`docs/form-convention.md`](docs/form-convention.md) | react-hook-form 패턴 / Zod 스키마 / shadcn `<Form>` 사용 룰 | 예정 |
-| [`docs/auth.md`](docs/auth.md) | 토큰 저장 / 자동 갱신 / Route Guard | 예정 |
-| [`docs/test-convention.md`](docs/test-convention.md) | Vitest + RTL + Playwright — 강도 / 핵심 흐름 / 파일 위치 / 모킹 | 예정 |
-| [`docs/pwa-convention.md`](docs/pwa-convention.md) | vite-plugin-pwa 설정 / Workbox 캐싱 전략 / Manifest / FCM 통합 (customer / seller) | 예정 |
-| [`docs/accessibility.md`](docs/accessibility.md) | 접근성 기준 | 예정 |
+| [`docs/coding-convention.md`](docs/coding-convention.md) | 모노레포 / Feature-based / 네이밍 / 콜로케이션 / 절대경로 / dev 포트 | ✅ 완료 |
+| [`docs/routing-convention.md`](docs/routing-convention.md) | createBrowserRouter / ROUTES 상수 / Zod params 검증 / Wrapper 가드 / lazy / Nested Layout / Loader 제한 사용 | ✅ 완료 |
+| [`docs/state-convention.md`](docs/state-convention.md) | 4영역 분리 (서버/전역/URL/로컬) / QueryClient 설정 / queryKey / 무효화 / Zustand 스토어 / persist 정책 | ✅ 완료 |
+| [`docs/styling-convention.md`](docs/styling-convention.md) | Tailwind + shadcn 셋업 / 공유 토큰 (root) / cn() / 토큰 외 값 금지 / mobile-first / Pretendard / lucide-react | ✅ 완료 |
+| [`docs/api-client-convention.md`](docs/api-client-convention.md) | axios 인스턴스 (`withCredentials`) / interceptor (Bearer access + cookie refresh) / 에러 정규화 / Zod 응답 검증 | ✅ 완료 |
+| [`docs/form-convention.md`](docs/form-convention.md) | 4부품 (Zod + useForm + shadcn `<Form>` + mutation) / 검증 모드 / useFieldArray / 의존 필드 / 파일 업로드 / 안티 패턴 | ✅ 완료 |
+| [`docs/auth.md`](docs/auth.md) | 듀얼 JWT (메모리 access + HttpOnly cookie refresh) / silent refresh / role 가드 / Mock 휴대폰 인증 | ✅ 완료 |
+| [`docs/test-convention.md`](docs/test-convention.md) | Vitest (jsdom) + RTL + Playwright + MSW / TDD red→green / 콜로케이션 / 한국어 표현 / 핵심 E2E 흐름 | ✅ 완료 |
+| [`docs/pwa-convention.md`](docs/pwa-convention.md) | vite-plugin-pwa + Workbox 캐싱 / Manifest / FCM / 설치 prompt / Geolocation / 앱별 차이 (customer/seller 만) | ✅ 완료 |
+| [`docs/accessibility.md`](docs/accessibility.md) | MVP 5룰 (시맨틱 / 키보드 / alt / 폼라벨 / 명도 대비) / shadcn 자동 처리 / 출시 후 보강 | ✅ 완료 |
 
 > 새 문서가 추가되면 이 표에 한 줄로 등록. 도구 결정될 때 해당 docs 가 작성됨.
