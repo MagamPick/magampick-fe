@@ -40,6 +40,7 @@ export function SignupPage() {
       phone: '',
       verificationToken: '',
       name: '',
+      representativeName: '',
       businessNumber: '',
       openDate: '',
       bizVerified: false,
@@ -69,6 +70,7 @@ export function SignupPage() {
         return v.name.trim().length >= 2
       case 5:
         return (
+          v.representativeName.trim().length > 0 &&
           v.bizVerified &&
           v.openDate.trim().length > 0 &&
           v.storeName.trim().length > 0 &&

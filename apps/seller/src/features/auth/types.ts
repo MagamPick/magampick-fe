@@ -27,6 +27,7 @@ export const signupInputSchema = z
     // Step 4 — 실명 (자기 신고, sellers.name, UNIQUE X)
     name: z.string().min(2, '2자 이상이어야 합니다').max(20, '20자 이하여야 합니다'),
     // Step 5 — 첫 매장 등록 (디테일은 → 매장 등록 신청 명세)
+    representativeName: z.string().min(1, '대표자명을 입력해주세요'),
     businessNumber: z.string().regex(/^\d{3}-\d{2}-\d{5}$/, '사업자등록번호를 확인해주세요'),
     openDate: z.string().min(1, '개업일자를 선택해주세요'),
     bizVerified: z.boolean(),
@@ -57,5 +58,13 @@ export const STEP_FIELDS: Record<number, (keyof SignupInput)[]> = {
   2: ['email', 'password', 'passwordConfirm'],
   3: ['phone', 'verificationToken'],
   4: ['name'],
-  5: ['businessNumber', 'openDate', 'bizVerified', 'storeName', 'storeAddress', 'storePhone'],
+  5: [
+    'representativeName',
+    'businessNumber',
+    'openDate',
+    'bizVerified',
+    'storeName',
+    'storeAddress',
+    'storePhone',
+  ],
 }

@@ -14,7 +14,11 @@ describe('useBusinessCheck', () => {
     vi.mocked(authApi.checkBusinessNumber).mockResolvedValue({ verified: true })
     const { result } = renderHook(() => useBusinessCheck(), { wrapper: createQueryWrapper() })
 
-    result.current.mutate({ businessNumber: '123-45-67890', openDate: '2020-01-01' })
+    result.current.mutate({
+      businessNumber: '123-45-67890',
+      representativeName: '김사장',
+      openDate: '2020-01-01',
+    })
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true))
     expect(result.current.data?.verified).toBe(true)
@@ -26,7 +30,11 @@ describe('useBusinessCheck', () => {
     )
     const { result } = renderHook(() => useBusinessCheck(), { wrapper: createQueryWrapper() })
 
-    result.current.mutate({ businessNumber: '000-45-67890', openDate: '2020-01-01' })
+    result.current.mutate({
+      businessNumber: '000-45-67890',
+      representativeName: '김사장',
+      openDate: '2020-01-01',
+    })
 
     await waitFor(() => expect(result.current.isError).toBe(true))
     expect((result.current.error as ApiError).code).toBe('BUSINESS_NUMBER_INVALID')

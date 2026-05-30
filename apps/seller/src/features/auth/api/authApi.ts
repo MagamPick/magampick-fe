@@ -46,12 +46,14 @@ export const authApi = {
    */
   async checkBusinessNumber(input: {
     businessNumber: string
+    representativeName: string
     openDate: string
   }): Promise<{ verified: true }> {
     await delay(600)
     const digits = input.businessNumber.replace(/\D/g, '')
-    if (digits.length !== 10) {
-      throw new ApiError(400, 'INVALID_INPUT', '사업자등록번호 10자리를 입력해주세요')
+    // 국세청 사업자등록 진위확인은 (사업자번호 + 대표자명 + 개업일자) 3요소 필수
+    if (digits.length !== 10 || !input.representativeName.trim() || !input.openDate) {
+      throw new ApiError(400, 'INVALID_INPUT', '사업자번호·대표자명·개업일자를 모두 입력해주세요')
     }
     if (digits.slice(0, 3) === '000') {
       throw new ApiError(404, 'BUSINESS_NUMBER_INVALID', '조회되지 않는 사업자등록번호입니다')

@@ -21,6 +21,7 @@ const validInput: SignupInput = {
   phone: '010-1234-5678',
   verificationToken: 'mock-verification-token',
   name: '홍길동',
+  representativeName: '홍길동',
   businessNumber: '123-45-67890',
   openDate: '2020-01-01',
   bizVerified: true,

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { UseFormReturn } from 'react-hook-form'
 import {
   FormField,
@@ -7,8 +7,10 @@ import {
   FormControl,
   FormMessage,
 } from '@/shared/components/ui/form'
+import { CalendarIcon } from 'lucide-react'
 import { Input } from '@/shared/components/ui/input'
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/shared/components/ui/sheet'
+import { Calendar } from '@/shared/components/ui/calendar'
 import { cn } from '@/shared/lib/utils'
 import { useBusinessCheck } from '../hooks/useBusinessCheck'
 import type { SignupInput } from '../types'
@@ -33,32 +35,57 @@ function formatBizNo(value: string): string {
   return d
 }
 
+// 캘린더(Date) ↔ 폼 값('YYYY-MM-DD') 변환 — toISOString 은 UTC 라 로컬 기준 직접 포맷
+const toYMD = (d: Date) =>
+  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+const parseYMD = (s: string) => {
+  const [y, m, d] = s.split('-').map(Number)
+  return new Date(y, m - 1, d)
+}
+
 export function Step5Store({ form }: { form: UseFormReturn<SignupInput> }) {
   const biz = useBusinessCheck()
   const [addrOpen, setAddrOpen] = useState(false)
+  const [dateOpen, setDateOpen] = useState(false)
 
   const photoAdded = !!form.watch('photoAdded')
+  const representativeName = form.watch('representativeName')
   const businessNumber = form.watch('businessNumber')
   const openDate = form.watch('openDate')
   const bizDigits = (businessNumber ?? '').replace(/\D/g, '')
 
+  // 대표자명 기본값 = Step 4 사장님 성명 (첫 매장은 보통 본인). 비어있을 때만 1회 채움 — 수정 가능.
+  useEffect(() => {
+    if (!form.getValues('representativeName') && form.getValues('name')) {
+      form.setValue('representativeName', form.getValues('name'))
+    }
+  }, [form])
+
   const togglePhoto = () =>
     form.setValue('photoAdded', !photoAdded, { shouldValidate: true, shouldDirty: true })
 
-  // 번호 변경 시 조회 결과·검증 플래그 리셋 (재조회 강제)
-  const onBizChange = (raw: string) => {
-    form.setValue('businessNumber', formatBizNo(raw), { shouldValidate: true })
+  // 진위확인 입력(대표자명·번호·개업일자) 변경 시 조회 결과·검증 플래그 리셋 (재조회 강제)
+  const resetBiz = () => {
     form.setValue('bizVerified', false)
     if (biz.isSuccess || biz.isError) biz.reset()
   }
 
+  const onBizChange = (raw: string) => {
+    form.setValue('businessNumber', formatBizNo(raw), { shouldValidate: true })
+    resetBiz()
+  }
+
   const checkBiz = () =>
     biz.mutate(
-      { businessNumber, openDate },
+      { businessNumber, representativeName, openDate },
       { onSuccess: () => form.setValue('bizVerified', true, { shouldValidate: true }) },
     )
 
-  const canCheck = bizDigits.length === 10 && !biz.isPending
+  const canCheck =
+    bizDigits.length === 10 &&
+    representativeName.trim().length > 0 &&
+    openDate.trim().length > 0 &&
+    !biz.isPending
 
   const selectAddr = (addr: string) => {
     form.setValue('storeAddress', addr, { shouldValidate: true })
@@ -98,6 +125,32 @@ export function Step5Store({ form }: { form: UseFormReturn<SignupInput> }) {
 
       <FormField
         control={form.control}
+        name="representativeName"
+        render={({ field }) => (
+          <FormItem className="mb-4">
+            <FormLabel>
+              대표자명<span aria-hidden="true" className="text-primary">*</span>
+            </FormLabel>
+            <FormControl>
+              <Input
+                placeholder="대표자 실명"
+                {...field}
+                onChange={(e) => {
+                  field.onChange(e)
+                  resetBiz()
+                }}
+              />
+            </FormControl>
+            <p className="mt-1.5 text-xs text-muted-foreground">
+              사업자등록증상 대표자명 — 사장님 본인이면 그대로 두세요.
+            </p>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+
+      <FormField
+        control={form.control}
         name="businessNumber"
         render={({ field }) => (
           <FormItem className="mb-4">
@@ -128,7 +181,7 @@ export function Step5Store({ form }: { form: UseFormReturn<SignupInput> }) {
               </button>
             </div>
             <p className="mt-1.5 text-xs text-muted-foreground">
-              ‘-’ 없이 숫자 10자리를 입력하면 자동 정리됩니다.
+              대표자명·개업일자와 함께 진위확인합니다. 숫자 10자리를 입력하면 자동 정리돼요.
             </p>
             <FormMessage />
           </FormItem>
@@ -143,13 +196,42 @@ export function Step5Store({ form }: { form: UseFormReturn<SignupInput> }) {
             <FormLabel>
               개업일자<span aria-hidden="true" className="text-primary">*</span>
             </FormLabel>
-            <FormControl>
-              <Input type="date" {...field} />
-            </FormControl>
+            <button
+              type="button"
+              onClick={() => setDateOpen(true)}
+              className="flex h-[50px] w-full items-center justify-between rounded-[10px] border-[1.5px] border-input bg-card px-3.5 text-[15px] text-foreground outline-none transition focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-secondary"
+            >
+              <span className={cn(!field.value && 'text-[#bdbdbd]')}>
+                {field.value ? field.value.replace(/-/g, '. ') + '.' : '날짜를 선택하세요'}
+              </span>
+              <CalendarIcon className="size-[18px] text-muted-foreground" />
+            </button>
             <p className="mt-1.5 text-xs text-muted-foreground">
-              사업자등록증에 기재된 개업일자를 선택해 주세요.
+              사업자등록증상 개업일자를 선택해 주세요.
             </p>
             <FormMessage />
+            <Sheet open={dateOpen} onOpenChange={setDateOpen}>
+              <SheetContent side="bottom" className="rounded-t-[22px] pb-5">
+                <SheetHeader>
+                  <SheetTitle>개업일자 선택</SheetTitle>
+                </SheetHeader>
+                <div className="px-2">
+                  <Calendar
+                    className="w-full"
+                    mode="single"
+                    selected={field.value ? parseYMD(field.value) : undefined}
+                    defaultMonth={field.value ? parseYMD(field.value) : undefined}
+                    onSelect={(d) => {
+                      field.onChange(d ? toYMD(d) : '')
+                      resetBiz()
+                      if (d) setDateOpen(false)
+                    }}
+                    disabled={{ after: new Date() }}
+                    autoFocus
+                  />
+                </div>
+              </SheetContent>
+            </Sheet>
           </FormItem>
         )}
       />
@@ -166,7 +248,7 @@ export function Step5Store({ form }: { form: UseFormReturn<SignupInput> }) {
           <span>
             조회되지 않는 사업자등록번호입니다.
             <br />
-            번호와 개업일자를 다시 확인해 주세요.
+            번호·대표자명·개업일자를 다시 확인해 주세요.
           </span>
         </div>
       )}

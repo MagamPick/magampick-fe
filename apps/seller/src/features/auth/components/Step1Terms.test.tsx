@@ -14,6 +14,7 @@ const defaults: SignupInput = {
   phone: '',
   verificationToken: '',
   name: '',
+  representativeName: '',
   businessNumber: '',
   openDate: '',
   bizVerified: false,
