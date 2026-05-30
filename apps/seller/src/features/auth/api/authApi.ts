@@ -1,0 +1,69 @@
+import { ApiError } from '@/shared/lib/apiError'
+import type { SignupInput } from '../types'
+
+/**
+ * ⚠️ Mock 스텁 — 백엔드 사장 회원가입 API(BE 완료 NO)가 아직이라 가짜 응답.
+ * BE 완료 후 `apiClient` 실제 호출 + Zod 응답 검증으로 교체 (api-client-convention).
+ */
+const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
+
+/** Mock: 이 이메일만 중복으로 취급 */
+const TAKEN_EMAIL = 'taken@magampick.com'
+/** Mock: 본인인증 통과 코드 (auth.md §11) */
+const MOCK_OTP = '000000'
+
+export const authApi = {
+  async checkEmail(email: string): Promise<{ available: boolean }> {
+    await delay(500)
+    if (email === TAKEN_EMAIL) {
+      throw new ApiError(409, 'EMAIL_ALREADY_EXISTS', '이미 사용 중인 이메일입니다')
+    }
+    return { available: true }
+  },
+
+  async requestPhoneVerification(phone: string): Promise<void> {
+    await delay(500)
+    if (!phone) {
+      throw new ApiError(400, 'INVALID_INPUT', '휴대폰 번호를 입력해주세요')
+    }
+    // Mock: 실제 SMS 발송 안 함 (코드 000000 으로 통과) — ADR-001 SOLAPI 연동 PR 에서 교체
+  },
+
+  async verifyPhoneCode(input: {
+    phone: string
+    code: string
+  }): Promise<{ verificationToken: string }> {
+    await delay(500)
+    if (input.code !== MOCK_OTP) {
+      throw new ApiError(400, 'PHONE_VERIFICATION_FAILED', '인증번호가 일치하지 않습니다')
+    }
+    return { verificationToken: 'mock-verification-token' }
+  },
+
+  /**
+   * 사업자등록번호 조회 — Mock(프로토타입 owner-v3 규칙): 앞 3자리 '000' 이면 실패.
+   * 실연동 시 국세청 사업자등록 상태조회 API 로 교체 (디테일 → 매장 등록 신청).
+   */
+  async checkBusinessNumber(input: {
+    businessNumber: string
+    representativeName: string
+    openDate: string
+  }): Promise<{ verified: true }> {
+    await delay(600)
+    const digits = input.businessNumber.replace(/\D/g, '')
+    // 국세청 사업자등록 진위확인은 (사업자번호 + 대표자명 + 개업일자) 3요소 필수
+    if (digits.length !== 10 || !input.representativeName.trim() || !input.openDate) {
+      throw new ApiError(400, 'INVALID_INPUT', '사업자번호·대표자명·개업일자를 모두 입력해주세요')
+    }
+    if (digits.slice(0, 3) === '000') {
+      throw new ApiError(404, 'BUSINESS_NUMBER_INVALID', '조회되지 않는 사업자등록번호입니다')
+    }
+    return { verified: true }
+  },
+
+  async signup(input: SignupInput): Promise<{ accessToken: string }> {
+    await delay(800)
+    // Mock: 실제로는 한 트랜잭션으로 sellers + 약관 동의 + stores 생성. 여기선 토큰만 발급.
+    return { accessToken: `mock-access-token:${input.email}` }
+  },
+}
