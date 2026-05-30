@@ -197,10 +197,13 @@ pnpm test --run path/to/XXX.test.tsx
 ```
 
 **3. 컴포넌트 구현**: shadcn 컴포넌트 + Tailwind 토큰 = [`styling-convention.md`](../../../docs/styling-convention.md) / [`coding-convention.md`](../../../docs/coding-convention.md) (예정)
+- **프로토타입 정독 (UI 구현 전 필수)**: [`prototype-index.md`](../../../docs/prototype-index.md) 로 화면 소스 위치 찾기 → 해당 `scripts/NN.js`(구조·상태·검증 로직) + `styles/*.css`(정확한 px·radius·색)에서 **스펙 추출**. 눈대중 X — shadcn/라이브러리 기본값이 프로토타입과 다르면(예: `Input` 기본 높이) 오버라이드.
 - 폼은 react-hook-form + Zod + shadcn `<Form>` 조합 = [`form-convention.md`](../../../docs/form-convention.md) (예정)
 - 라우팅 / Link / Guard = [`routing-convention.md`](../../../docs/routing-convention.md) (예정)
 
 **4. 재실행 → green**.
+
+**5. 스크린샷 대조 (UI 화면 — 임시 검증)**: dev 서버를 **슬롯 포트**로 띄우고(`pnpm --filter <app> dev -- --port <슬롯포트> --strictPort` — wt1=`15173` / wt2=`25173` / wt3=`35173`, 충돌 시 +30000), Playwright(headless 393×852)로 단계·화면별 스크린샷 → 프로토타입과 대조 → 교정. 스크립트·스크린샷은 **커밋 전 삭제** (커밋 E2E §5-6 과 별개). 자세한 절차·포트 표 = [`prototype-index.md`](../../../docs/prototype-index.md) "구현 충실도".
 
 ### 5-5. 페이지 / 라우트 셸
 
