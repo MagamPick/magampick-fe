@@ -161,14 +161,16 @@ export function useLogin() {
 // features/auth/types.ts
 export const loginInputSchema = z.object({
   email: z.string().email('이메일 형식이 아닙니다'),
-  password: z.string().min(8, '8자 이상').regex(
-    /^(?=.*[A-Za-z])(?=.*\d)(?=.*[^A-Za-z\d]).+$/,
-    '영문, 숫자, 특수문자를 포함해야 합니다'
-  ),
-  keepSignedIn: z.boolean().default(true),
+  password: z.string().min(1, '비밀번호를 입력해 주세요'), // 필수 여부만 — 구성 규칙 검증 X
+  keepSignedIn: z.boolean(),                               // 폼 defaultValues 에서 true
 })
 export type LoginInput = z.infer<typeof loginInputSchema>
 ```
+
+> **로그인은 비밀번호 구성 규칙(8자·영문·숫자·특수)을 검증/노출하지 않는다.** 가입 폼은 `passwordSchema`(§8)로
+> 강함을 강제하지만, 로그인 폼에서 같은 규칙을 노출하면 ① 비밀번호 정책이 외부에 드러나고 ② 규칙 도입 이전에
+> 가입한 계정이 로그인조차 못 하게 된다. 따라서 로그인은 **이메일 형식 + 비밀번호 필수**만 클라이언트에서 보고,
+> 실제 자격 판정은 서버가 하여 실패는 `LOGIN_FAILED` 단일 메시지로 거부한다 (계정 존재 여부도 비노출 — §4).
 
 폼은 [`form-convention.md`](form-convention.md) 패턴.
 
@@ -445,3 +447,4 @@ export const APP_ROLE = 'SELLER' as const
 
 ## 변경 이력
 - 2026-05-29: 초안 작성 — 노션 명세 (`로그인/로그아웃` 페이지) 기반. 백엔드 docs/auth.md 와 차이 (노션이 진실).
+- 2026-05-31: §5 로그인 폼 — 비밀번호 클라이언트 검증을 구성 규칙(strict) → 필수 여부만으로 변경 (정책 노출·구규칙 계정 차단 방지). 소비자 로그인/로그아웃 UI(mock) 구현 중 결정.

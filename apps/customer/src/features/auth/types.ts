@@ -49,3 +49,17 @@ export const STEP_FIELDS: Record<number, (keyof SignupInput)[]> = {
   4: ['address'],
   5: ['nickname'],
 }
+
+/**
+ * 로그인 입력 (auth.md §4-5). 로그인은 비밀번호 구성 규칙(8자·영문·숫자·특수)을 검증/노출하지 않는다
+ * — 정책 노출 방지 + 과거 규칙 이전 계정 차단 방지. 형식 검증은 이메일만, 비밀번호는 필수 여부만 본다.
+ * 실제 자격 판정은 서버가 하고 실패는 LOGIN_FAILED 단일 메시지로 거부 (가입 폼의 passwordSchema 와 별개).
+ * keepSignedIn 기본값은 폼 defaultValues 에서 true 로 설정 (스키마엔 .default 미사용 — RHF 타입 단순화).
+ */
+export const loginInputSchema = z.object({
+  email: z.string().email('이메일 형식이 아닙니다'),
+  password: z.string().min(1, '비밀번호를 입력해 주세요'),
+  keepSignedIn: z.boolean(),
+})
+
+export type LoginInput = z.infer<typeof loginInputSchema>
