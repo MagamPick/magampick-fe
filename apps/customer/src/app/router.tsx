@@ -5,7 +5,7 @@ import { LoginPage } from '@/features/auth/pages/LoginPage'
 import { SignupPage } from '@/features/auth/pages/SignupPage'
 import { WelcomePage } from '@/features/auth/pages/WelcomePage'
 import { TabLayout } from '@/shared/components/TabLayout'
-import { HomeTab } from '@/shared/components/tabs/HomeTab'
+import { HomePage } from '@/features/home/pages/HomePage'
 import { MapTab } from '@/shared/components/tabs/MapTab'
 import { AllTab } from '@/shared/components/tabs/AllTab'
 import { FavsTab } from '@/shared/components/tabs/FavsTab'
@@ -24,7 +24,7 @@ export const router = createBrowserRouter([
       </ProtectedRoute>
     ),
     children: [
-      { index: true, element: <HomeTab /> },
+      { index: true, element: <HomePage /> },
       { path: ROUTES.MAP, element: <MapTab /> },
       { path: ROUTES.ALL, element: <AllTab /> },
       { path: ROUTES.FAVS, element: <FavsTab /> },

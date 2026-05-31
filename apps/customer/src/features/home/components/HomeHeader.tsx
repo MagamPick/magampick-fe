@@ -1,0 +1,47 @@
+import { Bell, ChevronDown, ShoppingCart } from 'lucide-react'
+import { useComingSoon } from '../hooks/useComingSoon'
+import { useHomeAddress } from '../hooks/useHomeAddress'
+
+/**
+ * 홈 상단 헤더 — 기본 주소지(피드 기준점) + 알림/장바구니. 스크롤해도 상단 고정.
+ * 주소 변경·알림·장바구니는 별도 기능(미구현)이라 탭 시 "준비 중" 안내.
+ */
+export function HomeHeader() {
+  const { show } = useComingSoon()
+  const { data } = useHomeAddress()
+  const label = data?.label ?? '위치 불러오는 중…'
+
+  return (
+    <div className="sticky top-0 z-30 flex items-center gap-1.5 border-b border-border bg-card px-5 pb-3 pt-[calc(env(safe-area-inset-top,0px)+14px)]">
+      <button
+        type="button"
+        onClick={() => show('주소 변경은 준비 중이에요.')}
+        className="flex min-h-11 min-w-0 flex-1 items-center gap-1 py-1.5 text-left"
+      >
+        <span aria-hidden className="text-[15px]">
+          📍
+        </span>
+        <span className="truncate text-base font-extrabold tracking-[-0.3px]">{label}</span>
+        <ChevronDown className="size-4 flex-shrink-0 text-muted-foreground" aria-hidden />
+      </button>
+      <div className="flex flex-shrink-0">
+        <button
+          type="button"
+          aria-label="알림"
+          onClick={() => show('알림은 준비 중이에요.')}
+          className="inline-flex size-11 items-center justify-center text-foreground"
+        >
+          <Bell className="size-[22px]" aria-hidden />
+        </button>
+        <button
+          type="button"
+          aria-label="장바구니"
+          onClick={() => show('장바구니는 준비 중이에요.')}
+          className="inline-flex size-11 items-center justify-center text-foreground"
+        >
+          <ShoppingCart className="size-[22px]" aria-hidden />
+        </button>
+      </div>
+    </div>
+  )
+}
