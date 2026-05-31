@@ -1,6 +1,7 @@
 import { describe, it, expect, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { MemoryRouter, Routes, Route, useLocation } from 'react-router'
 import { ComingSoonProvider } from '@/shared/components/ComingSoonToast'
 import { DealTab } from './DealTab'
 import { useStoreDeals } from '../hooks/useStoreDeals'
@@ -19,11 +20,24 @@ const deal: StoreDeal = {
   stockLeft: 5,
 }
 
+function LocationDisplay() {
+  const loc = useLocation()
+  return <div data-testid="loc">{loc.pathname + loc.search}</div>
+}
+
 function renderTab(businessStatus: BusinessStatus = 'OPEN') {
   return render(
-    <ComingSoonProvider>
-      <DealTab storeId="st-1" businessStatus={businessStatus} />
-    </ComingSoonProvider>,
+    <MemoryRouter initialEntries={['/store/st-1']}>
+      <ComingSoonProvider>
+        <Routes>
+          <Route
+            path="/store/:id"
+            element={<DealTab storeId="st-1" businessStatus={businessStatus} />}
+          />
+          <Route path="/product/:kind/:productId" element={<LocationDisplay />} />
+        </Routes>
+      </ComingSoonProvider>
+    </MemoryRouter>,
   )
 }
 
@@ -50,13 +64,14 @@ describe('DealTab', () => {
     expect(screen.getByText('지금 진행 중인 마감 할인이 없어요.')).toBeInTheDocument()
   })
 
-  it('영업외면_차단안내_그리고_탭시_주문불가_토스트', async () => {
+  it('영업외면_차단안내_표시_그리고_탭하면_상품상세로_이동', async () => {
     const user = userEvent.setup()
     mockDeals([deal])
     renderTab('CLOSED_TODAY')
 
     expect(screen.getByText(/영업 외 상태/)).toBeInTheDocument()
+    // 영업 외여도 진입은 허용 — 차단은 상품 상세 화면이 처리
     await user.click(screen.getByText('크루아상 세트'))
-    expect(await screen.findByText('지금은 주문할 수 없는 매장이에요.')).toBeInTheDocument()
+    expect(screen.getByTestId('loc')).toHaveTextContent('/product/deal/sd-1')
   })
 })

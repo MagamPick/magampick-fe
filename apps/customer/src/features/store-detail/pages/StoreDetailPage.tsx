@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Navigate, useNavigate, useParams } from 'react-router'
+import { Navigate, useNavigate, useParams, useSearchParams } from 'react-router'
 import { ComingSoonProvider } from '@/shared/components/ComingSoonToast'
 import { ScreenContainer } from '@/shared/components/ScreenContainer'
 import { useComingSoon } from '@/shared/hooks/useComingSoon'
@@ -15,7 +15,7 @@ import { StoreHero } from '../components/StoreHero'
 import { StoreHeadMeta } from '../components/StoreHeadMeta'
 import { StoreActions } from '../components/StoreActions'
 import { StoreTabs } from '../components/StoreTabs'
-import type { StoreTabKey } from '../lib/tabs'
+import { resolveInitialTab, type StoreTabKey } from '../lib/tabs'
 import { DealTab } from '../components/DealTab'
 import { MenuTab } from '../components/MenuTab'
 import { ReviewTab } from '../components/ReviewTab'
@@ -42,7 +42,11 @@ function StoreDetailView({ storeId }: { storeId: string }) {
   const { data: store, isPending, isError } = useStoreDetail(storeId)
   const refresh = useStoreDetailRefresh(storeId)
   const toggleFavorite = useToggleFavorite()
-  const [activeTab, setActiveTab] = useState<StoreTabKey>('deal')
+  const [searchParams] = useSearchParams()
+  // 상품 상세의 평점·리뷰 영역에서 ?tab=review 로 진입하면 리뷰 탭으로 시작
+  const [activeTab, setActiveTab] = useState<StoreTabKey>(() =>
+    resolveInitialTab(searchParams.get('tab')),
+  )
 
   const handleBack = () => navigate(-1)
 
