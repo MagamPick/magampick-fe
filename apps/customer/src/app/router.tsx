@@ -12,7 +12,8 @@ import { MapTab } from '@/shared/components/tabs/MapTab'
 import { AllTab } from '@/shared/components/tabs/AllTab'
 import { FavsTab } from '@/shared/components/tabs/FavsTab'
 import { OrdersTab } from '@/shared/components/tabs/OrdersTab'
-import { MyTab } from '@/shared/components/tabs/MyTab'
+import { MyPage } from '@/features/profile/pages/MyPage'
+import { EditProfilePage } from '@/features/profile/pages/EditProfilePage'
 import { AddressListPage } from '@/features/addresses/pages/AddressListPage'
 import { AddressFormPage } from '@/features/addresses/pages/AddressFormPage'
 import { NotFoundPage } from '@/shared/components/NotFoundPage'
@@ -33,8 +34,17 @@ export const router = createBrowserRouter([
       { path: ROUTES.ALL, element: <AllTab /> },
       { path: ROUTES.FAVS, element: <FavsTab /> },
       { path: ROUTES.ORDERS, element: <OrdersTab /> },
-      { path: ROUTES.MYPAGE, element: <MyTab /> },
+      { path: ROUTES.MYPAGE, element: <MyPage /> },
     ],
+  },
+  // 프로필(내 정보) 수정 — 풀스크린 보호 라우트 (바텀네비 없음, 프로토타입 59-edit-profile)
+  {
+    path: ROUTES.EDIT_PROFILE,
+    element: (
+      <ProtectedRoute>
+        <EditProfilePage />
+      </ProtectedRoute>
+    ),
   },
   // 주소지 관리 — 탭이 아닌 독립 보호 라우트 (바텀네비 없음, 프로토타입 60-addresses 와 동일)
   {
