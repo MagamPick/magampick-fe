@@ -1,12 +1,13 @@
 import { ROUTES } from '@/shared/lib/routes'
-import { useFavoriteStores } from '../hooks/useFavoriteStores'
+import { useFavorites } from '@/features/favorites/hooks/useFavorites'
 import { FavoriteStoreCard } from './FavoriteStoreCard'
 import { SectionEmpty } from './SectionEmpty'
 import { SectionHeader } from './SectionHeader'
 
-/** ② 단골 가게 — 2열 그리드. 단골 0이면 등록 유도. 더보기 → 단골매장 목록 탭. */
+/** ② 내 단골 가게 — 단골 목록(단일 소스) 상위 4개 프리뷰. 더보기 → 단골 탭. 추가/해제는 매장 상세에서. */
 export function FavoriteStoresSection() {
-  const { data, isPending, isError } = useFavoriteStores()
+  const { data, isPending, isError } = useFavorites()
+  const stores = data?.stores.slice(0, 4) ?? []
 
   return (
     <section className="px-5 pt-[22px]">
@@ -19,11 +20,11 @@ export function FavoriteStoresSection() {
         </div>
       ) : isError ? (
         <SectionEmpty>지금은 불러오지 못했어요. 잠시 후 다시 시도해주세요.</SectionEmpty>
-      ) : data.length === 0 ? (
+      ) : stores.length === 0 ? (
         <SectionEmpty>아직 단골 가게가 없어요. 자주 가는 가게를 단골로 등록해 보세요.</SectionEmpty>
       ) : (
         <div className="grid grid-cols-2 gap-[10px]">
-          {data.map((store) => (
+          {stores.map((store) => (
             <FavoriteStoreCard key={store.id} store={store} />
           ))}
         </div>
