@@ -1,16 +1,20 @@
 import { ROUTES } from '@/shared/lib/routes'
+import { STORE_SORT } from '@/features/store-list/types'
 import { useNeighborhoodStores } from '../hooks/useNeighborhoodStores'
 import { SectionEmpty } from './SectionEmpty'
 import { SectionHeader } from './SectionHeader'
 import { StoreRow } from './StoreRow'
 
-/** ③ 우리 동네 마감픽 — 고정 6개 프리뷰. 전체 탐색은 더보기 → 전체 매장(추천순). */
+/** ③ 우리 동네 마감픽 — 고정 6개 프리뷰. 전체 탐색은 더보기 → 전체 매장(추천순 정렬 적용). */
 export function NeighborhoodSection() {
   const { data, isPending, isError } = useNeighborhoodStores()
 
   return (
     <section className="px-5 pt-[22px]">
-      <SectionHeader title="📍 우리 동네 마감픽" moreTo={ROUTES.ALL} />
+      <SectionHeader
+        title="📍 우리 동네 마감픽"
+        moreTo={`${ROUTES.ALL}?sort=${STORE_SORT.RECOMMENDED}`}
+      />
       {isPending ? (
         <div>
           {[0, 1, 2].map((i) => (

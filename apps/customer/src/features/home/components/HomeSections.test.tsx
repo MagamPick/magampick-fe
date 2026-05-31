@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import type { ReactNode } from 'react'
 import { render, screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router'
 import { ComingSoonProvider } from '@/shared/components/ComingSoonToast'
 import { useFavorites } from '@/features/favorites/hooks/useFavorites'
@@ -13,6 +14,12 @@ import { useNeighborhoodStores } from '../hooks/useNeighborhoodStores'
 vi.mock('../hooks/useClosingDeals')
 vi.mock('../hooks/useNeighborhoodStores')
 vi.mock('@/features/favorites/hooks/useFavorites')
+
+const mockNavigate = vi.fn()
+vi.mock('react-router', async (orig) => ({
+  ...(await orig<typeof import('react-router')>()),
+  useNavigate: () => mockNavigate,
+}))
 
 function wrap(ui: ReactNode) {
   return render(
@@ -77,7 +84,14 @@ describe('FavoriteStoresSection', () => {
     vi.mocked(useFavorites).mockReturnValue({
       data: {
         stores: [
-          { id: 'fv-1', name: '단골집', imageUrl: null, distanceKm: 0.3, rating: 4.8, activeDealCount: 2 },
+          {
+            id: 'fv-1',
+            name: '단골집',
+            imageUrl: null,
+            distanceKm: 0.3,
+            rating: 4.8,
+            activeDealCount: 2,
+          },
         ],
         totalCount: 1,
         totalActiveDealCount: 2,
@@ -110,5 +124,31 @@ describe('NeighborhoodSection', () => {
 
     wrap(<NeighborhoodSection />)
     expect(screen.getByText('북카페 무드')).toBeInTheDocument()
+  })
+})
+
+describe('홈 더보기 → 전체 매장 정렬 연동', () => {
+  it('마감임박_더보기는_전체매장_마감임박순으로_이동', async () => {
+    vi.mocked(useClosingDeals).mockReturnValue({
+      data: [],
+      isPending: false,
+      isError: false,
+    } as unknown as ReturnType<typeof useClosingDeals>)
+
+    wrap(<ClosingDealsSection />)
+    await userEvent.click(screen.getByRole('button', { name: '더보기' }))
+    expect(mockNavigate).toHaveBeenCalledWith('/all?sort=closing')
+  })
+
+  it('동네마감픽_더보기는_전체매장_추천순으로_이동', async () => {
+    vi.mocked(useNeighborhoodStores).mockReturnValue({
+      data: [],
+      isPending: false,
+      isError: false,
+    } as unknown as ReturnType<typeof useNeighborhoodStores>)
+
+    wrap(<NeighborhoodSection />)
+    await userEvent.click(screen.getByRole('button', { name: '더보기' }))
+    expect(mockNavigate).toHaveBeenCalledWith('/all?sort=recommended')
   })
 })

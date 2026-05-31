@@ -4,7 +4,6 @@ import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router'
 import { ComingSoonProvider } from '@/shared/components/ComingSoonToast'
 import { HomeHeader } from './HomeHeader'
-import { SearchBarButton } from './SearchBarButton'
 import { useHomeAddress } from '../hooks/useHomeAddress'
 import { ROUTES } from '@/shared/lib/routes'
 
@@ -52,18 +51,5 @@ describe('HomeHeader', () => {
     renderHeader()
     await user.click(screen.getByRole('button', { name: '장바구니' }))
     expect(await screen.findByText('장바구니는 준비 중이에요.')).toBeInTheDocument()
-  })
-})
-
-describe('SearchBarButton', () => {
-  it('탭하면_검색_준비중_안내', async () => {
-    const user = userEvent.setup()
-    render(
-      <ComingSoonProvider>
-        <SearchBarButton />
-      </ComingSoonProvider>,
-    )
-    await user.click(screen.getByRole('button', { name: /검색해 보세요/ }))
-    expect(await screen.findByText('검색은 준비 중이에요.')).toBeInTheDocument()
   })
 })

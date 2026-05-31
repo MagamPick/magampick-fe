@@ -1,7 +1,7 @@
 import { ComingSoonProvider } from '@/shared/components/ComingSoonToast'
 import { ScreenContainer } from '@/shared/components/ScreenContainer'
 import { HomeHeader } from '../components/HomeHeader'
-import { SearchBarButton } from '../components/SearchBarButton'
+import { SearchBarButton } from '@/shared/components/SearchBarButton'
 import { ClosingDealsSection } from '../components/ClosingDealsSection'
 import { FavoriteStoresSection } from '../components/FavoriteStoresSection'
 import { NeighborhoodSection } from '../components/NeighborhoodSection'

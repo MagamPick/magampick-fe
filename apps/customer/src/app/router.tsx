@@ -11,7 +11,7 @@ import { StoreDetailPage } from '@/features/store-detail/pages/StoreDetailPage'
 import { StoreLocationPage } from '@/features/store-detail/pages/StoreLocationPage'
 import { ProductDetailPage } from '@/features/product-detail/pages/ProductDetailPage'
 import { MapTab } from '@/shared/components/tabs/MapTab'
-import { AllTab } from '@/shared/components/tabs/AllTab'
+import { StoreListPage } from '@/features/store-list/pages/StoreListPage'
 import { FavoritesPage } from '@/features/favorites/pages/FavoritesPage'
 import { OrdersTab } from '@/shared/components/tabs/OrdersTab'
 import { MyPage } from '@/features/profile/pages/MyPage'
@@ -33,7 +33,7 @@ export const router = createBrowserRouter([
     children: [
       { index: true, element: <HomePage /> },
       { path: ROUTES.MAP, element: <MapTab /> },
-      { path: ROUTES.ALL, element: <AllTab /> },
+      { path: ROUTES.ALL, element: <StoreListPage /> },
       { path: ROUTES.FAVS, element: <FavoritesPage /> },
       { path: ROUTES.ORDERS, element: <OrdersTab /> },
       { path: ROUTES.MYPAGE, element: <MyPage /> },
