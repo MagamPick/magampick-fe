@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react'
 import { Bell } from 'lucide-react'
 import { useSearchParams } from 'react-router'
 import { ComingSoonProvider } from '@/shared/components/ComingSoonToast'
+import { ScreenContainer } from '@/shared/components/ScreenContainer'
 import { useComingSoon } from '@/shared/hooks/useComingSoon'
 import { SearchBarButton } from '@/shared/components/SearchBarButton'
 import { PullToRefresh } from '@/shared/components/PullToRefresh'
@@ -124,7 +125,7 @@ export function StoreListPage() {
 
   return (
     <ComingSoonProvider>
-      <section className="flex flex-1 flex-col bg-card">
+      <ScreenContainer as="section" variant="tab">
         <header className="flex h-[52px] flex-shrink-0 items-center justify-between px-5">
           <h1 className="text-lg font-extrabold tracking-[-0.3px]">전체 매장</h1>
           <NotificationBell />
@@ -132,7 +133,7 @@ export function StoreListPage() {
         <PullToRefresh onRefresh={refresh}>
           <StoreListBody sort={sort} onSortChange={(next) => setSearchParams({ sort: next })} />
         </PullToRefresh>
-      </section>
+      </ScreenContainer>
     </ComingSoonProvider>
   )
 }
