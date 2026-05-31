@@ -1,25 +1,23 @@
 import { Clock } from 'lucide-react'
+import { useNavigate } from 'react-router'
 import { cn } from '@/shared/lib/utils'
 import { Thumbnail } from '@/shared/components/Thumbnail'
 import { useCountdown } from '@/shared/hooks/useCountdown'
-import { useComingSoon } from '@/shared/hooks/useComingSoon'
+import { ROUTES } from '@/shared/lib/routes'
 import type { StoreDeal } from '../types'
 
 const won = (n: number) => `${n.toLocaleString('ko-KR')}원`
 
-/** 마감 할인 탭의 떨이 행 — 실시간 카운트다운. 영업 외면 dim + 담기 차단 안내 */
+/** 마감 할인 탭의 떨이 행 — 실시간 카운트다운. 영업 외면 dim. 탭 시 상품 상세로 이동 */
 export function DealItem({ deal, orderable }: { deal: StoreDeal; orderable: boolean }) {
-  const { show } = useComingSoon()
+  const navigate = useNavigate()
   const { label, isExpired, remainingMs } = useCountdown(deal.pickupDeadline)
   const urgent = !isExpired && remainingMs <= 10 * 60_000
-
-  const handleTap = () =>
-    show(orderable ? '상품 상세는 준비 중이에요.' : '지금은 주문할 수 없는 매장이에요.')
 
   return (
     <button
       type="button"
-      onClick={handleTap}
+      onClick={() => navigate(ROUTES.PRODUCT_DETAIL('deal', deal.id))}
       className={cn(
         'flex w-full items-center gap-3 border-b border-border py-[13px] text-left last:border-b-0',
         !orderable && 'opacity-60',

@@ -7,3 +7,8 @@ export const STORE_TABS = [
 ] as const
 
 export type StoreTabKey = (typeof STORE_TABS)[number]['key']
+
+/** URL ?tab= 값을 유효한 탭 키로 해석 (기본 deal). 상품 상세 리뷰 영역에서 ?tab=review 진입 등 */
+export function resolveInitialTab(tabParam: string | null): StoreTabKey {
+  return STORE_TABS.some((tab) => tab.key === tabParam) ? (tabParam as StoreTabKey) : 'deal'
+}

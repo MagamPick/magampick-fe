@@ -1,17 +1,18 @@
-import { useComingSoon } from '@/shared/hooks/useComingSoon'
+import { useNavigate } from 'react-router'
 import { CountdownBadge } from './CountdownBadge'
 import { Thumbnail } from '@/shared/components/Thumbnail'
+import { ROUTES } from '@/shared/lib/routes'
 import type { ClosingDeal } from '../types'
 
 const won = (n: number) => `${n.toLocaleString('ko-KR')}원`
 
-/** ① 마감 임박 특가 — 떨이 상품 단위 가로 카드 (158px). 탭 시 상품 상세(준비 중). */
+/** ① 마감 임박 특가 — 떨이 상품 단위 가로 카드 (158px). 탭 시 상품 상세로 이동. */
 export function DealCard({ deal }: { deal: ClosingDeal }) {
-  const { show } = useComingSoon()
+  const navigate = useNavigate()
   return (
     <button
       type="button"
-      onClick={() => show('상품 상세는 준비 중이에요.')}
+      onClick={() => navigate(ROUTES.PRODUCT_DETAIL('deal', deal.id))}
       className="w-[158px] flex-shrink-0 overflow-hidden rounded-[14px] border border-border bg-card text-left"
     >
       <span className="relative block h-[104px]">

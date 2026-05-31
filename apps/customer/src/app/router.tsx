@@ -8,6 +8,7 @@ import { TabLayout } from '@/shared/components/TabLayout'
 import { HomePage } from '@/features/home/pages/HomePage'
 import { StoreDetailPage } from '@/features/store-detail/pages/StoreDetailPage'
 import { StoreLocationPage } from '@/features/store-detail/pages/StoreLocationPage'
+import { ProductDetailPage } from '@/features/product-detail/pages/ProductDetailPage'
 import { MapTab } from '@/shared/components/tabs/MapTab'
 import { AllTab } from '@/shared/components/tabs/AllTab'
 import { FavsTab } from '@/shared/components/tabs/FavsTab'
@@ -62,7 +63,7 @@ export const router = createBrowserRouter([
     ),
   },
   {
-    // 매장 상세 + 매장 위치 — 인증 가드, 풀스크린(바텀네비 없음). 파라미터 Zod 검증은 페이지 내부.
+    // 매장/상품 상세 — 인증 가드, 풀스크린(바텀네비 없음). 파라미터 Zod 검증은 페이지 내부.
     element: (
       <ProtectedRoute>
         <Outlet />
@@ -71,6 +72,7 @@ export const router = createBrowserRouter([
     children: [
       { path: '/store/:id', element: <StoreDetailPage /> },
       { path: '/store/:id/location', element: <StoreLocationPage /> },
+      { path: '/product/:kind/:productId', element: <ProductDetailPage /> },
     ],
   },
   {
