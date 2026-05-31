@@ -68,3 +68,15 @@ export const STEP_FIELDS: Record<number, (keyof SignupInput)[]> = {
     'storePhone',
   ],
 }
+
+/**
+ * 로그인 입력 (auth.md §4-5). 사장 로그인은 이메일+비밀번호만 — 카카오·로그인상태유지 토글 없음 (auth.md §6).
+ * 로그인은 비밀번호 구성 규칙(8자·영문·숫자·특수)을 검증/노출하지 않는다 — 정책 노출 방지 + 과거 규칙 이전 계정 차단 방지.
+ * 형식 검증은 이메일만, 비밀번호는 필수 여부만. 실제 자격 판정은 서버가 하고 실패는 LOGIN_FAILED 단일 메시지로 거부.
+ */
+export const loginInputSchema = z.object({
+  email: z.string().email('이메일 형식이 아닙니다'),
+  password: z.string().min(1, '비밀번호를 입력해 주세요'),
+})
+
+export type LoginInput = z.infer<typeof loginInputSchema>
