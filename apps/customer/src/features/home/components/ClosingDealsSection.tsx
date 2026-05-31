@@ -1,20 +1,27 @@
 import { ROUTES } from '@/shared/lib/routes'
+import { STORE_SORT } from '@/features/store-list/types'
 import { useClosingDeals } from '../hooks/useClosingDeals'
 import { DealCard } from './DealCard'
 import { SectionEmpty } from './SectionEmpty'
 import { SectionHeader } from './SectionHeader'
 
-/** ① 마감 임박 특가 — 가로 스크롤. 더보기 → 전체 매장(마감임박순 — 화면 구현 시 파라미터). */
+/** ① 마감 임박 특가 — 가로 스크롤. 더보기 → 전체 매장(마감임박순 정렬 적용). */
 export function ClosingDealsSection() {
   const { data, isPending, isError } = useClosingDeals()
 
   return (
     <section className="px-5 pt-[22px]">
-      <SectionHeader title="⏰ 마감 임박 특가" moreTo={ROUTES.ALL} />
+      <SectionHeader
+        title="⏰ 마감 임박 특가"
+        moreTo={`${ROUTES.ALL}?sort=${STORE_SORT.CLOSING}`}
+      />
       {isPending ? (
         <div className="-mx-5 flex gap-3 overflow-hidden px-5">
           {[0, 1, 2].map((i) => (
-            <div key={i} className="h-[200px] w-[158px] flex-shrink-0 animate-pulse rounded-[14px] bg-muted" />
+            <div
+              key={i}
+              className="h-[200px] w-[158px] flex-shrink-0 animate-pulse rounded-[14px] bg-muted"
+            />
           ))}
         </div>
       ) : isError ? (

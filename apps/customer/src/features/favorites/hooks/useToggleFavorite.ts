@@ -63,6 +63,8 @@ export function useToggleFavorite() {
       queryClient.invalidateQueries({ queryKey: favoriteKeys.all })
       queryClient.invalidateQueries({ queryKey: ['home'] })
       queryClient.invalidateQueries({ queryKey: ['store', storeId] })
+      // 전체 매장 조회 카드의 단골 뱃지도 정합화 (store-list)
+      queryClient.invalidateQueries({ queryKey: ['stores', 'list'] })
     },
   })
 }
