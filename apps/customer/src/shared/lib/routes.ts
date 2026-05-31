@@ -20,6 +20,9 @@ export const ROUTES = {
   // 상품 상세 (일반/떨이 한 화면, kind 로 분기 — TabLayout 밖 풀스크린)
   PRODUCT_DETAIL: (kind: 'deal' | 'menu', id: string) => `/product/${kind}/${id}`,
 
+  // 프로필(내 정보) 수정 — 마이페이지에서 진입, TabLayout 밖 풀스크린 (바텀네비 없음)
+  EDIT_PROFILE: '/mypage/edit',
+
   // 주소지 관리 (마이페이지/홈 헤더에서 진입 — 진입 링크 연결은 후속)
   ADDRESSES: '/addresses',
   ADDRESS_NEW: '/addresses/new',

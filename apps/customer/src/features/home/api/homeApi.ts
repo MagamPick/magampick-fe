@@ -1,10 +1,8 @@
 import { z } from 'zod'
 import {
   closingDealSchema,
-  favoriteStoreSchema,
   neighborhoodStoreSchema,
   type ClosingDeal,
-  type FavoriteStore,
   type NeighborhoodStore,
 } from '../types'
 
@@ -76,16 +74,6 @@ const CLOSING_DEALS: ClosingDeal[] = [
   },
 ]
 
-/** ② 단골 가게 — 활성 떨이 보유 매장 우선, 동률 거리순 (BE 정렬 결과 가정). 상위 4개 노출. */
-const FAVORITE_STORES: FavoriteStore[] = [
-  { id: 'fv-1', name: '데일리 브레드', imageUrl: null, distanceKm: 0.2, activeDealCount: 2 },
-  { id: 'fv-2', name: '베이커리 브레드샵', imageUrl: null, distanceKm: 0.3, activeDealCount: 3 },
-  { id: 'fv-3', name: '커피로스터스 합정', imageUrl: null, distanceKm: 0.4, activeDealCount: 2 },
-  { id: 'fv-4', name: '스윗아워 디저트', imageUrl: null, distanceKm: 0.5, activeDealCount: 1 },
-  { id: 'fv-5', name: '동네분식 서교점', imageUrl: null, distanceKm: 0.7, activeDealCount: 0 },
-  { id: 'fv-6', name: '한솥도시락 합정', imageUrl: null, distanceKm: 1.2, activeDealCount: 0 },
-]
-
 /** ③ 우리 동네 마감픽 — 룰 스코어링 정렬 결과 가정. 홈은 고정 상위 6개 프리뷰(무한 스크롤 X). */
 const NEIGHBORHOOD: NeighborhoodStore[] = [
   { id: 'nb-1', name: '북카페 무드', imageUrl: null, distanceKm: 0.6, rating: 4.8, activeDealCount: 2 },
@@ -110,11 +98,6 @@ export const homeApi = {
   async getClosingDeals(): Promise<ClosingDeal[]> {
     await delay(400)
     return z.array(closingDealSchema).parse(CLOSING_DEALS.slice(0, 5))
-  },
-
-  async getFavoriteStores(): Promise<FavoriteStore[]> {
-    await delay(400)
-    return z.array(favoriteStoreSchema).parse(FAVORITE_STORES.slice(0, 4))
   },
 
   async getNeighborhoodStores(): Promise<NeighborhoodStore[]> {

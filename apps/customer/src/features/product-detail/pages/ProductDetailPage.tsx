@@ -2,6 +2,7 @@ import { Navigate, useNavigate, useParams } from 'react-router'
 import { ComingSoonProvider } from '@/shared/components/ComingSoonToast'
 import { PullToRefresh } from '@/shared/components/PullToRefresh'
 import { Button } from '@/shared/components/ui/button'
+import { ScreenContainer } from '@/shared/components/ScreenContainer'
 import { ROUTES } from '@/shared/lib/routes'
 import { productDetailParamsSchema, type ProductKind } from '../types'
 import { useProductDetail } from '../hooks/useProductDetail'
@@ -40,32 +41,35 @@ function ProductDetailView({ kind, productId }: { kind: ProductKind; productId: 
 
   if (isPending) {
     return (
-      <div className="min-h-screen bg-card">
+      <ScreenContainer variant="bleed">
         <ProductHero imageUrl={null} onBack={handleBack} />
         <div className="space-y-3 px-5 pt-5">
           <div className="h-4 w-28 animate-pulse rounded bg-muted" />
           <div className="h-6 w-44 animate-pulse rounded bg-muted" />
           <div className="h-8 w-32 animate-pulse rounded bg-muted" />
         </div>
-      </div>
+      </ScreenContainer>
     )
   }
 
   if (isError || !product) {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-card px-8 text-center">
+      <ScreenContainer
+        variant="bleed"
+        className="flex flex-col items-center justify-center gap-4 px-8 text-center"
+      >
         <p className="text-sm text-muted-foreground">상품 정보를 불러오지 못했어요.</p>
         <Button variant="outline" onClick={handleBack}>
           뒤로 가기
         </Button>
-      </div>
+      </ScreenContainer>
     )
   }
 
   return (
     <>
       <PullToRefresh onRefresh={refresh}>
-        <div className="min-h-screen bg-card pb-[120px]">
+        <ScreenContainer variant="bleed" className="pb-[120px]">
           <ProductHero imageUrl={product.imageUrl} onBack={handleBack} />
           <div className="px-5 pb-6 pt-4">
             <StorePreview
@@ -87,7 +91,7 @@ function ProductDetailView({ kind, productId }: { kind: ProductKind; productId: 
             />
             <ProductDescription description={product.description} />
           </div>
-        </div>
+        </ScreenContainer>
       </PullToRefresh>
       <PurchaseBar product={product} />
     </>

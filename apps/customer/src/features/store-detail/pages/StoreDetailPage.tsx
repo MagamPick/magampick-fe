@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Navigate, useNavigate, useParams, useSearchParams } from 'react-router'
 import { ComingSoonProvider } from '@/shared/components/ComingSoonToast'
+import { ScreenContainer } from '@/shared/components/ScreenContainer'
 import { useComingSoon } from '@/shared/hooks/useComingSoon'
 import { PullToRefresh } from '@/shared/components/PullToRefresh'
 import { Button } from '@/shared/components/ui/button'
@@ -8,7 +9,8 @@ import { ROUTES } from '@/shared/lib/routes'
 import { storeDetailParamsSchema } from '../types'
 import { useStoreDetail } from '../hooks/useStoreDetail'
 import { useStoreDetailRefresh } from '../hooks/useStoreDetailRefresh'
-import { useToggleFavorite } from '../hooks/useToggleFavorite'
+import { useToggleFavorite } from '@/features/favorites/hooks/useToggleFavorite'
+import { favoriteErrorMessage } from '@/features/favorites/lib/favoriteErrorMessage'
 import { StoreHero } from '../components/StoreHero'
 import { StoreHeadMeta } from '../components/StoreHeadMeta'
 import { StoreActions } from '../components/StoreActions'
@@ -39,7 +41,7 @@ function StoreDetailView({ storeId }: { storeId: string }) {
   const { show } = useComingSoon()
   const { data: store, isPending, isError } = useStoreDetail(storeId)
   const refresh = useStoreDetailRefresh(storeId)
-  const toggleFavorite = useToggleFavorite(storeId)
+  const toggleFavorite = useToggleFavorite()
   const [searchParams] = useSearchParams()
   // 상품 상세의 평점·리뷰 영역에서 ?tab=review 로 진입하면 리뷰 탭으로 시작
   const [activeTab, setActiveTab] = useState<StoreTabKey>(() =>
@@ -67,12 +69,28 @@ function StoreDetailView({ storeId }: { storeId: string }) {
   }
 
   const handleToggleFavorite = () => {
-    if (store) toggleFavorite.mutate(!store.isFavorite)
+    if (!store) return
+    toggleFavorite.mutate(
+      {
+        storeId,
+        next: !store.isFavorite,
+        // 단골 목록 카드가 상세에서 본 매장과 일치하도록 카드 전달 (활성 떨이 수는 BE 전까지 0)
+        store: {
+          id: store.id,
+          name: store.name,
+          imageUrl: store.imageUrl,
+          distanceKm: store.distanceKm,
+          rating: store.rating,
+          activeDealCount: 0,
+        },
+      },
+      { onError: (err) => show(favoriteErrorMessage(err)) },
+    )
   }
 
   if (isPending) {
     return (
-      <div className="min-h-screen bg-card">
+      <ScreenContainer variant="bleed">
         <div className="relative h-[218px] flex-shrink-0 animate-pulse bg-muted">
           <button
             type="button"
@@ -84,25 +102,25 @@ function StoreDetailView({ storeId }: { storeId: string }) {
           </button>
         </div>
         <TabLoading />
-      </div>
+      </ScreenContainer>
     )
   }
 
   if (isError || !store) {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-card px-8 text-center">
+      <ScreenContainer variant="bleed" className="flex flex-col items-center justify-center gap-4 px-8 text-center">
         <p className="text-sm text-muted-foreground">매장 정보를 불러오지 못했어요.</p>
         <Button variant="outline" onClick={handleBack}>
           뒤로 가기
         </Button>
-      </div>
+      </ScreenContainer>
     )
   }
 
   return (
     <>
       <PullToRefresh onRefresh={refresh}>
-        <div className="min-h-screen bg-card pb-[96px]">
+        <ScreenContainer variant="bleed" className="pb-[96px]">
           <StoreHero
             imageUrl={store.imageUrl}
             isFavorite={store.isFavorite}
@@ -128,7 +146,7 @@ function StoreDetailView({ storeId }: { storeId: string }) {
             {activeTab === 'review' && <ReviewTab storeId={storeId} />}
             {activeTab === 'info' && <InfoTab store={store} />}
           </div>
-        </div>
+        </ScreenContainer>
       </PullToRefresh>
       <CartBar count={0} />
     </>

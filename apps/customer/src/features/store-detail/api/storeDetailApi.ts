@@ -12,6 +12,7 @@ import {
   type StoreReview,
   type ReviewSummary,
 } from '../types'
+import { favoritesApi } from '@/features/favorites/api/favoritesApi'
 
 /**
  * ⚠️ Mock 스텁 — 매장 상세 BE(BE 완료 NO)가 아직이라 가짜 응답.
@@ -231,7 +232,11 @@ const REVIEW_PAGE_SIZE = 5
 export const storeDetailApi = {
   async getStoreDetail(id: string): Promise<StoreDetail> {
     await delay(350)
-    return storeDetailSchema.parse(STORES[id] ?? defaultStore(id))
+    // 단골 여부는 단일 소스(favorites)에서 — 매장 상세·홈·단골 목록이 일관 반영
+    return storeDetailSchema.parse({
+      ...(STORES[id] ?? defaultStore(id)),
+      isFavorite: favoritesApi.isFavorite(id),
+    })
   },
 
   async getStoreDeals(id: string): Promise<StoreDeal[]> {
@@ -258,10 +263,5 @@ export const storeDetailApi = {
     const items = REVIEWS.slice(start, start + REVIEW_PAGE_SIZE)
     const nextCursor = start + REVIEW_PAGE_SIZE < REVIEWS.length ? cursor + 1 : null
     return storeReviewPageSchema.parse({ items, nextCursor })
-  },
-
-  async toggleFavorite(_id: string, isFavorite: boolean): Promise<{ isFavorite: boolean }> {
-    await delay(150)
-    return { isFavorite }
   },
 }

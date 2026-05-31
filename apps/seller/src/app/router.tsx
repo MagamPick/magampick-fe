@@ -6,6 +6,8 @@ import { SignupPage } from '@/features/auth/pages/SignupPage'
 import { NotFoundPage } from '@/shared/components/NotFoundPage'
 import { ROUTES } from '@/shared/lib/routes'
 import { SellerHomePage } from '@/features/home/pages/SellerHomePage'
+import { StoreManagePage } from '@/features/store/pages/StoreManagePage'
+import { StoreHoursPage } from '@/features/store/pages/StoreHoursPage'
 
 export const router = createBrowserRouter([
   {
@@ -13,6 +15,22 @@ export const router = createBrowserRouter([
     element: (
       <ProtectedRoute>
         <SellerHomePage />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: ROUTES.STORE_MANAGE,
+    element: (
+      <ProtectedRoute>
+        <StoreManagePage />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: ROUTES.STORE_HOURS,
+    element: (
+      <ProtectedRoute>
+        <StoreHoursPage />
       </ProtectedRoute>
     ),
   },

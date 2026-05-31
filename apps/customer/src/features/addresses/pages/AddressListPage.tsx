@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router'
 import { ChevronLeft, Search, LocateFixed, Plus } from 'lucide-react'
 import { ROUTES } from '@/shared/lib/routes'
+import { ScreenContainer } from '@/shared/components/ScreenContainer'
 import { AddressCard } from '../components/AddressCard'
 import { AddressSearchSheet } from '../components/AddressSearchSheet'
 import { useAddresses } from '../hooks/useAddresses'
@@ -35,7 +36,7 @@ export function AddressListPage() {
   }
 
   return (
-    <div className="mx-auto flex min-h-screen max-w-md flex-col bg-card">
+    <ScreenContainer variant="page">
       <header className="sticky top-0 z-10 flex h-[52px] items-center gap-1 border-b border-border bg-card px-2">
         <button
           type="button"
@@ -112,6 +113,6 @@ export function AddressListPage() {
         onOpenChange={setSheetOpen}
         onSelect={(result) => goToNew(result)}
       />
-    </div>
+    </ScreenContainer>
   )
 }

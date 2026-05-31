@@ -3,16 +3,16 @@ import type { ReactNode } from 'react'
 import { render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router'
 import { ComingSoonProvider } from '@/shared/components/ComingSoonToast'
+import { useFavorites } from '@/features/favorites/hooks/useFavorites'
 import { ClosingDealsSection } from './ClosingDealsSection'
 import { FavoriteStoresSection } from './FavoriteStoresSection'
 import { NeighborhoodSection } from './NeighborhoodSection'
 import { useClosingDeals } from '../hooks/useClosingDeals'
-import { useFavoriteStores } from '../hooks/useFavoriteStores'
 import { useNeighborhoodStores } from '../hooks/useNeighborhoodStores'
 
 vi.mock('../hooks/useClosingDeals')
-vi.mock('../hooks/useFavoriteStores')
 vi.mock('../hooks/useNeighborhoodStores')
+vi.mock('@/features/favorites/hooks/useFavorites')
 
 function wrap(ui: ReactNode) {
   return render(
@@ -22,7 +22,15 @@ function wrap(ui: ReactNode) {
   )
 }
 
-beforeEach(() => vi.clearAllMocks())
+beforeEach(() => {
+  vi.clearAllMocks()
+  // 내 단골 프리뷰는 단골 단일 소스(useFavorites)를 읽음 — 기본 빈 목록
+  vi.mocked(useFavorites).mockReturnValue({
+    data: { stores: [], totalCount: 0, totalActiveDealCount: 0 },
+    isPending: false,
+    isError: false,
+  } as unknown as ReturnType<typeof useFavorites>)
+})
 
 describe('ClosingDealsSection', () => {
   it('결과_0건이면_빈안내_노출', () => {
@@ -61,14 +69,25 @@ describe('ClosingDealsSection', () => {
 
 describe('FavoriteStoresSection', () => {
   it('단골_0이면_등록_유도_안내', () => {
-    vi.mocked(useFavoriteStores).mockReturnValue({
-      data: [],
-      isPending: false,
-      isError: false,
-    } as unknown as ReturnType<typeof useFavoriteStores>)
-
     wrap(<FavoriteStoresSection />)
     expect(screen.getByText(/단골로 등록해 보세요/)).toBeInTheDocument()
+  })
+
+  it('단골_있으면_프리뷰_카드_렌더', () => {
+    vi.mocked(useFavorites).mockReturnValue({
+      data: {
+        stores: [
+          { id: 'fv-1', name: '단골집', imageUrl: null, distanceKm: 0.3, rating: 4.8, activeDealCount: 2 },
+        ],
+        totalCount: 1,
+        totalActiveDealCount: 2,
+      },
+      isPending: false,
+      isError: false,
+    } as unknown as ReturnType<typeof useFavorites>)
+
+    wrap(<FavoriteStoresSection />)
+    expect(screen.getByText('단골집')).toBeInTheDocument()
   })
 })
 
