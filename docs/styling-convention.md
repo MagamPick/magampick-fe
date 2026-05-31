@@ -267,6 +267,7 @@ shadcn v4 는 **`tw-animate-css`** (`globals.css` 에 `@import 'tw-animate-css'`
 - ❌ **`@apply` 남용** — 클래스 묶기는 컴포넌트로.
 - ❌ **`tailwind.config.ts` 재도입** — v4 는 `@theme`. config 파일 안 만든다.
 - ❌ **shadcn 컴포넌트 수정 후 깜빡** — 내 코드라 수정 OK, 다만 commit/주석으로 명확히.
+- ❌ **복제된 `shared/components/ui/*` 를 한 앱만 수정** — ui 컴포넌트는 3앱 복제(§2 토큰 복제와 동일 구조)라 한 곳만 고치면 앱 간 drift 발생. 같은 컴포넌트 변경은 customer/seller/admin 에 동일 적용 (예: sheet 배경 `bg-card` 통일). 복제가 잦아지면 §2 의 공유 ui 추출을 앞당기는 신호.
 - ❌ **toast/dialog 같은 글로벌 UI 를 페이지마다 직접** — `shared/components/ui` 글로벌 provider 한 곳.
 
 ---
