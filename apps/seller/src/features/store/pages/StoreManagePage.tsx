@@ -24,7 +24,7 @@ export function StoreManagePage() {
   const name = stores?.find((s) => s.id === storeId)?.name ?? '매장'
 
   return (
-    <div className="mx-auto flex min-h-screen max-w-md flex-col bg-background pb-10">
+    <div className="mx-auto flex min-h-screen max-w-md flex-col bg-card pb-10">
       <header className="sticky top-0 z-10 flex h-[52px] items-center gap-1 border-b border-border bg-card px-2">
         <button
           type="button"

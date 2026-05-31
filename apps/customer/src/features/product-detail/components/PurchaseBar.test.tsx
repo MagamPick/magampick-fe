@@ -65,4 +65,17 @@ describe('PurchaseBar', () => {
     expect(screen.getByText('마감된 상품이에요.')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: '장바구니 담기' })).toBeDisabled()
   })
+
+  it('데스크탑에서_중앙_max_width_고정바로_표시', () => {
+    const { container } = renderBar(activeDeal)
+
+    expect(container.firstElementChild).toHaveClass(
+      'fixed',
+      'bottom-0',
+      'left-1/2',
+      'w-full',
+      'max-w-md',
+      '-translate-x-1/2',
+    )
+  })
 })
