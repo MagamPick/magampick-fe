@@ -16,8 +16,8 @@ import { BottomNav } from './BottomNav'
  */
 export function TabLayout() {
   return (
-    <div className="mx-auto flex min-h-screen max-w-md flex-col bg-background">
-      <main className="flex flex-1 flex-col pb-[calc(64px+8px+env(safe-area-inset-bottom,24px)+12px)]">
+    <div className="mx-auto flex min-h-screen max-w-md flex-col bg-card">
+      <main className="flex flex-1 flex-col bg-card pb-[calc(64px+8px+env(safe-area-inset-bottom,24px)+12px)]">
         <Outlet />
       </main>
       <BottomNav />

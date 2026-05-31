@@ -28,4 +28,20 @@ describe('ComingSoonProvider', () => {
 
     expect(await screen.findByText('검색은 준비 중이에요.')).toBeInTheDocument()
   })
+
+  it('토스트_영역을_customer_max_width_컬럼에_맞춘다', () => {
+    const { container } = render(
+      <ComingSoonProvider>
+        <Consumer />
+      </ComingSoonProvider>,
+    )
+
+    expect(container.lastElementChild).toHaveClass(
+      'fixed',
+      'left-1/2',
+      'w-full',
+      'max-w-md',
+      '-translate-x-1/2',
+    )
+  })
 })

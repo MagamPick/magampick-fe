@@ -21,7 +21,7 @@ export function SellerHomePage() {
   const { data: status, isLoading } = useStoreStatus(selectedStoreId)
 
   return (
-    <div className="mx-auto flex min-h-screen max-w-md flex-col bg-background pb-[calc(env(safe-area-inset-bottom,0px)+2rem)]">
+    <div className="mx-auto flex min-h-screen max-w-md flex-col bg-card pb-[calc(env(safe-area-inset-bottom,0px)+2rem)]">
       <HomeHero />
       <BizStatusCard status={status} isLoading={isLoading} onManage={() => setSheetOpen(true)} />
       <HomeShortcuts />

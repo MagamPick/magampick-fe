@@ -24,7 +24,7 @@ export function ComingSoonProvider({ children }: { children: ReactNode }) {
       <div
         role="status"
         aria-live="polite"
-        className="pointer-events-none fixed inset-x-0 z-[60] flex justify-center px-4"
+        className="pointer-events-none fixed left-1/2 z-[60] flex w-full max-w-md -translate-x-1/2 justify-center px-4"
         style={{ bottom: 'calc(64px + 8px + env(safe-area-inset-bottom, 24px) + 20px)' }}
       >
         {message && (

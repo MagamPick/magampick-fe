@@ -43,7 +43,7 @@ export function StoreHoursPage() {
   }
 
   return (
-    <div className="mx-auto flex min-h-screen max-w-md flex-col bg-background pb-8">
+    <div className="mx-auto flex min-h-screen max-w-md flex-col bg-card pb-8">
       <header className="sticky top-0 z-10 flex h-[52px] items-center gap-1 border-b border-border bg-card px-2">
         <button
           type="button"

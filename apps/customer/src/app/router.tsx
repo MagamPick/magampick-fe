@@ -1,10 +1,11 @@
-import { createBrowserRouter, Outlet } from 'react-router'
+import { createBrowserRouter } from 'react-router'
 import { ProtectedRoute } from '@/features/auth/components/ProtectedRoute'
 import { PublicOnlyRoute } from '@/features/auth/components/PublicOnlyRoute'
 import { LoginPage } from '@/features/auth/pages/LoginPage'
 import { SignupPage } from '@/features/auth/pages/SignupPage'
 import { WelcomePage } from '@/features/auth/pages/WelcomePage'
 import { TabLayout } from '@/shared/components/TabLayout'
+import { FullscreenColumnLayout } from '@/shared/components/FullscreenColumnLayout'
 import { HomePage } from '@/features/home/pages/HomePage'
 import { StoreDetailPage } from '@/features/store-detail/pages/StoreDetailPage'
 import { StoreLocationPage } from '@/features/store-detail/pages/StoreLocationPage'
@@ -73,10 +74,10 @@ export const router = createBrowserRouter([
     ),
   },
   {
-    // 매장/상품 상세 — 인증 가드, 풀스크린(바텀네비 없음). 파라미터 Zod 검증은 페이지 내부.
+    // 상세 계열 — 인증 가드, 모바일 컬럼 풀스크린(바텀네비 없음). 파라미터 Zod 검증은 페이지 내부.
     element: (
       <ProtectedRoute>
-        <Outlet />
+        <FullscreenColumnLayout />
       </ProtectedRoute>
     ),
     children: [

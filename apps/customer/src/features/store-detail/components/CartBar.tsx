@@ -9,7 +9,7 @@ import { Button } from '@/shared/components/ui/button'
 export function CartBar({ count = 0 }: { count?: number }) {
   const { show } = useComingSoon()
   return (
-    <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-card px-5 pb-[calc(12px+env(safe-area-inset-bottom,24px))] pt-3">
+    <div className="fixed bottom-0 left-1/2 z-40 w-full max-w-md -translate-x-1/2 border-t border-border bg-card px-5 pb-[calc(12px+env(safe-area-inset-bottom,24px))] pt-3">
       <Button
         type="button"
         onClick={() => show('장바구니는 준비 중이에요.')}

@@ -17,4 +17,21 @@ describe('CartBar', () => {
     await user.click(button)
     expect(await screen.findByText('장바구니는 준비 중이에요.')).toBeInTheDocument()
   })
+
+  it('데스크탑에서_중앙_max_width_고정바로_표시', () => {
+    const { container } = render(
+      <ComingSoonProvider>
+        <CartBar />
+      </ComingSoonProvider>,
+    )
+
+    expect(container.firstElementChild).toHaveClass(
+      'fixed',
+      'bottom-0',
+      'left-1/2',
+      'w-full',
+      'max-w-md',
+      '-translate-x-1/2',
+    )
+  })
 })
