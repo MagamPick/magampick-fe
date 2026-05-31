@@ -1,4 +1,5 @@
 import { ComingSoonProvider } from '@/shared/components/ComingSoonToast'
+import { ScreenContainer } from '@/shared/components/ScreenContainer'
 import { useComingSoon } from '@/shared/hooks/useComingSoon'
 import { ROUTES } from '@/shared/lib/routes'
 import { useLogout } from '@/features/auth/hooks/useLogout'
@@ -27,7 +28,7 @@ function MyPageContent() {
   }
 
   return (
-    <div className="flex flex-1 flex-col bg-card pb-6 pt-[env(safe-area-inset-top,0px)]">
+    <ScreenContainer variant="tab" className="pb-6 pt-[env(safe-area-inset-top,0px)]">
       <h1 className="sr-only">마이</h1>
 
       {profile ? (
@@ -68,7 +69,7 @@ function MyPageContent() {
         <MenuRow icon="🚪" label="로그아웃" danger onClick={handleLogout} />
         <MenuRow icon="🗑️" label="회원 탈퇴" danger onClick={soon} />
       </MenuGroup>
-    </div>
+    </ScreenContainer>
   )
 }
 

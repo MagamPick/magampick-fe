@@ -1,12 +1,13 @@
 import { useFavorites } from '../hooks/useFavorites'
 import { FavoriteListCard } from '../components/FavoriteListCard'
+import { ScreenContainer } from '@/shared/components/ScreenContainer'
 
 /** 단골 탭 (TabLayout 자식 라우트 /favs) — 상단 통계 + 카드 리스트 + 빈 상태. 프로토타입 23-favs. */
 export function FavoritesPage() {
   const { data, isPending, isError } = useFavorites()
 
   return (
-    <section className="flex flex-1 flex-col bg-card">
+    <ScreenContainer as="section" variant="tab">
       <header className="flex h-[52px] flex-shrink-0 items-center px-5">
         <h1 className="text-lg font-extrabold tracking-[-0.3px]">단골 가게</h1>
       </header>
@@ -51,6 +52,6 @@ export function FavoritesPage() {
           </>
         )}
       </div>
-    </section>
+    </ScreenContainer>
   )
 }

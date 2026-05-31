@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Navigate, useNavigate, useParams } from 'react-router'
 import { ComingSoonProvider } from '@/shared/components/ComingSoonToast'
+import { ScreenContainer } from '@/shared/components/ScreenContainer'
 import { useComingSoon } from '@/shared/hooks/useComingSoon'
 import { PullToRefresh } from '@/shared/components/PullToRefresh'
 import { Button } from '@/shared/components/ui/button'
@@ -85,7 +86,7 @@ function StoreDetailView({ storeId }: { storeId: string }) {
 
   if (isPending) {
     return (
-      <div className="min-h-screen bg-card">
+      <ScreenContainer variant="bleed">
         <div className="relative h-[218px] flex-shrink-0 animate-pulse bg-muted">
           <button
             type="button"
@@ -97,25 +98,25 @@ function StoreDetailView({ storeId }: { storeId: string }) {
           </button>
         </div>
         <TabLoading />
-      </div>
+      </ScreenContainer>
     )
   }
 
   if (isError || !store) {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-card px-8 text-center">
+      <ScreenContainer variant="bleed" className="flex flex-col items-center justify-center gap-4 px-8 text-center">
         <p className="text-sm text-muted-foreground">매장 정보를 불러오지 못했어요.</p>
         <Button variant="outline" onClick={handleBack}>
           뒤로 가기
         </Button>
-      </div>
+      </ScreenContainer>
     )
   }
 
   return (
     <>
       <PullToRefresh onRefresh={refresh}>
-        <div className="min-h-screen bg-card pb-[96px]">
+        <ScreenContainer variant="bleed" className="pb-[96px]">
           <StoreHero
             imageUrl={store.imageUrl}
             isFavorite={store.isFavorite}
@@ -141,7 +142,7 @@ function StoreDetailView({ storeId }: { storeId: string }) {
             {activeTab === 'review' && <ReviewTab storeId={storeId} />}
             {activeTab === 'info' && <InfoTab store={store} />}
           </div>
-        </div>
+        </ScreenContainer>
       </PullToRefresh>
       <CartBar count={0} />
     </>

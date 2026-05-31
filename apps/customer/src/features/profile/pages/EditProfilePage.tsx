@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { ComingSoonProvider } from '@/shared/components/ComingSoonToast'
+import { ScreenContainer } from '@/shared/components/ScreenContainer'
 import { useComingSoon } from '@/shared/hooks/useComingSoon'
 import { useProfile } from '../hooks/useProfile'
 import { NicknameEditSheet } from '../components/NicknameEditSheet'
@@ -28,7 +29,7 @@ function EditProfileContent() {
   const soon = () => show(COMING_SOON)
 
   return (
-    <div className="mx-auto flex min-h-screen max-w-md flex-col bg-card">
+    <ScreenContainer variant="page">
       <header className="sticky top-0 z-10 flex h-[52px] items-center gap-1 border-b border-border bg-card px-2">
         <button
           type="button"
@@ -108,7 +109,7 @@ function EditProfileContent() {
           </>
         )}
       </main>
-    </div>
+    </ScreenContainer>
   )
 }
 

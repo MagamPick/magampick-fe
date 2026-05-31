@@ -1,4 +1,5 @@
 import { ComingSoonProvider } from '@/shared/components/ComingSoonToast'
+import { ScreenContainer } from '@/shared/components/ScreenContainer'
 import { HomeHeader } from '../components/HomeHeader'
 import { SearchBarButton } from '../components/SearchBarButton'
 import { ClosingDealsSection } from '../components/ClosingDealsSection'
@@ -23,10 +24,10 @@ function HomeFeed() {
 export function HomePage() {
   return (
     <ComingSoonProvider>
-      <div className="flex flex-1 flex-col bg-card">
+      <ScreenContainer variant="tab">
         <HomeHeader />
         <HomeFeed />
-      </div>
+      </ScreenContainer>
     </ComingSoonProvider>
   )
 }
