@@ -1,7 +1,7 @@
 import { Bell, ChevronDown, ShoppingCart } from 'lucide-react'
 import { Link } from 'react-router'
 import { ROUTES } from '@/shared/lib/routes'
-import { useComingSoon } from '../hooks/useComingSoon'
+import { useComingSoon } from '@/shared/hooks/useComingSoon'
 import { useHomeAddress } from '../hooks/useHomeAddress'
 
 /**

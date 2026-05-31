@@ -1,5 +1,5 @@
 import { Clock } from 'lucide-react'
-import { useCountdown } from '../hooks/useCountdown'
+import { useCountdown } from '@/shared/hooks/useCountdown'
 
 /** 픽업 마감 잔여 시간 실시간 카운트다운 배지 (마감 임박 카드 이미지 위 오버레이). */
 export function CountdownBadge({ deadline }: { deadline: string }) {

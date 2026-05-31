@@ -1,10 +1,10 @@
-import { ComingSoonProvider } from '../components/ComingSoonToast'
+import { ComingSoonProvider } from '@/shared/components/ComingSoonToast'
 import { HomeHeader } from '../components/HomeHeader'
 import { SearchBarButton } from '../components/SearchBarButton'
 import { ClosingDealsSection } from '../components/ClosingDealsSection'
 import { FavoriteStoresSection } from '../components/FavoriteStoresSection'
 import { NeighborhoodSection } from '../components/NeighborhoodSection'
-import { PullToRefresh } from '../components/PullToRefresh'
+import { PullToRefresh } from '@/shared/components/PullToRefresh'
 import { useHomeRefresh } from '../hooks/useHomeRefresh'
 
 /** 소비자 홈 피드 — 주소지 기준 3섹션(마감임박·단골·동네). 탭 셸의 index 라우트(/). */

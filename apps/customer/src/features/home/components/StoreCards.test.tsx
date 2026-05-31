@@ -1,19 +1,21 @@
-import { describe, it, expect } from 'vitest'
-import type { ReactNode } from 'react'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { ComingSoonProvider } from './ComingSoonToast'
 import { FavoriteStoreCard } from './FavoriteStoreCard'
 import { StoreRow } from './StoreRow'
 
-function wrap(ui: ReactNode) {
-  return render(<ComingSoonProvider>{ui}</ComingSoonProvider>)
-}
+const mockNavigate = vi.fn()
+vi.mock('react-router', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('react-router')>()
+  return { ...actual, useNavigate: () => mockNavigate }
+})
+
+beforeEach(() => mockNavigate.mockClear())
 
 describe('FavoriteStoreCard', () => {
-  it('이름_거리_진행중할인수_표시_그리고_탭시_매장상세_준비중', async () => {
+  it('이름_거리_진행중할인수_표시_그리고_탭시_매장상세_이동', async () => {
     const user = userEvent.setup()
-    wrap(
+    render(
       <FavoriteStoreCard
         store={{ id: 'fv', name: '단골집', imageUrl: null, distanceKm: 0.3, activeDealCount: 2 }}
       />,
@@ -24,11 +26,11 @@ describe('FavoriteStoreCard', () => {
     expect(screen.getByText('진행 중 마감 할인 2건')).toBeInTheDocument()
 
     await user.click(screen.getByRole('button'))
-    expect(await screen.findByText('매장 상세는 준비 중이에요.')).toBeInTheDocument()
+    expect(mockNavigate).toHaveBeenCalledWith('/store/fv')
   })
 
   it('진행중_할인_0건이면_배지_생략', () => {
-    wrap(
+    render(
       <FavoriteStoreCard
         store={{ id: 'fv', name: '단골집', imageUrl: null, distanceKm: 0.3, activeDealCount: 0 }}
       />,
@@ -38,8 +40,9 @@ describe('FavoriteStoreCard', () => {
 })
 
 describe('StoreRow', () => {
-  it('이름_거리평점_표시_0건이면_배지생략', () => {
-    wrap(
+  it('이름_거리평점_표시_0건이면_배지생략_그리고_탭시_매장상세_이동', async () => {
+    const user = userEvent.setup()
+    render(
       <StoreRow
         store={{
           id: 'nb',
@@ -55,5 +58,8 @@ describe('StoreRow', () => {
     expect(screen.getByText('동네집')).toBeInTheDocument()
     expect(screen.getByText('0.8km · ★ 4.6')).toBeInTheDocument()
     expect(screen.queryByText(/진행 중 마감 할인/)).not.toBeInTheDocument()
+
+    await user.click(screen.getByRole('button'))
+    expect(mockNavigate).toHaveBeenCalledWith('/store/nb')
   })
 })

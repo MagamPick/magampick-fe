@@ -11,6 +11,10 @@ export const ROUTES = {
   ORDERS: '/orders',
   MYPAGE: '/mypage',
 
+  // 매장 상세 + 매장 위치 (TabLayout 밖 풀스크린 — 바텀네비 없음)
+  STORE_DETAIL: (id: string) => `/store/${id}`,
+  STORE_LOCATION: (id: string) => `/store/${id}/location`,
+
   // 주소지 관리 (마이페이지/홈 헤더에서 진입 — 진입 링크 연결은 후속)
   ADDRESSES: '/addresses',
   ADDRESS_NEW: '/addresses/new',

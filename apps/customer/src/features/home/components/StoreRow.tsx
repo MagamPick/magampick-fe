@@ -1,15 +1,16 @@
 import { ChevronRight } from 'lucide-react'
-import { useComingSoon } from '../hooks/useComingSoon'
-import { Thumbnail } from './Thumbnail'
+import { useNavigate } from 'react-router'
+import { Thumbnail } from '@/shared/components/Thumbnail'
+import { ROUTES } from '@/shared/lib/routes'
 import type { NeighborhoodStore } from '../types'
 
-/** ③ 우리 동네 마감픽 — 매장 단위 리스트 row(거리·평점·할인수). 0건이면 배지 생략. 탭 시 매장 상세(준비 중). */
+/** ③ 우리 동네 마감픽 — 매장 단위 리스트 row(거리·평점·할인수). 0건이면 배지 생략. 탭 시 매장 상세. */
 export function StoreRow({ store }: { store: NeighborhoodStore }) {
-  const { show } = useComingSoon()
+  const navigate = useNavigate()
   return (
     <button
       type="button"
-      onClick={() => show('매장 상세는 준비 중이에요.')}
+      onClick={() => navigate(ROUTES.STORE_DETAIL(store.id))}
       className="flex w-full items-center gap-3 border-b border-border py-[13px] text-left last:border-b-0"
     >
       <Thumbnail

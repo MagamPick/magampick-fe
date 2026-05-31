@@ -1,6 +1,6 @@
-import { useComingSoon } from '../hooks/useComingSoon'
+import { useComingSoon } from '@/shared/hooks/useComingSoon'
 import { CountdownBadge } from './CountdownBadge'
-import { Thumbnail } from './Thumbnail'
+import { Thumbnail } from '@/shared/components/Thumbnail'
 import type { ClosingDeal } from '../types'
 
 const won = (n: number) => `${n.toLocaleString('ko-KR')}원`
