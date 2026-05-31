@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { ChevronLeft, Minus, Plus, Store } from 'lucide-react'
 import { Navigate, useNavigate, useParams } from 'react-router'
 import { ROUTES } from '@/shared/lib/routes'
+import { ScreenContainer } from '@/shared/components/ScreenContainer'
 import { storeDetailParamsSchema } from '../types'
 import { useStoreDetail } from '../hooks/useStoreDetail'
 import { walkAndDistanceLabel } from '../lib/walkTime'
@@ -28,7 +29,7 @@ export function StoreLocationPage() {
   const z = ZOOM_LEVELS[zoom]
 
   return (
-    <div className="flex min-h-screen flex-col bg-card">
+    <ScreenContainer variant="bleed" className="flex flex-col">
       <header className="sticky top-0 z-10 flex h-[52px] flex-shrink-0 items-center gap-1 border-b border-border bg-card px-2">
         <button
           type="button"
@@ -150,6 +151,6 @@ export function StoreLocationPage() {
           </div>
         </div>
       </div>
-    </div>
+    </ScreenContainer>
   )
 }

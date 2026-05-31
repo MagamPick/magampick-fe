@@ -15,6 +15,7 @@ import { Input } from '@/shared/components/ui/input'
 import { cn } from '@/shared/lib/utils'
 import { ApiError } from '@/shared/lib/apiError'
 import { ROUTES } from '@/shared/lib/routes'
+import { ScreenContainer } from '@/shared/components/ScreenContainer'
 import { AddressSearchSheet } from '../components/AddressSearchSheet'
 import { useAddresses } from '../hooks/useAddresses'
 import { useCreateAddress } from '../hooks/useCreateAddress'
@@ -117,7 +118,7 @@ export function AddressFormPage() {
   const saveDisabled = !displayRoad || !form.formState.isValid || mutation.isPending
 
   return (
-    <div className="mx-auto flex min-h-screen max-w-md flex-col bg-card">
+    <ScreenContainer variant="page">
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="flex min-h-screen flex-col">
           <header className="sticky top-0 z-10 flex h-[52px] items-center gap-1 border-b border-border bg-card px-2">
@@ -251,6 +252,6 @@ export function AddressFormPage() {
         onOpenChange={setSheetOpen}
         onSelect={(result) => setRoadResult(result)}
       />
-    </div>
+    </ScreenContainer>
   )
 }
