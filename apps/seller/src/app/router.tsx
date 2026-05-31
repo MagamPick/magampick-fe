@@ -3,10 +3,10 @@ import { PublicOnlyRoute } from '@/features/auth/components/PublicOnlyRoute'
 import { SignupPage } from '@/features/auth/pages/SignupPage'
 import { NotFoundPage } from '@/shared/components/NotFoundPage'
 import { ROUTES } from '@/shared/lib/routes'
-import { HomePlaceholder } from '@/shared/components/HomePlaceholder'
+import { SellerHomePage } from '@/features/home/pages/SellerHomePage'
 
 export const router = createBrowserRouter([
-  { path: ROUTES.HOME, element: <HomePlaceholder /> },
+  { path: ROUTES.HOME, element: <SellerHomePage /> },
   {
     path: ROUTES.SIGNUP,
     element: (

@@ -13,6 +13,8 @@ import { AllTab } from '@/shared/components/tabs/AllTab'
 import { FavsTab } from '@/shared/components/tabs/FavsTab'
 import { OrdersTab } from '@/shared/components/tabs/OrdersTab'
 import { MyTab } from '@/shared/components/tabs/MyTab'
+import { AddressListPage } from '@/features/addresses/pages/AddressListPage'
+import { AddressFormPage } from '@/features/addresses/pages/AddressFormPage'
 import { NotFoundPage } from '@/shared/components/NotFoundPage'
 import { ROUTES } from '@/shared/lib/routes'
 
@@ -33,6 +35,31 @@ export const router = createBrowserRouter([
       { path: ROUTES.ORDERS, element: <OrdersTab /> },
       { path: ROUTES.MYPAGE, element: <MyTab /> },
     ],
+  },
+  // 주소지 관리 — 탭이 아닌 독립 보호 라우트 (바텀네비 없음, 프로토타입 60-addresses 와 동일)
+  {
+    path: ROUTES.ADDRESSES,
+    element: (
+      <ProtectedRoute>
+        <AddressListPage />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: '/addresses/new',
+    element: (
+      <ProtectedRoute>
+        <AddressFormPage />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: '/addresses/:id/edit',
+    element: (
+      <ProtectedRoute>
+        <AddressFormPage />
+      </ProtectedRoute>
+    ),
   },
   {
     // 매장 상세 + 매장 위치 — 인증 가드, 풀스크린(바텀네비 없음). 파라미터 Zod 검증은 페이지 내부.
