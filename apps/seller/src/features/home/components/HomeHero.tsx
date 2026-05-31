@@ -1,14 +1,18 @@
-import { Bell } from 'lucide-react'
+import { Bell, LogOut } from 'lucide-react'
 import { StoreSwitcher } from '@/features/store/components/StoreSwitcher'
+import { useLogout } from '@/features/auth/hooks/useLogout'
 
 /**
  * 사장 홈 히어로 — 오렌지 그라디언트 헤더 (프로토타입 .ms-hero).
  * 매장 선택기만 실동작. 평점·리뷰·알림은 정적/비활성 (별도 기능).
+ * 로그아웃은 임시 진입점 — 사장 마이/설정 화면 생기면 그쪽 메뉴 행으로 이전 (프로토타입 24-mypage·52-settings).
  */
 export function HomeHero() {
+  const logout = useLogout()
+
   return (
     <header className="relative overflow-hidden rounded-b-3xl bg-gradient-to-br from-primary to-secondary-foreground px-5 pb-7 pt-[calc(env(safe-area-inset-top,0px)+1.75rem)] text-white shadow-e3">
-      <div className="relative flex items-center gap-3.5">
+      <div className="relative flex items-center gap-3">
         <span className="flex size-14 shrink-0 items-center justify-center rounded-2xl bg-white/15 text-[30px] ring-2 ring-inset ring-white/55">
           🥐
         </span>
@@ -28,6 +32,15 @@ export function HomeHero() {
         >
           <Bell className="size-5" />
           <span className="absolute right-2.5 top-2 size-2 rounded-full bg-warning ring-2 ring-primary" aria-hidden />
+        </button>
+        <button
+          type="button"
+          onClick={() => logout.mutate()}
+          disabled={logout.isPending}
+          className="relative flex size-10 shrink-0 items-center justify-center rounded-full bg-white/20 disabled:opacity-60"
+          aria-label="로그아웃"
+        >
+          <LogOut className="size-5" />
         </button>
       </div>
     </header>
