@@ -1,5 +1,5 @@
 import { Search } from 'lucide-react'
-import { useComingSoon } from '../hooks/useComingSoon'
+import { useComingSoon } from '@/shared/hooks/useComingSoon'
 
 /** 검색 진입 버튼 — 키워드 검색은 별도(Phase 11)라 탭 시 "준비 중" 안내. */
 export function SearchBarButton() {

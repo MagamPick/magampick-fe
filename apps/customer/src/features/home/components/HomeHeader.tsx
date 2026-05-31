@@ -1,5 +1,5 @@
 import { Bell, ChevronDown, ShoppingCart } from 'lucide-react'
-import { useComingSoon } from '../hooks/useComingSoon'
+import { useComingSoon } from '@/shared/hooks/useComingSoon'
 import { useHomeAddress } from '../hooks/useHomeAddress'
 
 /**

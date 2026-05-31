@@ -1,4 +1,4 @@
-import { createBrowserRouter } from 'react-router'
+import { createBrowserRouter, Outlet } from 'react-router'
 import { ProtectedRoute } from '@/features/auth/components/ProtectedRoute'
 import { PublicOnlyRoute } from '@/features/auth/components/PublicOnlyRoute'
 import { LoginPage } from '@/features/auth/pages/LoginPage'
@@ -6,6 +6,8 @@ import { SignupPage } from '@/features/auth/pages/SignupPage'
 import { WelcomePage } from '@/features/auth/pages/WelcomePage'
 import { TabLayout } from '@/shared/components/TabLayout'
 import { HomePage } from '@/features/home/pages/HomePage'
+import { StoreDetailPage } from '@/features/store-detail/pages/StoreDetailPage'
+import { StoreLocationPage } from '@/features/store-detail/pages/StoreLocationPage'
 import { MapTab } from '@/shared/components/tabs/MapTab'
 import { AllTab } from '@/shared/components/tabs/AllTab'
 import { FavsTab } from '@/shared/components/tabs/FavsTab'
@@ -30,6 +32,18 @@ export const router = createBrowserRouter([
       { path: ROUTES.FAVS, element: <FavsTab /> },
       { path: ROUTES.ORDERS, element: <OrdersTab /> },
       { path: ROUTES.MYPAGE, element: <MyTab /> },
+    ],
+  },
+  {
+    // 매장 상세 + 매장 위치 — 인증 가드, 풀스크린(바텀네비 없음). 파라미터 Zod 검증은 페이지 내부.
+    element: (
+      <ProtectedRoute>
+        <Outlet />
+      </ProtectedRoute>
+    ),
+    children: [
+      { path: '/store/:id', element: <StoreDetailPage /> },
+      { path: '/store/:id/location', element: <StoreLocationPage /> },
     ],
   },
   {

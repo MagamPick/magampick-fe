@@ -10,4 +10,8 @@ export const ROUTES = {
   FAVS: '/favs',
   ORDERS: '/orders',
   MYPAGE: '/mypage',
+
+  // 매장 상세 + 매장 위치 (TabLayout 밖 풀스크린 — 바텀네비 없음)
+  STORE_DETAIL: (id: string) => `/store/${id}`,
+  STORE_LOCATION: (id: string) => `/store/${id}/location`,
 } as const
