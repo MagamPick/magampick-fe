@@ -1,0 +1,63 @@
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import type { ReactNode } from 'react'
+import { render, screen, waitFor, cleanup } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
+import { MemoryRouter } from 'react-router'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { SellerMyPage } from './SellerMyPage'
+import { __resetProfileStoreForTest } from '../api/profileApi'
+
+// 로그아웃은 auth 도메인 — 여기선 "호출됐는지"만 검증 (인증 흐름은 auth 테스트가 커버)
+const { logoutMutate } = vi.hoisted(() => ({ logoutMutate: vi.fn() }))
+vi.mock('@/features/auth/hooks/useLogout', () => ({
+  useLogout: () => ({ mutate: logoutMutate, isPending: false }),
+}))
+
+function renderMyPage() {
+  const qc = new QueryClient({
+    defaultOptions: { queries: { retry: false, gcTime: 0 }, mutations: { retry: false } },
+  })
+  const wrapper = ({ children }: { children: ReactNode }) => (
+    <QueryClientProvider client={qc}>
+      <MemoryRouter>{children}</MemoryRouter>
+    </QueryClientProvider>
+  )
+  render(<SellerMyPage />, { wrapper })
+}
+
+describe('SellerMyPage (사장 마이 허브)', () => {
+  beforeEach(() => __resetProfileStoreForTest())
+  afterEach(() => {
+    cleanup()
+    vi.clearAllMocks()
+  })
+
+  it('프로필 실명을 보여준다', async () => {
+    renderMyPage()
+    await waitFor(() => expect(screen.getByText(/김민수/)).toBeInTheDocument())
+  })
+
+  it('보유 매장·수정은 실제 라우트로 링크된다', async () => {
+    renderMyPage()
+    await waitFor(() => expect(screen.getByText(/김민수/)).toBeInTheDocument())
+    expect(screen.getByRole('link', { name: '보유 매장' })).toHaveAttribute('href', '/store')
+    expect(screen.getByRole('link', { name: '수정' })).toHaveAttribute('href', '/mypage/edit')
+  })
+
+  it('미구현 메뉴(정산 내역)를 누르면 준비 중 안내가 뜬다', async () => {
+    const user = userEvent.setup()
+    renderMyPage()
+    await waitFor(() => expect(screen.getByText(/김민수/)).toBeInTheDocument())
+    await user.click(screen.getByRole('button', { name: '정산 내역' }))
+    expect(await screen.findByText('준비 중인 기능이에요')).toBeInTheDocument()
+  })
+
+  it('로그아웃을 누르고 확인하면 로그아웃을 호출한다', async () => {
+    const user = userEvent.setup()
+    vi.spyOn(window, 'confirm').mockReturnValue(true)
+    renderMyPage()
+    await waitFor(() => expect(screen.getByText(/김민수/)).toBeInTheDocument())
+    await user.click(screen.getByRole('button', { name: '로그아웃' }))
+    expect(logoutMutate).toHaveBeenCalled()
+  })
+})

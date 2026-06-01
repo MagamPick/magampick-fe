@@ -8,6 +8,8 @@ import { ROUTES } from '@/shared/lib/routes'
 import { SellerHomePage } from '@/features/home/pages/SellerHomePage'
 import { StoreManagePage } from '@/features/store/pages/StoreManagePage'
 import { StoreHoursPage } from '@/features/store/pages/StoreHoursPage'
+import { SellerMyPage } from '@/features/profile/pages/SellerMyPage'
+import { EditProfilePage } from '@/features/profile/pages/EditProfilePage'
 
 export const router = createBrowserRouter([
   {
@@ -31,6 +33,22 @@ export const router = createBrowserRouter([
     element: (
       <ProtectedRoute>
         <StoreHoursPage />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: ROUTES.MYPAGE,
+    element: (
+      <ProtectedRoute>
+        <SellerMyPage />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: ROUTES.EDIT_PROFILE,
+    element: (
+      <ProtectedRoute>
+        <EditProfilePage />
       </ProtectedRoute>
     ),
   },
