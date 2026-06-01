@@ -5,4 +5,7 @@ export const ROUTES = {
 
   STORE_MANAGE: '/store',
   STORE_HOURS: '/store/hours',
+
+  PRODUCTS: '/products',
+  PRODUCT_NEW: '/products/new',
 } as const
