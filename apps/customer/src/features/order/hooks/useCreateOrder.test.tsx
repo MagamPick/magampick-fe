@@ -14,7 +14,15 @@ vi.mock('react-router', async (importOriginal) => {
 const vars: CreateOrderVars = {
   store: { id: 'st-1', name: '브레드샵' },
   items: [
-    { id: 'd1', kind: 'deal', name: '떨이 빵', imageUrl: null, originalPrice: 10000, salePrice: 6000, qty: 1 },
+    {
+      id: 'd1',
+      kind: 'deal',
+      name: '떨이 빵',
+      imageUrl: null,
+      originalPrice: 10000,
+      salePrice: 6000,
+      qty: 1,
+    },
   ],
   pickup: { type: 'asap' },
   memo: '',

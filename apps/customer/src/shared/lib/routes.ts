@@ -27,6 +27,9 @@ export const ROUTES = {
   CHECKOUT: '/checkout',
   ORDER_SUCCESS: '/order/success',
 
+  // 주문 상세 (TabLayout 밖 풀스크린, 프로토타입 50-order-detail)
+  ORDER_DETAIL: (id: string) => `/orders/${id}`,
+
   // 프로필(내 정보) 수정 — 마이페이지에서 진입, TabLayout 밖 풀스크린 (바텀네비 없음)
   EDIT_PROFILE: '/mypage/edit',
 

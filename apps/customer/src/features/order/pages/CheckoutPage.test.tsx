@@ -9,7 +9,15 @@ import { useCartStore } from '@/features/cart/stores/cartStore'
 import type { CartItem } from '@/features/cart/types'
 
 const items: CartItem[] = [
-  { id: 'd1', kind: 'deal', name: '크루아상 세트', imageUrl: null, originalPrice: 10000, salePrice: 6000, qty: 2 },
+  {
+    id: 'd1',
+    kind: 'deal',
+    name: '크루아상 세트',
+    imageUrl: null,
+    originalPrice: 10000,
+    salePrice: 6000,
+    qty: 2,
+  },
 ]
 const fill = () =>
   useCartStore.setState({
@@ -63,7 +71,9 @@ describe('CheckoutPage', () => {
     await user.click(screen.getByRole('checkbox', { name: '결제 동의' }))
     await user.click(screen.getByRole('button', { name: /결제하기/ }))
 
-    expect(await screen.findByText('주문이 완료되었어요', undefined, { timeout: 3000 })).toBeInTheDocument()
+    expect(
+      await screen.findByText('주문이 완료되었어요', undefined, { timeout: 3000 }),
+    ).toBeInTheDocument()
     expect(useCartStore.getState().items).toHaveLength(0)
   })
 })

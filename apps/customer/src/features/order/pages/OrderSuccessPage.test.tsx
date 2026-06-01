@@ -9,7 +9,15 @@ const order: Order = {
   storeId: 'st-1',
   storeName: '브레드샵',
   items: [
-    { id: 'd1', kind: 'deal', name: '크루아상', imageUrl: null, originalPrice: 10000, salePrice: 6000, qty: 2 },
+    {
+      id: 'd1',
+      kind: 'deal',
+      name: '크루아상',
+      imageUrl: null,
+      originalPrice: 10000,
+      salePrice: 6000,
+      qty: 2,
+    },
   ],
   pickup: { type: 'slot', time: '19:00' },
   memo: '',
@@ -26,7 +34,11 @@ function renderSuccess(withState: boolean) {
       { path: '/order/success', element: <OrderSuccessPage /> },
       { path: '/', element: <div>HOME PAGE</div> },
     ],
-    { initialEntries: withState ? [{ pathname: '/order/success', state: { order } }] : ['/order/success'] },
+    {
+      initialEntries: withState
+        ? [{ pathname: '/order/success', state: { order } }]
+        : ['/order/success'],
+    },
   )
   return render(<RouterProvider router={router} />)
 }

@@ -35,7 +35,9 @@ export function OrderSuccessPage() {
         <div className="mx-auto mt-[50px] flex size-[88px] items-center justify-center rounded-full bg-gradient-to-b from-[#3DD15B] to-[#22A341] text-white shadow-[0_14px_30px_rgba(34,163,65,0.28)]">
           <Check className="size-11" strokeWidth={3} aria-hidden />
         </div>
-        <h1 className="mt-[22px] text-[22px] font-extrabold tracking-[-0.5px]">주문이 완료되었어요</h1>
+        <h1 className="mt-[22px] text-[22px] font-extrabold tracking-[-0.5px]">
+          주문이 완료되었어요
+        </h1>
         <p className="mt-3 text-sm leading-[1.65] text-muted-foreground">
           매장에서 아래 픽업 코드를 보여주시면
           <br />
@@ -47,7 +49,9 @@ export function OrderSuccessPage() {
           <p className="mt-2.5 text-[40px] font-extrabold tracking-[10px] text-secondary-foreground tabular-nums">
             {order.pickupCode}
           </p>
-          <p className="mt-2 text-[11.5px] font-semibold text-[#b5764e]">매장 직원에게 보여주세요</p>
+          <p className="mt-2 text-[11.5px] font-semibold text-[#b5764e]">
+            매장 직원에게 보여주세요
+          </p>
         </div>
 
         <div className="mt-[22px] rounded-[14px] border border-border bg-card px-[18px] py-4 text-left">
