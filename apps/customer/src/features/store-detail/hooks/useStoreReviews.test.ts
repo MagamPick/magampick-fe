@@ -13,6 +13,7 @@ const review = (id: string): StoreReview => ({
   rating: 5,
   content: '좋아요',
   createdAt: new Date().toISOString(),
+  products: [],
   photos: [],
   tags: [],
   ownerReply: null,

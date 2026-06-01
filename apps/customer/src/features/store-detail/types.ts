@@ -91,6 +91,14 @@ export const storeReviewSchema = z.object({
   content: z.string(),
   /** 작성일 (M/D 표기용 ISO) */
   createdAt: z.string(),
+  /** 주문 상품들 — 각 상품 상세 링크(kind 로 경로 분기) */
+  products: z.array(
+    z.object({
+      productId: z.string(),
+      kind: z.enum(['deal', 'menu']),
+      name: z.string(),
+    }),
+  ),
   photos: z.array(z.string()),
   tags: z.array(z.string()),
   /** 사장 답글 (없으면 null) */

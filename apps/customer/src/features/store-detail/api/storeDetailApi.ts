@@ -185,6 +185,17 @@ const MENU: StoreMenuItem[] = [
 
 const REVIEW_TAGS = ['#신선해요', '#친절해요', '#재방문', '#양 많아요', '#가성비 좋아요']
 
+/** 리뷰별 주문 상품 (i % 4 순환) — product-detail mock id 와 연결되어 상세 링크가 동작 */
+const REVIEW_PRODUCTS = [
+  [{ productId: 'sd-1', kind: 'deal' as const, name: '크루아상 세트 (4개입)' }],
+  [
+    { productId: 'mn-1', kind: 'menu' as const, name: '플레인 크루아상' },
+    { productId: 'mn-2', kind: 'menu' as const, name: '소금빵' },
+  ],
+  [{ productId: 'mn-4', kind: 'menu' as const, name: '아메리카노' }],
+  [{ productId: 'sd-3', kind: 'deal' as const, name: '오늘의 샌드위치' }],
+]
+
 const REVIEWS: StoreReview[] = Array.from({ length: 12 }, (_, i) => {
   const rating = [5, 5, 5, 4, 5, 4, 5, 3, 5, 4, 5, 2][i]
   return {
@@ -198,6 +209,7 @@ const REVIEWS: StoreReview[] = Array.from({ length: 12 }, (_, i) => {
       '가까워서 자주 이용하는데 늘 만족스럽습니다.',
     ][i % 4],
     createdAt: daysAgo(i + 1),
+    products: REVIEW_PRODUCTS[i % 4],
     photos:
       i % 3 === 0
         ? [UNSPLASH('photo-1555507036-ab1f4038808a'), UNSPLASH('photo-1509440159596-0249088772ff')]

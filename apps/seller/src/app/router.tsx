@@ -12,6 +12,7 @@ import { ProductListPage } from '@/features/product/pages/ProductListPage'
 import { ProductCreatePage } from '@/features/product/pages/ProductCreatePage'
 import { SellerMyPage } from '@/features/profile/pages/SellerMyPage'
 import { EditProfilePage } from '@/features/profile/pages/EditProfilePage'
+import { ReviewManagePage } from '@/features/reviews/pages/ReviewManagePage'
 
 export const router = createBrowserRouter([
   {
@@ -51,6 +52,14 @@ export const router = createBrowserRouter([
     element: (
       <ProtectedRoute>
         <ProductCreatePage />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: ROUTES.REVIEWS,
+    element: (
+      <ProtectedRoute>
+        <ReviewManagePage />
       </ProtectedRoute>
     ),
   },

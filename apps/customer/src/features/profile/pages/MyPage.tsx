@@ -54,7 +54,7 @@ function MyPageContent() {
 
       <MenuGroup title="활동">
         <MenuRow icon="❤️" label="찜한 가게" to={ROUTES.FAVS} />
-        <MenuRow icon="✍️" label="내가 쓴 리뷰" onClick={soon} />
+        <MenuRow icon="✍️" label="내가 쓴 리뷰" to={ROUTES.MY_REVIEWS} />
       </MenuGroup>
 
       <MenuGroup title="설정 · 지원">

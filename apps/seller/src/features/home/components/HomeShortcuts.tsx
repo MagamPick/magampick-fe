@@ -6,7 +6,7 @@ import { ROUTES } from '@/shared/lib/routes'
 const ROWS: { icon: string; label: string; value: string; to?: string }[] = [
   { icon: '🏪', label: '매장 정보 · 영업시간', value: '영업시간 설정', to: ROUTES.STORE_MANAGE },
   { icon: '🍽️', label: '메뉴 관리', value: '', to: ROUTES.PRODUCTS },
-  { icon: '💬', label: '리뷰 관리', value: '★ 4.8 · 412' },
+  { icon: '💬', label: '리뷰 관리', value: '★ 4.8 · 412', to: ROUTES.REVIEWS },
 ]
 
 export function HomeShortcuts() {

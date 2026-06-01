@@ -60,7 +60,7 @@ function SellerMyPageContent() {
 
       <MenuGroup title="매장 관리">
         <MenuRow icon="🏪" label="보유 매장" to={ROUTES.STORE_MANAGE} />
-        <MenuRow icon="💬" label="리뷰 관리" onClick={soon} />
+        <MenuRow icon="💬" label="리뷰 관리" to={ROUTES.REVIEWS} />
         <MenuRow icon="💰" label="정산 내역" onClick={soon} />
       </MenuGroup>
 
