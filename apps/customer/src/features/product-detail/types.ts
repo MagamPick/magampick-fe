@@ -40,6 +40,11 @@ const productCommon = {
   rating: z.number(),
   /** 상품 단위 리뷰 개수 */
   reviewCount: z.number(),
+  /**
+   * 매장 마감 시각 (HH:mm) — 장바구니 픽업 시간 슬롯(영업 종료 전 15분 단위) 생성용.
+   * 담기 시 cart 매장 컨텍스트로 캡처. mock 은 항상 주입하며, BE 연동 시 응답에 포함.
+   */
+  closingTime: z.string().optional(),
 }
 
 /** 일반 상품(menu) — 정가 + 판매 여부 */

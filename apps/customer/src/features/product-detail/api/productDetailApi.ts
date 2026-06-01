@@ -215,9 +215,20 @@ function defaultProduct(kind: ProductKind, id: string): ProductDetail {
   }
 }
 
+/** 매장별 마감 시각(HH:mm) — 장바구니 픽업 슬롯 생성용. 알 수 없는 매장은 기본 21:00 */
+const STORE_CLOSING: Record<string, string> = {
+  'st-1': '21:00',
+  'st-break': '20:00',
+}
+const closingFor = (storeId: string) => STORE_CLOSING[storeId] ?? '21:00'
+
 export const productDetailApi = {
   async getProductDetail(kind: ProductKind, id: string): Promise<ProductDetail> {
     await delay(350)
-    return productDetailSchema.parse(PRODUCTS[id] ?? defaultProduct(kind, id))
+    const base = PRODUCTS[id] ?? defaultProduct(kind, id)
+    return productDetailSchema.parse({
+      ...base,
+      closingTime: base.closingTime ?? closingFor(base.storeId),
+    })
   },
 }

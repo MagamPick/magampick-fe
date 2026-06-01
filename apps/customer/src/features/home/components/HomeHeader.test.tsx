@@ -46,10 +46,8 @@ describe('HomeHeader', () => {
     expect(await screen.findByText('알림은 준비 중이에요.')).toBeInTheDocument()
   })
 
-  it('장바구니_탭하면_준비중_안내', async () => {
-    const user = userEvent.setup()
+  it('장바구니_탭하면_장바구니_화면으로_연결', () => {
     renderHeader()
-    await user.click(screen.getByRole('button', { name: '장바구니' }))
-    expect(await screen.findByText('장바구니는 준비 중이에요.')).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: '장바구니' })).toHaveAttribute('href', ROUTES.CART)
   })
 })
