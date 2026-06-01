@@ -1,11 +1,15 @@
+import { discountRate } from '../lib/clearanceStatus'
+
 /**
  * 마감 할인(clearance) 카드 — 프레젠테이션 컴포넌트 (프로토타입 DEALS / deal-card).
- * 홈 요약 리스트 + 추후 마감 할인 탭에서 재사용. 조회/동작은 각 기능 PR(노션 명세)에서.
+ * 홈 요약 리스트 + 마감 할인 탭에서 재사용. 조회/동작은 각 기능 PR(노션 명세)에서.
  */
 export interface DealCardProps {
   name: string
-  /** mock 썸네일 이모지 (실연동: 이미지 URL) */
+  /** mock 썸네일 이모지 (사진 없을 때 폴백) */
   thumbnail?: string
+  /** 대표 사진 URL — 있으면 이모지 대신 표시 */
+  imageUrl?: string
   /** 정가 (원) */
   originalPrice: number
   /** 할인가 (원) */
@@ -25,6 +29,7 @@ const won = (n: number) => `₩${n.toLocaleString('ko-KR')}`
 export function DealCard({
   name,
   thumbnail = '🍞',
+  imageUrl,
   originalPrice,
   salePrice,
   soldCount,
@@ -32,15 +37,15 @@ export function DealCard({
   closeTime,
   status = 'live',
 }: DealCardProps) {
-  const rate = Math.round((1 - salePrice / originalPrice) * 100)
+  const rate = discountRate(originalPrice, salePrice)
   const pct = totalQty > 0 ? Math.round((soldCount / totalQty) * 100) : 0
   const closeText =
     status === 'ended' ? '마감 완료' : status === 'soon' ? '곧 마감' : `마감 ${closeTime}`
 
   return (
     <div className="flex gap-3 rounded-[14px] border border-border bg-card p-3">
-      <span className="flex size-16 shrink-0 items-center justify-center rounded-[10px] bg-secondary text-[30px]">
-        {thumbnail}
+      <span className="flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-[10px] bg-secondary text-[30px]">
+        {imageUrl ? <img src={imageUrl} alt={name} className="size-full object-cover" /> : thumbnail}
       </span>
       <div className="min-w-0 flex-1">
         <p className="truncate text-[14px] font-bold text-foreground">{name}</p>

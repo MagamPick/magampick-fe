@@ -1,6 +1,6 @@
 import { ApiError } from '@/shared/lib/apiError'
 import { PRODUCT_CATEGORIES } from '../types'
-import type { CreateProductPayload, Product } from '../types'
+import type { CreateProductPayload, Product, UpdateProductPayload } from '../types'
 
 /**
  * ⚠️ Mock 스텁 — 일반 상품 BE(BE 완료 NO) 미구현. in-memory 로 상태 유지.
@@ -36,14 +36,30 @@ export function resetProductState() {
   seq = 100
 }
 
+/**
+ * 내부 조회(지연 없음) — 떨이 join 등 교차 도메인 mock 합성용. soft delete 제외.
+ * UI 는 직접 쓰지 말 것(지연 있는 조회 훅 사용). 실연동 시 제거.
+ */
+export function peekProduct(id: string): Product | undefined {
+  return products.find((p) => p.id === id && !p.deletedAt)
+}
+
 export const productApi = {
-  /** 매장 상품 목록 — 등록 최신순(신규가 상단). soft delete 는 수정/삭제 기능 소관 */
+  /** 매장 상품 목록 — 등록 최신순(신규가 상단). soft delete 제외 */
   async listProducts(storeId: string): Promise<Product[]> {
     await delay(300)
     return products
-      .filter((p) => p.storeId === storeId)
+      .filter((p) => p.storeId === storeId && !p.deletedAt)
       .reverse()
       .map((p) => ({ ...p }))
+  },
+
+  /** 상품 단건 조회 (상세·수정 화면). soft delete 제외 */
+  async getProduct(id: string): Promise<Product> {
+    await delay(300)
+    const product = products.find((p) => p.id === id && !p.deletedAt)
+    if (!product) throw new ApiError(404, 'PRODUCT_NOT_FOUND', '상품을 찾을 수 없어요')
+    return { ...product }
   },
 
   /** 상품 등록 — 서버측 미러 검증 후 row 생성 (수량 없음, 자동 승인) */
@@ -73,5 +89,42 @@ export const productApi = {
     }
     products.push(product)
     return { ...product }
+  },
+
+  /** 상품 수정 — 등록과 동일 검증. 사진은 imageDataUrl 제공 시에만 교체(미제공 시 기존 유지) */
+  async updateProduct(id: string, payload: UpdateProductPayload): Promise<Product> {
+    await delay(400)
+    const product = products.find((p) => p.id === id && !p.deletedAt)
+    if (!product) throw new ApiError(404, 'PRODUCT_NOT_FOUND', '상품을 찾을 수 없어요')
+
+    const name = payload.name.trim()
+    if (!name) {
+      throw new ApiError(422, 'PRODUCT_INVALID_NAME', '상품명을 입력해 주세요')
+    }
+    if (!PRODUCT_CATEGORIES.includes(payload.category)) {
+      throw new ApiError(422, 'PRODUCT_INVALID_CATEGORY', '카테고리를 선택해 주세요')
+    }
+    if (!Number.isInteger(payload.price) || payload.price < 0) {
+      throw new ApiError(422, 'PRODUCT_INVALID_PRICE', '정상가는 0 이상의 정수여야 해요')
+    }
+
+    product.name = name
+    product.category = payload.category
+    product.price = payload.price
+    product.description = payload.description?.trim() || undefined
+    product.onSale = payload.onSale
+    if (payload.imageDataUrl !== undefined) product.imageUrl = payload.imageDataUrl
+    return { ...product }
+  },
+
+  /**
+   * 상품 삭제 — soft delete (`deletedAt` 기록). 목록·조회에서 제외, 복원 UI 없음.
+   * 진행 중인 떨이 자동 마감은 호출 측(useDeleteProduct)이 clearance 와 함께 처리.
+   */
+  async deleteProduct(id: string): Promise<void> {
+    await delay(400)
+    const product = products.find((p) => p.id === id && !p.deletedAt)
+    if (!product) throw new ApiError(404, 'PRODUCT_NOT_FOUND', '상품을 찾을 수 없어요')
+    product.deletedAt = new Date().toISOString()
   },
 }

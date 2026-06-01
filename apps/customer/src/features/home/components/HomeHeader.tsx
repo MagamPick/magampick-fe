@@ -6,7 +6,7 @@ import { useHomeAddress } from '../hooks/useHomeAddress'
 
 /**
  * 홈 상단 헤더 — 기본 주소지(피드 기준점) + 알림/장바구니. 스크롤해도 상단 고정.
- * 주소지 칩을 탭하면 주소 설정(/addresses)으로 진입. 알림·장바구니는 별도 기능(미구현)이라 탭 시 "준비 중" 안내.
+ * 주소지 칩 → 주소 설정(/addresses), 장바구니 → /cart. 알림은 미구현이라 탭 시 "준비 중" 안내.
  */
 export function HomeHeader() {
   const { show } = useComingSoon()
@@ -34,14 +34,13 @@ export function HomeHeader() {
         >
           <Bell className="size-[22px]" aria-hidden />
         </button>
-        <button
-          type="button"
+        <Link
+          to={ROUTES.CART}
           aria-label="장바구니"
-          onClick={() => show('장바구니는 준비 중이에요.')}
           className="inline-flex size-11 items-center justify-center text-foreground"
         >
           <ShoppingCart className="size-[22px]" aria-hidden />
-        </button>
+        </Link>
       </div>
     </div>
   )

@@ -29,6 +29,8 @@ export interface Product {
   onSale: boolean
   /** 대표 사진 — mock dataURL. 없으면 카드에서 이모지 폴백 */
   imageUrl?: string
+  /** soft delete 시각 (ISO). 있으면 목록·조회 제외 (노션: 일반 상품 수정/삭제) */
+  deletedAt?: string | null
 }
 
 /**
@@ -61,3 +63,9 @@ export interface CreateProductPayload {
   onSale: boolean
   imageDataUrl?: string
 }
+
+/**
+ * 상품 수정 페이로드 (노션: 일반 상품 수정/삭제). 등록과 동일 필드.
+ * `imageDataUrl` 은 사진 교체 시에만 — 없으면 기존 사진 유지.
+ */
+export type UpdateProductPayload = Omit<CreateProductPayload, 'storeId'>

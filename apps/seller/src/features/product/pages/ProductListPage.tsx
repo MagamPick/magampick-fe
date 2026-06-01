@@ -1,15 +1,19 @@
 import { useState } from 'react'
-import { ChevronLeft } from 'lucide-react'
-import { Link, useNavigate } from 'react-router'
+import { Link, useSearchParams } from 'react-router'
 import { cn } from '@/shared/lib/utils'
 import { ROUTES } from '@/shared/lib/routes'
+import { ScreenContainer } from '@/shared/components/ScreenContainer'
 import { useCurrentStoreStore } from '@/features/store/stores/currentStoreStore'
+import { useClearances } from '@/features/clearance/hooks/useClearances'
+import { DealCard } from '@/features/clearance/components/DealCard'
+import { toDealCardStatus } from '@/features/clearance/lib/clearanceStatus'
 import { useProducts } from '../hooks/useProducts'
 import { ProductCard } from '../components/ProductCard'
 import { PRODUCT_CATEGORIES } from '../types'
 import type { ProductCategory } from '../types'
 
 type CategoryFilter = ProductCategory | 'all'
+type Tab = 'normal' | 'deal'
 
 const FILTERS: { value: CategoryFilter; label: string }[] = [
   { value: 'all', label: '전체' },
@@ -17,90 +21,200 @@ const FILTERS: { value: CategoryFilter; label: string }[] = [
 ]
 
 /**
- * 상품 관리 — 현재 매장의 일반 상품 목록(읽기전용) + 등록 진입.
- * 수정/삭제/판매 토글은 별도 '일반 상품 수정/삭제' 기능. 마감할인 탭은 범위 외.
+ * 상품 관리 — 일반 상품 / 마감 할인 세그먼트 탭 (프로토타입 22-products).
+ * - 일반 상품: 목록 + 카테고리 필터, 카드 탭 → 상세(수정/삭제·떨이 전환 진입).
+ * - 마감 할인: 진행중 / 오늘 마감된 떨이 목록, 카드 탭 → 떨이 상세.
+ * `?tab=deal` 로 마감 할인 탭을 바로 열 수 있다(홈 "모두 보기" 등).
  */
 export function ProductListPage() {
-  const navigate = useNavigate()
   const storeId = useCurrentStoreStore((s) => s.selectedStoreId)
-  const { data: products, isLoading } = useProducts(storeId)
+  const [searchParams, setSearchParams] = useSearchParams()
+  const tab: Tab = searchParams.get('tab') === 'deal' ? 'deal' : 'normal'
+  const setTab = (next: Tab) => setSearchParams(next === 'deal' ? { tab: 'deal' } : {}, { replace: true })
+
+  const { data: products, isLoading: loadingProducts } = useProducts(storeId)
+  const { data: clearances, isLoading: loadingClearances } = useClearances(storeId)
+
   const [filter, setFilter] = useState<CategoryFilter>('all')
 
-  const visible = (products ?? []).filter((p) => filter === 'all' || p.category === filter)
-  const isEmpty = !isLoading && visible.length === 0
+  const activeProductIds = new Set(
+    (clearances ?? []).filter((c) => c.status === 'ACTIVE').map((c) => c.productId),
+  )
+  const visibleProducts = (products ?? []).filter(
+    (p) => filter === 'all' || p.category === filter,
+  )
+  const productsEmpty = !loadingProducts && visibleProducts.length === 0
+
+  const liveDeals = (clearances ?? []).filter((c) => c.status === 'ACTIVE')
+  const endedDeals = (clearances ?? []).filter((c) => c.status !== 'ACTIVE')
 
   return (
-    <div className="mx-auto flex min-h-screen max-w-md flex-col bg-background pb-10">
-      <header className="sticky top-0 z-10 flex h-[52px] items-center gap-1 border-b border-border bg-card px-2">
-        <button
-          type="button"
-          aria-label="뒤로 가기"
-          onClick={() => navigate(ROUTES.HOME)}
-          className="flex size-10 items-center justify-center rounded-full text-foreground active:bg-muted"
-        >
-          <ChevronLeft className="size-[22px]" />
-        </button>
+    <ScreenContainer variant="tab">
+      <header className="sticky top-0 z-10 flex h-[52px] items-center border-b border-border bg-card px-5">
         <h1 className="text-[16px] font-bold">상품 관리</h1>
       </header>
 
-      <Link
-        to={ROUTES.PRODUCT_NEW}
-        className="mx-5 mt-4 mb-1 flex h-12 items-center justify-center gap-1.5 rounded-[12px] border-[1.5px] border-dashed border-primary text-[14px] font-bold text-primary transition active:bg-secondary"
-      >
-        <span aria-hidden>➕</span> 상품 등록하기
-      </Link>
-
-      {/* 카테고리 필터 */}
-      <div className="flex gap-1.5 overflow-x-auto px-5 pt-3 pb-1 [&::-webkit-scrollbar]:hidden">
-        {FILTERS.map((f) => {
-          const on = filter === f.value
+      {/* 세그먼트 탭 */}
+      <div className="flex border-b border-border bg-card" role="tablist" aria-label="상품 종류">
+        {(
+          [
+            { value: 'normal', label: '일반 상품' },
+            { value: 'deal', label: '마감 할인' },
+          ] as const
+        ).map((t) => {
+          const on = tab === t.value
           return (
             <button
-              key={f.value}
+              key={t.value}
               type="button"
-              aria-pressed={on}
-              onClick={() => setFilter(f.value)}
+              role="tab"
+              aria-selected={on}
+              onClick={() => setTab(t.value)}
               className={cn(
-                'shrink-0 rounded-full border-[1.5px] px-4 py-2 text-[13px] transition',
+                'flex-1 border-b-2 py-3 text-[14px] transition',
                 on
-                  ? 'border-primary bg-secondary font-bold text-secondary-foreground'
-                  : 'border-border bg-card text-muted-foreground',
+                  ? 'border-primary font-bold text-foreground'
+                  : 'border-transparent font-semibold text-muted-foreground',
               )}
             >
-              {f.label}
+              {t.label}
             </button>
           )
         })}
       </div>
 
-      {/* 목록 */}
-      <div className="mt-2 flex flex-col gap-2 px-5">
-        {isLoading && (
-          <p className="py-16 text-center text-[14px] text-muted-foreground">불러오는 중…</p>
-        )}
+      {/* 일반 상품 패널 */}
+      {tab === 'normal' && (
+        <>
+          <Link
+            to={ROUTES.PRODUCT_NEW}
+            className="mx-5 mt-4 mb-1 flex h-12 items-center justify-center gap-1.5 rounded-[12px] border-[1.5px] border-dashed border-primary text-[14px] font-bold text-primary transition active:bg-secondary"
+          >
+            <span aria-hidden>➕</span> 상품 등록하기
+          </Link>
 
-        {isEmpty && (
-          <div className="px-8 py-16 text-center">
-            <p className="text-[40px]">🍞</p>
-            <p className="mt-3 whitespace-pre-line text-[14px] leading-relaxed text-muted-foreground">
-              {(products?.length ?? 0) === 0
-                ? '아직 등록된 상품이 없어요.\n첫 상품을 등록해 보세요.'
-                : '이 카테고리에는 상품이 없어요.'}
-            </p>
+          <div className="flex gap-1.5 overflow-x-auto px-5 pt-3 pb-1 [&::-webkit-scrollbar]:hidden">
+            {FILTERS.map((f) => {
+              const on = filter === f.value
+              return (
+                <button
+                  key={f.value}
+                  type="button"
+                  aria-pressed={on}
+                  onClick={() => setFilter(f.value)}
+                  className={cn(
+                    'shrink-0 rounded-full border-[1.5px] px-4 py-2 text-[13px] transition',
+                    on
+                      ? 'border-primary bg-secondary font-bold text-secondary-foreground'
+                      : 'border-border bg-card text-muted-foreground',
+                  )}
+                >
+                  {f.label}
+                </button>
+              )
+            })}
           </div>
-        )}
 
-        {visible.map((p) => (
-          <ProductCard
-            key={p.id}
-            name={p.name}
-            category={p.category}
-            price={p.price}
-            imageUrl={p.imageUrl}
-            status={p.onSale ? 'onSale' : 'offSale'}
-          />
-        ))}
-      </div>
-    </div>
+          <div className="mt-2 flex flex-col gap-2 px-5">
+            {loadingProducts && (
+              <p className="py-16 text-center text-[14px] text-muted-foreground">불러오는 중…</p>
+            )}
+
+            {productsEmpty && (
+              <div className="px-8 py-16 text-center">
+                <p className="text-[40px]">🍞</p>
+                <p className="mt-3 whitespace-pre-line text-[14px] leading-relaxed text-muted-foreground">
+                  {(products?.length ?? 0) === 0
+                    ? '아직 등록된 상품이 없어요.\n첫 상품을 등록해 보세요.'
+                    : '이 카테고리에는 상품이 없어요.'}
+                </p>
+              </div>
+            )}
+
+            {visibleProducts.map((p) => (
+              <Link key={p.id} to={ROUTES.PRODUCT_DETAIL(p.id)} className="block">
+                <ProductCard
+                  name={p.name}
+                  category={p.category}
+                  price={p.price}
+                  imageUrl={p.imageUrl}
+                  status={p.onSale ? 'onSale' : 'offSale'}
+                  hasDeal={activeProductIds.has(p.id)}
+                />
+              </Link>
+            ))}
+          </div>
+        </>
+      )}
+
+      {/* 마감 할인 패널 */}
+      {tab === 'deal' && (
+        <>
+          <Link
+            to={ROUTES.CLEARANCE_NEW}
+            className="mx-5 mt-4 mb-1 flex h-12 items-center justify-center gap-1.5 rounded-[12px] border-[1.5px] border-dashed border-primary text-[14px] font-bold text-primary transition active:bg-secondary"
+          >
+            <span aria-hidden>🔥</span> 마감 할인 등록하기
+          </Link>
+
+          {loadingClearances && (
+            <p className="py-16 text-center text-[14px] text-muted-foreground">불러오는 중…</p>
+          )}
+
+          {!loadingClearances && liveDeals.length === 0 && endedDeals.length === 0 && (
+            <div className="px-8 py-16 text-center">
+              <p className="text-[40px]">🔥</p>
+              <p className="mt-3 whitespace-pre-line text-[14px] leading-relaxed text-muted-foreground">
+                진행 중인 마감 할인이 없어요.{'\n'}판매 중인 상품을 마감 할인으로 등록해 보세요.
+              </p>
+            </div>
+          )}
+
+          {liveDeals.length > 0 && (
+            <section className="mt-4 px-5">
+              <h2 className="mb-2 text-[13px] font-bold text-muted-foreground">진행중 마감 할인</h2>
+              <div className="flex flex-col gap-2">
+                {liveDeals.map((c) => (
+                  <Link key={c.id} to={ROUTES.CLEARANCE_DETAIL(c.id)} className="block">
+                    <DealCard
+                      name={c.productName}
+                      imageUrl={c.productImageUrl}
+                      originalPrice={c.originalPrice}
+                      salePrice={c.salePrice}
+                      soldCount={c.soldQty}
+                      totalQty={c.totalQty}
+                      closeTime={c.closeTime}
+                      status={toDealCardStatus(c.status)}
+                    />
+                  </Link>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {endedDeals.length > 0 && (
+            <section className="mt-6 px-5">
+              <h2 className="mb-2 text-[13px] font-bold text-muted-foreground">오늘 마감된 마감 할인</h2>
+              <div className="flex flex-col gap-2">
+                {endedDeals.map((c) => (
+                  <Link key={c.id} to={ROUTES.CLEARANCE_DETAIL(c.id)} className="block opacity-60">
+                    <DealCard
+                      name={c.productName}
+                      imageUrl={c.productImageUrl}
+                      originalPrice={c.originalPrice}
+                      salePrice={c.salePrice}
+                      soldCount={c.soldQty}
+                      totalQty={c.totalQty}
+                      closeTime={c.closeTime}
+                      status={toDealCardStatus(c.status)}
+                    />
+                  </Link>
+                ))}
+              </div>
+            </section>
+          )}
+        </>
+      )}
+    </ScreenContainer>
   )
 }
