@@ -10,6 +10,10 @@ import { StoreManagePage } from '@/features/store/pages/StoreManagePage'
 import { StoreHoursPage } from '@/features/store/pages/StoreHoursPage'
 import { ProductListPage } from '@/features/product/pages/ProductListPage'
 import { ProductCreatePage } from '@/features/product/pages/ProductCreatePage'
+import { ProductDetailPage } from '@/features/product/pages/ProductDetailPage'
+import { ProductEditPage } from '@/features/product/pages/ProductEditPage'
+import { ClearanceCreatePage } from '@/features/clearance/pages/ClearanceCreatePage'
+import { ClearanceDetailPage } from '@/features/clearance/pages/ClearanceDetailPage'
 import { SellerMyPage } from '@/features/profile/pages/SellerMyPage'
 import { EditProfilePage } from '@/features/profile/pages/EditProfilePage'
 
@@ -51,6 +55,38 @@ export const router = createBrowserRouter([
     element: (
       <ProtectedRoute>
         <ProductCreatePage />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: ROUTES.PRODUCT_EDIT(':id'),
+    element: (
+      <ProtectedRoute>
+        <ProductEditPage />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: ROUTES.PRODUCT_DETAIL(':id'),
+    element: (
+      <ProtectedRoute>
+        <ProductDetailPage />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: ROUTES.CLEARANCE_NEW,
+    element: (
+      <ProtectedRoute>
+        <ClearanceCreatePage />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: ROUTES.CLEARANCE_DETAIL(':id'),
+    element: (
+      <ProtectedRoute>
+        <ClearanceDetailPage />
       </ProtectedRoute>
     ),
   },
