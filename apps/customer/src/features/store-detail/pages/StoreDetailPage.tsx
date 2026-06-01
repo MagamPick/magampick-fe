@@ -148,7 +148,7 @@ function StoreDetailView({ storeId }: { storeId: string }) {
           </div>
         </ScreenContainer>
       </PullToRefresh>
-      <CartBar count={0} />
+      <CartBar />
     </>
   )
 }
