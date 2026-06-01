@@ -2,9 +2,8 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router'
 import { ChevronLeft } from 'lucide-react'
 import { ScreenContainer } from '@/shared/components/ScreenContainer'
-import { ComingSoonProvider } from '@/shared/components/ComingSoonToast'
-import { useComingSoon } from '@/shared/hooks/useComingSoon'
 import { Button } from '@/shared/components/ui/button'
+import { ROUTES } from '@/shared/lib/routes'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -26,20 +25,10 @@ const won = (n: number) => `${n.toLocaleString('ko-KR')}원`
 
 /**
  * 장바구니 (노션: 장바구니 관리, 프로토타입 40-cart).
- * 단일 매장 그룹 + 수량/삭제 + 픽업 시간 선택 + 금액 요약.
- * 결제하기는 Step 2(주문 생성/결제)에서 연결 — 현재는 "준비 중" 안내.
+ * 단일 매장 그룹 + 수량/삭제 + 픽업 시간 선택 + 금액 요약. 결제하기 → 결제 화면(주문 생성).
  */
 export function CartPage() {
-  return (
-    <ComingSoonProvider>
-      <CartView />
-    </ComingSoonProvider>
-  )
-}
-
-function CartView() {
   const navigate = useNavigate()
-  const { show } = useComingSoon()
   const store = useCartStore((s) => s.store)
   const items = useCartStore((s) => s.items)
   const clearCart = useCartStore((s) => s.clearCart)
@@ -100,7 +89,7 @@ function CartView() {
         <div className="fixed bottom-0 left-1/2 z-40 w-full max-w-md -translate-x-1/2 border-t border-border bg-card px-5 pb-[calc(12px+env(safe-area-inset-bottom,24px))] pt-3">
           <Button
             type="button"
-            onClick={() => show('결제 기능은 준비 중이에요.')}
+            onClick={() => navigate(ROUTES.CHECKOUT)}
             className="flex h-[54px] w-full items-center justify-center gap-2 rounded-[12px] text-base font-bold"
           >
             결제하기 <span>{won(payTotal)}</span>

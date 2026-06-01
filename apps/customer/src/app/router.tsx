@@ -19,6 +19,8 @@ import { EditProfilePage } from '@/features/profile/pages/EditProfilePage'
 import { AddressListPage } from '@/features/addresses/pages/AddressListPage'
 import { AddressFormPage } from '@/features/addresses/pages/AddressFormPage'
 import { CartPage } from '@/features/cart/pages/CartPage'
+import { CheckoutPage } from '@/features/order/pages/CheckoutPage'
+import { OrderSuccessPage } from '@/features/order/pages/OrderSuccessPage'
 import { NotFoundPage } from '@/shared/components/NotFoundPage'
 import { ROUTES } from '@/shared/lib/routes'
 
@@ -74,12 +76,28 @@ export const router = createBrowserRouter([
       </ProtectedRoute>
     ),
   },
-  // 장바구니 — 탭 밖 독립 보호 라우트(바텀네비 없음, 프로토타입 40-cart)
+  // 장바구니 / 결제 / 주문 완료 — 탭 밖 독립 보호 라우트(바텀네비 없음, 프로토타입 40~42)
   {
     path: ROUTES.CART,
     element: (
       <ProtectedRoute>
         <CartPage />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: ROUTES.CHECKOUT,
+    element: (
+      <ProtectedRoute>
+        <CheckoutPage />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: ROUTES.ORDER_SUCCESS,
+    element: (
+      <ProtectedRoute>
+        <OrderSuccessPage />
       </ProtectedRoute>
     ),
   },

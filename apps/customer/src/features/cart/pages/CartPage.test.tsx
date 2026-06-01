@@ -21,7 +21,13 @@ const fill = () =>
 const empty = () => useCartStore.setState({ store: null, items: [], pickup: { type: 'asap' } })
 
 function renderCart() {
-  const router = createMemoryRouter([{ path: '/', element: <CartPage /> }], { initialEntries: ['/'] })
+  const router = createMemoryRouter(
+    [
+      { path: '/', element: <CartPage /> },
+      { path: '/checkout', element: <div>CHECKOUT PAGE</div> },
+    ],
+    { initialEntries: ['/'] },
+  )
   return render(<RouterProvider router={router} />)
 }
 
@@ -44,12 +50,12 @@ describe('CartPage', () => {
     expect(screen.getByRole('button', { name: /결제하기/ })).toHaveTextContent('16,000원')
   })
 
-  it('결제하기는_준비중_안내', async () => {
+  it('결제하기_탭하면_결제화면으로_이동', async () => {
     fill()
     const user = userEvent.setup()
     renderCart()
     await user.click(screen.getByRole('button', { name: /결제하기/ }))
-    expect(await screen.findByText('결제 기능은 준비 중이에요.')).toBeInTheDocument()
+    expect(screen.getByText('CHECKOUT PAGE')).toBeInTheDocument()
   })
 
   it('전체삭제_확인후_장바구니_비움', async () => {
