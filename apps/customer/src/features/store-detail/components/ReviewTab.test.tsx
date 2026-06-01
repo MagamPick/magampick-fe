@@ -1,5 +1,6 @@
 import { describe, it, expect, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
+import { MemoryRouter } from 'react-router'
 import { ReviewTab } from './ReviewTab'
 import { useReviewSummary } from '../hooks/useReviewSummary'
 import { useStoreReviews } from '../hooks/useStoreReviews'
@@ -26,6 +27,7 @@ const review: StoreReview = {
   rating: 5,
   content: '빵도 신선하고 좋았어요.',
   createdAt: new Date('2026-05-20').toISOString(),
+  products: [{ productId: 'sd-1', kind: 'deal', name: '크루아상 세트' }],
   photos: [],
   tags: ['#신선해요'],
   ownerReply: '감사해요. 또 들러주세요!',
@@ -54,7 +56,11 @@ describe('ReviewTab', () => {
   it('요약_평점_분포_그리고_리뷰카드_사장답글_노출', () => {
     mockSummary(summary)
     mockReviews([review])
-    render(<ReviewTab storeId="st-1" />)
+    render(
+      <MemoryRouter>
+        <ReviewTab storeId="st-1" />
+      </MemoryRouter>,
+    )
 
     expect(screen.getByText('4.8')).toBeInTheDocument()
     expect(screen.getByText('리뷰 412개')).toBeInTheDocument()
@@ -65,7 +71,11 @@ describe('ReviewTab', () => {
   it('리뷰_0건이면_요약은_나오고_빈안내', () => {
     mockSummary({ average: 0, count: 0, distribution: summary.distribution })
     mockReviews([])
-    render(<ReviewTab storeId="st-1" />)
+    render(
+      <MemoryRouter>
+        <ReviewTab storeId="st-1" />
+      </MemoryRouter>,
+    )
 
     expect(screen.getByText('리뷰 0개')).toBeInTheDocument()
     expect(screen.getByText('아직 등록된 리뷰가 없어요.')).toBeInTheDocument()

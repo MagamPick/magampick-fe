@@ -16,6 +16,8 @@ import { FavoritesPage } from '@/features/favorites/pages/FavoritesPage'
 import { OrdersTab } from '@/shared/components/tabs/OrdersTab'
 import { MyPage } from '@/features/profile/pages/MyPage'
 import { EditProfilePage } from '@/features/profile/pages/EditProfilePage'
+import { MyReviewsPage } from '@/features/reviews/pages/MyReviewsPage'
+import { ReviewWritePage } from '@/features/reviews/pages/ReviewWritePage'
 import { AddressListPage } from '@/features/addresses/pages/AddressListPage'
 import { AddressFormPage } from '@/features/addresses/pages/AddressFormPage'
 import { CartPage } from '@/features/cart/pages/CartPage'
@@ -48,6 +50,31 @@ export const router = createBrowserRouter([
     element: (
       <ProtectedRoute>
         <EditProfilePage />
+      </ProtectedRoute>
+    ),
+  },
+  // 리뷰 — 내가 쓴 리뷰 목록 + 작성/수정 (TabLayout 밖 풀스크린). 작성/수정은 ReviewWritePage 겸용
+  {
+    path: ROUTES.MY_REVIEWS,
+    element: (
+      <ProtectedRoute>
+        <MyReviewsPage />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: '/reviews/write/:orderId',
+    element: (
+      <ProtectedRoute>
+        <ReviewWritePage />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: '/reviews/:reviewId/edit',
+    element: (
+      <ProtectedRoute>
+        <ReviewWritePage />
       </ProtectedRoute>
     ),
   },

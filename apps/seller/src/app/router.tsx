@@ -19,6 +19,7 @@ import { ClearanceCreatePage } from '@/features/clearance/pages/ClearanceCreateP
 import { ClearanceDetailPage } from '@/features/clearance/pages/ClearanceDetailPage'
 import { SellerMyPage } from '@/features/profile/pages/SellerMyPage'
 import { EditProfilePage } from '@/features/profile/pages/EditProfilePage'
+import { ReviewManagePage } from '@/features/reviews/pages/ReviewManagePage'
 
 export const router = createBrowserRouter([
   {
@@ -91,6 +92,14 @@ export const router = createBrowserRouter([
     element: (
       <ProtectedRoute>
         <ClearanceDetailPage />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: ROUTES.REVIEWS,
+    element: (
+      <ProtectedRoute>
+        <ReviewManagePage />
       </ProtectedRoute>
     ),
   },

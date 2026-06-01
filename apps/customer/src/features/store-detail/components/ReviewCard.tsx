@@ -1,3 +1,5 @@
+import { Link } from 'react-router'
+import { ROUTES } from '@/shared/lib/routes'
 import type { StoreReview } from '../types'
 
 function starString(rating: number) {
@@ -21,6 +23,21 @@ export function ReviewCard({ review }: { review: StoreReview }) {
         </span>
         <span className="ml-auto text-[11px] text-[#bdbdbd]">{formatDate(review.createdAt)}</span>
       </div>
+
+      {review.products.length > 0 && (
+        <div className="mt-2 flex flex-wrap gap-1.5">
+          {review.products.map((item) => (
+            <Link
+              key={item.productId}
+              to={ROUTES.PRODUCT_DETAIL(item.kind, item.productId)}
+              className="rounded-md bg-background px-2.5 py-1 text-[12px] font-bold text-foreground transition active:scale-[0.97]"
+            >
+              {item.name}
+            </Link>
+          ))}
+        </div>
+      )}
+
       <p className="mt-[7px] text-[13px] leading-[1.5]">{review.content}</p>
 
       {review.photos.length > 0 && (
