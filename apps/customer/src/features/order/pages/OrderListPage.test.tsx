@@ -11,6 +11,7 @@ vi.mock('../api/orderApi')
 
 const pending: Order = {
   id: 'o1',
+  orderNo: '1001',
   storeId: 'st1',
   storeName: '스윗아워',
   storePhone: undefined,

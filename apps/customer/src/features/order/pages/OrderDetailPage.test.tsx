@@ -11,6 +11,7 @@ vi.mock('../api/orderApi')
 
 const base: Order = {
   id: 'o1',
+  orderNo: '1001',
   storeId: 'st1',
   storeName: '베이커리',
   storePhone: '02-1234-5678',

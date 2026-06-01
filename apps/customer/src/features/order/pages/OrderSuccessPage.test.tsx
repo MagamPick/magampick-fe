@@ -6,6 +6,7 @@ import type { Order } from '../types'
 
 const order: Order = {
   id: 'ord_1',
+  orderNo: '1001',
   storeId: 'st-1',
   storeName: '브레드샵',
   items: [

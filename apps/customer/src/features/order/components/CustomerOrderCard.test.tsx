@@ -5,6 +5,7 @@ import type { Order } from '../types'
 
 const base: Order = {
   id: 'o1',
+  orderNo: '1001',
   storeId: 'st1',
   storeName: '테스트 매장',
   storePhone: '02-1234-5678',
