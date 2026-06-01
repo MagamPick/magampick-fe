@@ -88,4 +88,58 @@ describe('productApi', () => {
       )
     })
   })
+
+  describe('getProduct', () => {
+    it('id 로 상품을 조회한다', async () => {
+      const p = await productApi.getProduct('p1')
+      expect(p.name).toBe('통밀 식빵')
+    })
+
+    it('없는 상품은 404 로 거부한다 (PRODUCT_NOT_FOUND)', async () => {
+      await expect(productApi.getProduct('nope')).rejects.toMatchObject({
+        code: 'PRODUCT_NOT_FOUND',
+      })
+    })
+  })
+
+  describe('updateProduct', () => {
+    it('필드를 수정하고 목록에 반영한다', async () => {
+      const updated = await productApi.updateProduct('p1', {
+        name: '호밀 식빵',
+        category: '베이커리',
+        price: 5200,
+        onSale: false,
+      })
+      expect(updated).toMatchObject({ name: '호밀 식빵', price: 5200, onSale: false })
+
+      const list = await productApi.listProducts('s1')
+      expect(list.find((p) => p.id === 'p1')).toMatchObject({ name: '호밀 식빵', price: 5200 })
+    })
+
+    it('음수 가격은 거부한다 (PRODUCT_INVALID_PRICE)', async () => {
+      await expect(
+        productApi.updateProduct('p1', { name: '통밀 식빵', category: '베이커리', price: -1, onSale: true }),
+      ).rejects.toMatchObject({ code: 'PRODUCT_INVALID_PRICE' })
+    })
+
+    it('사진을 제공하지 않으면 기존 사진을 유지한다', async () => {
+      const created = await productApi.createProduct({ ...base, imageDataUrl: 'data:image/png;base64,AAAA' })
+      const updated = await productApi.updateProduct(created.id, {
+        name: created.name,
+        category: created.category,
+        price: 6000,
+        onSale: true,
+      })
+      expect(updated.imageUrl).toBe('data:image/png;base64,AAAA')
+    })
+  })
+
+  describe('deleteProduct', () => {
+    it('soft delete 하면 목록·조회에서 제외된다', async () => {
+      await productApi.deleteProduct('p1')
+      const list = await productApi.listProducts('s1')
+      expect(list.some((p) => p.id === 'p1')).toBe(false)
+      await expect(productApi.getProduct('p1')).rejects.toMatchObject({ code: 'PRODUCT_NOT_FOUND' })
+    })
+  })
 })

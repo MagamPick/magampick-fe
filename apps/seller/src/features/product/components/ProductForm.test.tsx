@@ -3,22 +3,36 @@ import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
-const mutate = vi.fn()
+const createMutate = vi.fn()
+const updateMutate = vi.fn()
 vi.mock('../hooks/useCreateProduct', () => ({
-  useCreateProduct: () => ({ mutate, isPending: false, error: null }),
+  useCreateProduct: () => ({ mutate: createMutate, isPending: false, error: null }),
+}))
+vi.mock('../hooks/useUpdateProduct', () => ({
+  useUpdateProduct: () => ({ mutate: updateMutate, isPending: false, error: null }),
 }))
 
 import { ProductForm } from './ProductForm'
+import type { Product } from '../types'
 
-function renderForm() {
+function renderForm(props?: Parameters<typeof ProductForm>[0]) {
   return render(
     <MemoryRouter>
-      <ProductForm />
+      <ProductForm {...props} />
     </MemoryRouter>,
   )
 }
 
-describe('ProductForm', () => {
+const product: Product = {
+  id: 'p1',
+  storeId: 's1',
+  name: '통밀 식빵',
+  category: '베이커리',
+  price: 4800,
+  onSale: true,
+}
+
+describe('ProductForm — 등록', () => {
   beforeEach(() => vi.clearAllMocks())
 
   it('판매 시작 토글이 기본 ON 이다', () => {
@@ -52,12 +66,40 @@ describe('ProductForm', () => {
     await waitFor(() => expect(submit).toBeEnabled())
     await user.click(submit)
 
-    await waitFor(() => expect(mutate).toHaveBeenCalledTimes(1))
-    expect(mutate.mock.calls[0][0]).toMatchObject({
+    await waitFor(() => expect(createMutate).toHaveBeenCalledTimes(1))
+    expect(createMutate.mock.calls[0][0]).toMatchObject({
       name: '녹차 라떼',
       category: '음료',
       price: 5000,
       onSale: true,
     })
+  })
+})
+
+describe('ProductForm — 수정', () => {
+  beforeEach(() => vi.clearAllMocks())
+
+  it('기존 값으로 프리필되고 변경 저장 버튼을 보여준다', async () => {
+    renderForm({ mode: 'edit', product })
+    expect(screen.getByDisplayValue('통밀 식빵')).toBeInTheDocument()
+    expect(screen.getByDisplayValue('4800')).toBeInTheDocument()
+    const submit = screen.getByRole('button', { name: '변경 저장' })
+    await waitFor(() => expect(submit).toBeEnabled())
+  })
+
+  it('값을 바꿔 저장하면 updateProduct 가 숫자 가격으로 호출된다', async () => {
+    const user = userEvent.setup()
+    renderForm({ mode: 'edit', product })
+
+    const price = screen.getByLabelText(/정상가/)
+    await user.clear(price)
+    await user.type(price, '5200')
+
+    const submit = screen.getByRole('button', { name: '변경 저장' })
+    await waitFor(() => expect(submit).toBeEnabled())
+    await user.click(submit)
+
+    await waitFor(() => expect(updateMutate).toHaveBeenCalledTimes(1))
+    expect(updateMutate.mock.calls[0][0]).toMatchObject({ name: '통밀 식빵', price: 5200 })
   })
 })
