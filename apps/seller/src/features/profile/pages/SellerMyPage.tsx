@@ -1,5 +1,3 @@
-import { useNavigate } from 'react-router'
-import { ChevronLeft } from 'lucide-react'
 import { ComingSoonProvider } from '@/shared/components/ComingSoonToast'
 import { ScreenContainer } from '@/shared/components/ScreenContainer'
 import { useComingSoon } from '@/shared/hooks/useComingSoon'
@@ -16,10 +14,9 @@ const COMING_SOON = '준비 중인 기능이에요'
 /**
  * 사장 마이 허브 (프로토타입 24-mypage). 프로필 카드 + 정산 카드 + 메뉴 그룹 3개.
  * 구현된 진입점만 실제 라우트로 연결(보유 매장·내 정보 수정·로그아웃), 미구현은 "준비 중" 토스트.
- * 사장 앱은 바텀네비가 없어 홈에서 진입 → back 헤더로 복귀.
+ * 바텀네비 탭(TabLayout 자식) — 본문만 렌더(tab variant), 뒤로가기 헤더 없음(소비자 MyPage 미러).
  */
 function SellerMyPageContent() {
-  const navigate = useNavigate()
   const { data: profile } = useProfile()
   const { show } = useComingSoon()
   const logout = useLogout()
@@ -30,18 +27,8 @@ function SellerMyPageContent() {
   }
 
   return (
-    <ScreenContainer variant="page" className="pb-10">
-      <header className="sticky top-0 z-10 flex h-[52px] items-center gap-1 border-b border-border bg-card px-2">
-        <button
-          type="button"
-          onClick={() => navigate(-1)}
-          aria-label="뒤로 가기"
-          className="flex h-10 w-10 items-center justify-center text-foreground"
-        >
-          <ChevronLeft className="h-[22px] w-[22px]" />
-        </button>
-        <h1 className="text-[17px] font-bold text-foreground">마이</h1>
-      </header>
+    <ScreenContainer variant="tab" className="pb-6 pt-[env(safe-area-inset-top,0px)]">
+      <h1 className="sr-only">마이</h1>
 
       {profile ? (
         <SellerProfileCard

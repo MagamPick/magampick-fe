@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { ScreenContainer } from '@/shared/components/ScreenContainer'
 import { BizStatusCard } from '@/features/store/components/BizStatusCard'
 import { BizStatusSheet } from '@/features/store/components/BizStatusSheet'
 import { useStoreStatus } from '@/features/store/hooks/useStoreStatus'
@@ -21,7 +22,7 @@ export function SellerHomePage() {
   const { data: status, isLoading } = useStoreStatus(selectedStoreId)
 
   return (
-    <div className="mx-auto flex min-h-screen max-w-md flex-col bg-card pb-[calc(env(safe-area-inset-bottom,0px)+2rem)]">
+    <ScreenContainer variant="tab">
       <HomeHero />
       <BizStatusCard status={status} isLoading={isLoading} onManage={() => setSheetOpen(true)} />
       <HomeShortcuts />
@@ -38,6 +39,6 @@ export function SellerHomePage() {
           status={status}
         />
       )}
-    </div>
+    </ScreenContainer>
   )
 }

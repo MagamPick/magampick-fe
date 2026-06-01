@@ -3,6 +3,9 @@ import { ProtectedRoute } from '@/features/auth/components/ProtectedRoute'
 import { PublicOnlyRoute } from '@/features/auth/components/PublicOnlyRoute'
 import { LoginPage } from '@/features/auth/pages/LoginPage'
 import { SignupPage } from '@/features/auth/pages/SignupPage'
+import { TabLayout } from '@/shared/components/TabLayout'
+import { OrdersTab } from '@/shared/components/tabs/OrdersTab'
+import { AnalyticsTab } from '@/shared/components/tabs/AnalyticsTab'
 import { NotFoundPage } from '@/shared/components/NotFoundPage'
 import { ROUTES } from '@/shared/lib/routes'
 import { SellerHomePage } from '@/features/home/pages/SellerHomePage'
@@ -19,13 +22,22 @@ import { EditProfilePage } from '@/features/profile/pages/EditProfilePage'
 
 export const router = createBrowserRouter([
   {
-    path: ROUTES.HOME,
+    // 로그인 후 메인 탭 셸 — 인증 가드 + 공통 레이아웃(바텀네비). 자식 탭이 <Outlet/> 에 렌더.
+    // (routing-convention §8 nested layout — pathless 부모 + 절대경로 자식)
     element: (
       <ProtectedRoute>
-        <SellerHomePage />
+        <TabLayout />
       </ProtectedRoute>
     ),
+    children: [
+      { index: true, element: <SellerHomePage /> },
+      { path: ROUTES.ORDERS, element: <OrdersTab /> },
+      { path: ROUTES.PRODUCTS, element: <ProductListPage /> },
+      { path: ROUTES.ANALYTICS, element: <AnalyticsTab /> },
+      { path: ROUTES.MYPAGE, element: <SellerMyPage /> },
+    ],
   },
+  // 풀스크린 보호 라우트 — 바텀네비 없음(홈·상품목록·마이에서 진입)
   {
     path: ROUTES.STORE_MANAGE,
     element: (
@@ -39,14 +51,6 @@ export const router = createBrowserRouter([
     element: (
       <ProtectedRoute>
         <StoreHoursPage />
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: ROUTES.PRODUCTS,
-    element: (
-      <ProtectedRoute>
-        <ProductListPage />
       </ProtectedRoute>
     ),
   },
@@ -87,14 +91,6 @@ export const router = createBrowserRouter([
     element: (
       <ProtectedRoute>
         <ClearanceDetailPage />
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: ROUTES.MYPAGE,
-    element: (
-      <ProtectedRoute>
-        <SellerMyPage />
       </ProtectedRoute>
     ),
   },

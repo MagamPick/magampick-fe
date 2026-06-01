@@ -1,8 +1,8 @@
 import { useState } from 'react'
-import { ChevronLeft } from 'lucide-react'
-import { Link, useNavigate, useSearchParams } from 'react-router'
+import { Link, useSearchParams } from 'react-router'
 import { cn } from '@/shared/lib/utils'
 import { ROUTES } from '@/shared/lib/routes'
+import { ScreenContainer } from '@/shared/components/ScreenContainer'
 import { useCurrentStoreStore } from '@/features/store/stores/currentStoreStore'
 import { useClearances } from '@/features/clearance/hooks/useClearances'
 import { DealCard } from '@/features/clearance/components/DealCard'
@@ -27,7 +27,6 @@ const FILTERS: { value: CategoryFilter; label: string }[] = [
  * `?tab=deal` 로 마감 할인 탭을 바로 열 수 있다(홈 "모두 보기" 등).
  */
 export function ProductListPage() {
-  const navigate = useNavigate()
   const storeId = useCurrentStoreStore((s) => s.selectedStoreId)
   const [searchParams, setSearchParams] = useSearchParams()
   const tab: Tab = searchParams.get('tab') === 'deal' ? 'deal' : 'normal'
@@ -50,16 +49,8 @@ export function ProductListPage() {
   const endedDeals = (clearances ?? []).filter((c) => c.status !== 'ACTIVE')
 
   return (
-    <div className="mx-auto flex min-h-screen max-w-md flex-col bg-card pb-10">
-      <header className="sticky top-0 z-10 flex h-[52px] items-center gap-1 border-b border-border bg-card px-2">
-        <button
-          type="button"
-          aria-label="뒤로 가기"
-          onClick={() => navigate(ROUTES.HOME)}
-          className="flex size-10 items-center justify-center rounded-full text-foreground active:bg-muted"
-        >
-          <ChevronLeft className="size-[22px]" />
-        </button>
+    <ScreenContainer variant="tab">
+      <header className="sticky top-0 z-10 flex h-[52px] items-center border-b border-border bg-card px-5">
         <h1 className="text-[16px] font-bold">상품 관리</h1>
       </header>
 
@@ -224,6 +215,6 @@ export function ProductListPage() {
           )}
         </>
       )}
-    </div>
+    </ScreenContainer>
   )
 }

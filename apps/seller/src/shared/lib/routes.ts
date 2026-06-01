@@ -3,6 +3,10 @@ export const ROUTES = {
   LOGIN: '/login',
   SIGNUP: '/signup',
 
+  // 바텀네비 탭(구현 예정 스텁) — 홈·상품·마이 탭은 아래 각 기능 라우트가 목적지
+  ORDERS: '/orders',
+  ANALYTICS: '/analytics',
+
   STORE_MANAGE: '/store',
   STORE_HOURS: '/store/hours',
 
@@ -15,7 +19,7 @@ export const ROUTES = {
   CLEARANCE_NEW: '/clearance/new',
   CLEARANCE_DETAIL: (id: string) => `/clearance/${id}`,
 
-  // 마이 허브 + 내 정보 수정 (바텀네비 없음 — 홈 헤더에서 진입)
+  // 마이 허브(바텀네비 탭) + 내 정보 수정(풀스크린, 바텀네비 없음)
   MYPAGE: '/mypage',
   EDIT_PROFILE: '/mypage/edit',
 } as const
