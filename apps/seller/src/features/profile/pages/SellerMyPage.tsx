@@ -1,0 +1,90 @@
+import { useNavigate } from 'react-router'
+import { ChevronLeft } from 'lucide-react'
+import { ComingSoonProvider } from '@/shared/components/ComingSoonToast'
+import { ScreenContainer } from '@/shared/components/ScreenContainer'
+import { useComingSoon } from '@/shared/hooks/useComingSoon'
+import { ROUTES } from '@/shared/lib/routes'
+import { useLogout } from '@/features/auth/hooks/useLogout'
+import { useProfile } from '../hooks/useProfile'
+import { SellerProfileCard } from '../components/SellerProfileCard'
+import { SettlementCard } from '../components/SettlementCard'
+import { MenuGroup } from '../components/MenuGroup'
+import { MenuRow } from '../components/MenuRow'
+
+const COMING_SOON = '준비 중인 기능이에요'
+
+/**
+ * 사장 마이 허브 (프로토타입 24-mypage). 프로필 카드 + 정산 카드 + 메뉴 그룹 3개.
+ * 구현된 진입점만 실제 라우트로 연결(보유 매장·내 정보 수정·로그아웃), 미구현은 "준비 중" 토스트.
+ * 사장 앱은 바텀네비가 없어 홈에서 진입 → back 헤더로 복귀.
+ */
+function SellerMyPageContent() {
+  const navigate = useNavigate()
+  const { data: profile } = useProfile()
+  const { show } = useComingSoon()
+  const logout = useLogout()
+
+  const soon = () => show(COMING_SOON)
+  const handleLogout = () => {
+    if (window.confirm('로그아웃 할까요?')) logout.mutate()
+  }
+
+  return (
+    <ScreenContainer variant="page" className="pb-10">
+      <header className="sticky top-0 z-10 flex h-[52px] items-center gap-1 border-b border-border bg-card px-2">
+        <button
+          type="button"
+          onClick={() => navigate(-1)}
+          aria-label="뒤로 가기"
+          className="flex h-10 w-10 items-center justify-center text-foreground"
+        >
+          <ChevronLeft className="h-[22px] w-[22px]" />
+        </button>
+        <h1 className="text-[17px] font-bold text-foreground">마이</h1>
+      </header>
+
+      {profile ? (
+        <SellerProfileCard
+          name={profile.name}
+          phone={profile.phone}
+          avatarEmoji={profile.avatarEmoji}
+        />
+      ) : (
+        <div className="flex items-center gap-[14px] px-5 py-5">
+          <div className="size-[60px] shrink-0 animate-pulse rounded-full bg-muted" />
+          <div className="h-5 w-32 animate-pulse rounded bg-muted" />
+        </div>
+      )}
+
+      <SettlementCard />
+
+      <MenuGroup title="매장 관리">
+        <MenuRow icon="🏪" label="보유 매장" to={ROUTES.STORE_MANAGE} />
+        <MenuRow icon="💬" label="리뷰 관리" onClick={soon} />
+        <MenuRow icon="💰" label="정산 내역" onClick={soon} />
+      </MenuGroup>
+
+      <MenuGroup title="설정">
+        <MenuRow icon="🔔" label="알림 설정" onClick={soon} />
+        <MenuRow icon="🔒" label="비밀번호 변경" onClick={soon} />
+        <MenuRow icon="📄" label="약관 및 정책" onClick={soon} />
+      </MenuGroup>
+
+      <MenuGroup title="지원">
+        <MenuRow icon="📢" label="공지사항" onClick={soon} />
+        <MenuRow icon="🎧" label="고객센터" onClick={soon} />
+        <MenuRow icon="ℹ️" label="앱 버전" value="v1.0.0" />
+        <MenuRow icon="🚪" label="로그아웃" danger onClick={handleLogout} />
+        <MenuRow icon="🗑️" label="회원 탈퇴" danger onClick={soon} />
+      </MenuGroup>
+    </ScreenContainer>
+  )
+}
+
+export function SellerMyPage() {
+  return (
+    <ComingSoonProvider>
+      <SellerMyPageContent />
+    </ComingSoonProvider>
+  )
+}

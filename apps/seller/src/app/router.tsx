@@ -10,6 +10,8 @@ import { StoreManagePage } from '@/features/store/pages/StoreManagePage'
 import { StoreHoursPage } from '@/features/store/pages/StoreHoursPage'
 import { ProductListPage } from '@/features/product/pages/ProductListPage'
 import { ProductCreatePage } from '@/features/product/pages/ProductCreatePage'
+import { SellerMyPage } from '@/features/profile/pages/SellerMyPage'
+import { EditProfilePage } from '@/features/profile/pages/EditProfilePage'
 
 export const router = createBrowserRouter([
   {
@@ -49,6 +51,22 @@ export const router = createBrowserRouter([
     element: (
       <ProtectedRoute>
         <ProductCreatePage />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: ROUTES.MYPAGE,
+    element: (
+      <ProtectedRoute>
+        <SellerMyPage />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: ROUTES.EDIT_PROFILE,
+    element: (
+      <ProtectedRoute>
+        <EditProfilePage />
       </ProtectedRoute>
     ),
   },
