@@ -15,7 +15,8 @@ describe('SellerHomePage', () => {
       </Wrapper>,
     )
 
-    expect(container.firstElementChild).toHaveClass('mx-auto', 'max-w-md', 'bg-card')
+    // 탭 셸(TabLayout)이 max-w-md·중앙정렬을 담당하므로 페이지는 본문만(tab variant) — 배경 흰색만 검증
+    expect(container.firstElementChild).toHaveClass('bg-card')
     expect(container.firstElementChild).not.toHaveClass('bg-background')
   })
 })
