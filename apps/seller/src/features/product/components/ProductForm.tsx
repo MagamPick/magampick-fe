@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useNavigate } from 'react-router'
@@ -18,35 +18,62 @@ import { ApiError } from '@/shared/lib/apiError'
 import { ROUTES } from '@/shared/lib/routes'
 import { useCurrentStoreStore } from '@/features/store/stores/currentStoreStore'
 import { useCreateProduct } from '../hooks/useCreateProduct'
+import { useUpdateProduct } from '../hooks/useUpdateProduct'
 import { PRODUCT_CATEGORIES, createProductInputSchema } from '../types'
-import type { CreateProductInput, ProductCategory } from '../types'
+import type { CreateProductInput, Product, ProductCategory } from '../types'
 
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024
 
+interface Props {
+  /** 'edit' + product 면 수정 모드 (프리필 + 변경 저장), 기본은 등록 모드 */
+  mode?: 'create' | 'edit'
+  product?: Product
+}
+
 /**
- * 일반 상품 등록 폼 (노션: 일반 상품 등록). 현재 매장에 등록 → 성공 시 상품 목록으로 이동.
- * 사진은 선택 입력 — 로컬에서 dataURL 로 읽어 mock 에 저장(실연동 시 OCI 업로드).
+ * 일반 상품 등록/수정 공용 폼 (노션: 일반 상품 등록 / 수정·삭제).
+ * 등록: 현재 매장에 생성 → 목록으로. 수정: 기존 상품 프리필 → 변경 저장 → 상세로.
+ * 사진은 로컬 dataURL — 수정 시 새로 고르지 않으면 기존 사진 유지(미전송).
  */
-export function ProductForm() {
+export function ProductForm({ mode = 'create', product }: Props) {
   const navigate = useNavigate()
   const storeId = useCurrentStoreStore((s) => s.selectedStoreId)
+  const isEdit = mode === 'edit' && !!product
+
   const create = useCreateProduct(storeId)
+  const update = useUpdateProduct(product?.id ?? '', storeId)
+  const mutation = isEdit ? update : create
 
   const fileInputRef = useRef<HTMLInputElement>(null)
+  // 새로 고른 사진 dataURL (수정 시 미선택이면 null → 기존 사진 유지)
   const [imageDataUrl, setImageDataUrl] = useState<string | null>(null)
   const [imageError, setImageError] = useState<string | null>(null)
+  const previewUrl = imageDataUrl ?? product?.imageUrl ?? null
 
   const form = useForm<CreateProductInput>({
     resolver: zodResolver(createProductInputSchema),
     mode: 'onChange',
-    defaultValues: {
-      name: '',
-      category: '' as ProductCategory,
-      price: '',
-      description: '',
-      onSale: true,
-    },
+    defaultValues: isEdit
+      ? {
+          name: product.name,
+          category: product.category,
+          price: String(product.price),
+          description: product.description ?? '',
+          onSale: product.onSale,
+        }
+      : {
+          name: '',
+          category: '' as ProductCategory,
+          price: '',
+          description: '',
+          onSale: true,
+        },
   })
+
+  // 수정 모드: 프리필 값이 유효하면 마운트 시 저장 버튼이 바로 활성화되도록 검증 트리거
+  useEffect(() => {
+    if (isEdit) void form.trigger()
+  }, [isEdit, form])
 
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
@@ -70,24 +97,28 @@ export function ProductForm() {
 
   function onSubmit(values: CreateProductInput) {
     const description = values.description?.trim()
-    create.mutate(
-      {
-        name: values.name,
-        category: values.category,
-        price: Number(values.price),
-        description: description || undefined,
-        onSale: values.onSale,
-        imageDataUrl: imageDataUrl ?? undefined,
-      },
-      { onSuccess: () => navigate(ROUTES.PRODUCTS) },
-    )
+    const payload = {
+      name: values.name,
+      category: values.category,
+      price: Number(values.price),
+      description: description || undefined,
+      onSale: values.onSale,
+      imageDataUrl: imageDataUrl ?? undefined,
+    }
+    if (isEdit) {
+      update.mutate(payload, {
+        onSuccess: () => navigate(ROUTES.PRODUCT_DETAIL(product.id)),
+      })
+    } else {
+      create.mutate(payload, { onSuccess: () => navigate(ROUTES.PRODUCTS) })
+    }
   }
 
   const serverError =
-    create.error instanceof ApiError
-      ? create.error.message
-      : create.error
-        ? '등록 중 문제가 발생했어요. 잠시 후 다시 시도해 주세요.'
+    mutation.error instanceof ApiError
+      ? mutation.error.message
+      : mutation.error
+        ? '저장 중 문제가 발생했어요. 잠시 후 다시 시도해 주세요.'
         : null
 
   return (
@@ -98,15 +129,15 @@ export function ProductForm() {
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
-            aria-label={imageDataUrl ? '상품 사진 변경' : '상품 사진 등록'}
+            aria-label={previewUrl ? '상품 사진 변경' : '상품 사진 등록'}
             className={cn(
               'relative mb-5 flex h-[168px] w-full flex-col items-center justify-center gap-2 overflow-hidden rounded-[14px] border-[1.5px] border-dashed border-border bg-background text-muted-foreground',
-              imageDataUrl && 'border-solid border-primary',
+              previewUrl && 'border-solid border-primary',
             )}
           >
-            {imageDataUrl ? (
+            {previewUrl ? (
               <img
-                src={imageDataUrl}
+                src={previewUrl}
                 alt="상품 사진 미리보기"
                 className="absolute inset-0 size-full object-cover"
               />
@@ -223,10 +254,12 @@ export function ProductForm() {
               <FormItem>
                 <FormLabel>판매 상태</FormLabel>
                 <div className="flex items-center justify-between rounded-xl bg-background px-4 py-3.5">
-                  <span className="text-[14px] font-bold text-foreground">등록 즉시 판매 시작</span>
+                  <span className="text-[14px] font-bold text-foreground">
+                    {isEdit ? '판매 중' : '등록 즉시 판매 시작'}
+                  </span>
                   <FormControl>
                     <Switch
-                      aria-label="등록 즉시 판매 시작"
+                      aria-label={isEdit ? '판매 상태' : '등록 즉시 판매 시작'}
                       checked={field.value}
                       onCheckedChange={field.onChange}
                     />
@@ -247,10 +280,16 @@ export function ProductForm() {
         <div className="border-t border-border bg-card px-5 py-3">
           <button
             type="submit"
-            disabled={!form.formState.isValid || create.isPending}
+            disabled={!form.formState.isValid || mutation.isPending}
             className="h-[54px] w-full rounded-xl bg-primary text-base font-bold tracking-[-0.3px] text-white transition active:scale-[0.98] disabled:bg-[#f0d9ce] disabled:active:scale-100"
           >
-            {create.isPending ? '등록 중…' : '상품 등록'}
+            {isEdit
+              ? mutation.isPending
+                ? '저장 중…'
+                : '변경 저장'
+              : mutation.isPending
+                ? '등록 중…'
+                : '상품 등록'}
           </button>
         </div>
       </form>
