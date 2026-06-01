@@ -4,7 +4,6 @@ import { PublicOnlyRoute } from '@/features/auth/components/PublicOnlyRoute'
 import { LoginPage } from '@/features/auth/pages/LoginPage'
 import { SignupPage } from '@/features/auth/pages/SignupPage'
 import { TabLayout } from '@/shared/components/TabLayout'
-import { OrdersTab } from '@/shared/components/tabs/OrdersTab'
 import { AnalyticsTab } from '@/shared/components/tabs/AnalyticsTab'
 import { NotFoundPage } from '@/shared/components/NotFoundPage'
 import { ROUTES } from '@/shared/lib/routes'
@@ -17,6 +16,8 @@ import { ProductDetailPage } from '@/features/product/pages/ProductDetailPage'
 import { ProductEditPage } from '@/features/product/pages/ProductEditPage'
 import { ClearanceCreatePage } from '@/features/clearance/pages/ClearanceCreatePage'
 import { ClearanceDetailPage } from '@/features/clearance/pages/ClearanceDetailPage'
+import { OrderListPage } from '@/features/order/pages/OrderListPage'
+import { OrderDetailPage } from '@/features/order/pages/OrderDetailPage'
 import { SellerMyPage } from '@/features/profile/pages/SellerMyPage'
 import { EditProfilePage } from '@/features/profile/pages/EditProfilePage'
 import { ReviewManagePage } from '@/features/reviews/pages/ReviewManagePage'
@@ -32,7 +33,7 @@ export const router = createBrowserRouter([
     ),
     children: [
       { index: true, element: <SellerHomePage /> },
-      { path: ROUTES.ORDERS, element: <OrdersTab /> },
+      { path: ROUTES.ORDERS, element: <OrderListPage /> },
       { path: ROUTES.PRODUCTS, element: <ProductListPage /> },
       { path: ROUTES.ANALYTICS, element: <AnalyticsTab /> },
       { path: ROUTES.MYPAGE, element: <SellerMyPage /> },
@@ -92,6 +93,14 @@ export const router = createBrowserRouter([
     element: (
       <ProtectedRoute>
         <ClearanceDetailPage />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: ROUTES.ORDER_DETAIL(':id'),
+    element: (
+      <ProtectedRoute>
+        <OrderDetailPage />
       </ProtectedRoute>
     ),
   },

@@ -3,8 +3,9 @@ export const ROUTES = {
   LOGIN: '/login',
   SIGNUP: '/signup',
 
-  // 바텀네비 탭(구현 예정 스텁) — 홈·상품·마이 탭은 아래 각 기능 라우트가 목적지
+  // 주문(바텀네비 탭) + 주문 상세(풀스크린, 바텀네비 없음)
   ORDERS: '/orders',
+  ORDER_DETAIL: (id: string) => `/orders/${id}`,
   ANALYTICS: '/analytics',
 
   STORE_MANAGE: '/store',
