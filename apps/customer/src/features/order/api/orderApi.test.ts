@@ -4,7 +4,15 @@ import { orderApi, type CreateOrderInput } from './orderApi'
 const input: CreateOrderInput = {
   store: { id: 'st-1', name: '브레드샵' },
   items: [
-    { id: 'd1', kind: 'deal', name: '크루아상 세트', imageUrl: null, originalPrice: 10000, salePrice: 6000, qty: 2 },
+    {
+      id: 'd1',
+      kind: 'deal',
+      name: '크루아상 세트',
+      imageUrl: null,
+      originalPrice: 10000,
+      salePrice: 6000,
+      qty: 2,
+    },
   ],
   pickup: { type: 'asap' },
   memo: '포장 부탁드려요',

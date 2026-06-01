@@ -13,7 +13,8 @@ import { ProductDetailPage } from '@/features/product-detail/pages/ProductDetail
 import { MapTab } from '@/shared/components/tabs/MapTab'
 import { StoreListPage } from '@/features/store-list/pages/StoreListPage'
 import { FavoritesPage } from '@/features/favorites/pages/FavoritesPage'
-import { OrdersTab } from '@/shared/components/tabs/OrdersTab'
+import { OrderListPage } from '@/features/order/pages/OrderListPage'
+import { OrderDetailPage } from '@/features/order/pages/OrderDetailPage'
 import { MyPage } from '@/features/profile/pages/MyPage'
 import { EditProfilePage } from '@/features/profile/pages/EditProfilePage'
 import { MyReviewsPage } from '@/features/reviews/pages/MyReviewsPage'
@@ -40,7 +41,7 @@ export const router = createBrowserRouter([
       { path: ROUTES.MAP, element: <MapTab /> },
       { path: ROUTES.ALL, element: <StoreListPage /> },
       { path: ROUTES.FAVS, element: <FavoritesPage /> },
-      { path: ROUTES.ORDERS, element: <OrdersTab /> },
+      { path: ROUTES.ORDERS, element: <OrderListPage /> },
       { path: ROUTES.MYPAGE, element: <MyPage /> },
     ],
   },
@@ -125,6 +126,15 @@ export const router = createBrowserRouter([
     element: (
       <ProtectedRoute>
         <OrderSuccessPage />
+      </ProtectedRoute>
+    ),
+  },
+  // 주문 상세 — 풀스크린 보호 라우트 (바텀네비 없음, 프로토타입 50-order-detail)
+  {
+    path: '/orders/:id',
+    element: (
+      <ProtectedRoute>
+        <OrderDetailPage />
       </ProtectedRoute>
     ),
   },

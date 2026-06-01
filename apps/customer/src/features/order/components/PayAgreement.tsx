@@ -17,8 +17,8 @@ export function PayAgreement({
         className="mt-0.5"
       />
       <span className="flex-1 text-[13px] leading-[1.55] text-foreground">
-        주문 정보를 확인했으며 <b className="font-bold text-primary">결제 진행에 동의합니다</b>. 매장
-        마감 후에는 픽업이 어려워 환불이 제한될 수 있어요.
+        주문 정보를 확인했으며 <b className="font-bold text-primary">결제 진행에 동의합니다</b>.
+        매장 마감 후에는 픽업이 어려워 환불이 제한될 수 있어요.
       </span>
     </label>
   )
