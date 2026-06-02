@@ -31,6 +31,8 @@ import { OrderSuccessPage } from '@/features/order/pages/OrderSuccessPage'
 import { PointHistoryPage } from '@/features/points/pages/PointHistoryPage'
 import { CouponBoxPage } from '@/features/coupons/pages/CouponBoxPage'
 import { EventPage } from '@/features/coupons/pages/EventPage'
+import { NotificationCenterPage } from '@/features/notifications/pages/NotificationCenterPage'
+import { NotificationSettingsPage } from '@/features/notifications/pages/NotificationSettingsPage'
 import { NotFoundPage } from '@/shared/components/NotFoundPage'
 import { ROUTES } from '@/shared/lib/routes'
 
@@ -67,6 +69,23 @@ export const router = createBrowserRouter([
     element: (
       <ProtectedRoute>
         <SearchPage />
+      </ProtectedRoute>
+    ),
+  },
+  // 알림센터 / 알림 설정 — 풀스크린 보호 라우트 (바텀네비 없음, 프로토타입 51 / 61)
+  {
+    path: ROUTES.NOTIFICATIONS,
+    element: (
+      <ProtectedRoute>
+        <NotificationCenterPage />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: ROUTES.NOTIFICATION_SETTINGS,
+    element: (
+      <ProtectedRoute>
+        <NotificationSettingsPage />
       </ProtectedRoute>
     ),
   },
