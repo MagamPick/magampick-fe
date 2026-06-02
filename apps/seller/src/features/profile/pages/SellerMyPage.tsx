@@ -5,7 +5,7 @@ import { ROUTES } from '@/shared/lib/routes'
 import { useLogout } from '@/features/auth/hooks/useLogout'
 import { useProfile } from '../hooks/useProfile'
 import { SellerProfileCard } from '../components/SellerProfileCard'
-import { SettlementCard } from '../components/SettlementCard'
+import { SettlementSummaryCard } from '@/features/settlement/components/SettlementSummaryCard'
 import { MenuGroup } from '../components/MenuGroup'
 import { MenuRow } from '../components/MenuRow'
 
@@ -43,13 +43,13 @@ function SellerMyPageContent() {
         </div>
       )}
 
-      <SettlementCard />
+      <SettlementSummaryCard className="mx-5 mt-1" />
 
       <MenuGroup title="매장 관리">
         <MenuRow icon="🏪" label="보유 매장" to={ROUTES.STORE_MANAGE} />
         <MenuRow icon="💬" label="리뷰 관리" to={ROUTES.REVIEWS} />
         <MenuRow icon="💸" label="환불 관리" to={ROUTES.REFUNDS} />
-        <MenuRow icon="💰" label="정산 내역" onClick={soon} />
+        <MenuRow icon="💰" label="정산 내역" to={ROUTES.SETTLEMENT} />
       </MenuGroup>
 
       <MenuGroup title="설정">
