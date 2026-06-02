@@ -3,6 +3,8 @@ export const ROUTES = {
   LOGIN: '/login',
   SIGNUP: '/signup',
   WELCOME: '/welcome',
+  // 비밀번호 재설정 — 이메일→휴대폰 본인인증→새 비번 (비로그인 전용, 프로토타입 11-forgot)
+  PASSWORD_RESET: '/password-reset',
 
   // 카카오 소셜 로그인 — 콜백 처리(연동 시 카카오 redirect_uri) + 신규 추가정보 위저드 (둘 다 PublicOnly)
   KAKAO_CALLBACK: '/login/kakao/callback',

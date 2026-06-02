@@ -1,4 +1,5 @@
 import { ApiError } from '@/shared/lib/apiError'
+import { passwordSchema, PASSWORD_RESET_ERROR } from '../types'
 import type { SignupInput, LoginInput } from '../types'
 
 /**
@@ -13,6 +14,14 @@ const TAKEN_EMAIL = 'taken@magampick.com'
 const MOCK_OTP = '000000'
 /** Mock: 이 이메일만 로그인 실패로 취급 (그 외 임의 이메일 + 입력된 PW 는 성공) */
 const WRONG_CREDENTIAL_EMAIL = 'wrong@magampick.com'
+
+/**
+ * Mock: 비밀번호 재설정 매칭용 등록 사장 계정 (이메일+휴대폰 쌍). 휴대폰 unique X 라 쌍으로만 식별.
+ * 사장은 소셜 가입이 없어 socialOnly 계정 없음. 실연동 시 BE 가 sellers 조회로 대체.
+ */
+const RESET_ACCOUNTS: { email: string; phone: string; socialOnly: boolean }[] = [
+  { email: 'demo@magampick.com', phone: '010-1234-5678', socialOnly: false },
+]
 
 export const authApi = {
   async checkEmail(email: string): Promise<{ available: boolean }> {
@@ -83,5 +92,65 @@ export const authApi = {
   async logout(): Promise<void> {
     await delay(300)
     // Mock: 실제로는 서버가 Redis refresh 키 삭제 + clear cookie (auth.md §7).
+  },
+
+  /**
+   * 비밀번호 재설정 Step 2→3 게이트 — 이메일↔휴대폰 매칭 후 resetToken 발급.
+   * 존재 비노출: 이메일 미등록·휴대폰 불일치 모두 동일 RESET_VERIFICATION_FAILED (노션 AC).
+   * (사장은 소셜 가입이 없어 SOCIAL_ONLY_ACCOUNT 는 발생하지 않지만 방어용으로 분기 유지)
+   * Mock: 실연동 시 verificationToken 의 휴대폰 일치 검증 + 계정 조회로 교체.
+   */
+  async verifyPasswordResetIdentity(input: {
+    email: string
+    phone: string
+    verificationToken: string
+  }): Promise<{ resetToken: string }> {
+    await delay(600)
+    if (!input.verificationToken) {
+      throw new ApiError(
+        400,
+        PASSWORD_RESET_ERROR.PHONE_VERIFICATION_REQUIRED,
+        '휴대폰 본인인증이 필요합니다',
+      )
+    }
+    const account = RESET_ACCOUNTS.find((a) => a.email === input.email && a.phone === input.phone)
+    if (!account) {
+      throw new ApiError(
+        404,
+        PASSWORD_RESET_ERROR.RESET_VERIFICATION_FAILED,
+        '입력하신 정보와 일치하는 계정을 찾을 수 없어요',
+      )
+    }
+    if (account.socialOnly) {
+      throw new ApiError(
+        409,
+        PASSWORD_RESET_ERROR.SOCIAL_ONLY_ACCOUNT,
+        '소셜 계정은 비밀번호 재설정을 사용할 수 없어요',
+      )
+    }
+    return { resetToken: `mock-reset-token:${input.email}` }
+  },
+
+  /**
+   * 새 비밀번호 저장 — Mock: 실연동 시 비번 해시 업데이트 + 해당 계정 Redis refresh 키 일괄 삭제
+   * (모든 기기 강제 로그아웃, 자동 로그인 X — 노션 명세). 여기선 정책 검증 후 resolve.
+   */
+  async resetPassword(input: { resetToken: string; newPassword: string }): Promise<void> {
+    await delay(700)
+    if (!input.resetToken) {
+      throw new ApiError(
+        400,
+        PASSWORD_RESET_ERROR.PHONE_VERIFICATION_REQUIRED,
+        '본인인증이 필요합니다',
+      )
+    }
+    if (!passwordSchema.safeParse(input.newPassword).success) {
+      throw new ApiError(
+        400,
+        PASSWORD_RESET_ERROR.PASSWORD_POLICY_VIOLATION,
+        '비밀번호는 8자 이상, 영문·숫자·특수문자를 포함해야 합니다',
+      )
+    }
+    // Mock: 실제 갱신 없음
   },
 }
