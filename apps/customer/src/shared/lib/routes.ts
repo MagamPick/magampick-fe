@@ -4,6 +4,10 @@ export const ROUTES = {
   SIGNUP: '/signup',
   WELCOME: '/welcome',
 
+  // 카카오 소셜 로그인 — 콜백 처리(연동 시 카카오 redirect_uri) + 신규 추가정보 위저드 (둘 다 PublicOnly)
+  KAKAO_CALLBACK: '/login/kakao/callback',
+  SOCIAL_SIGNUP: '/signup/social',
+
   // 로그인 후 메인 탭 (TabLayout 의 자식 라우트)
   MAP: '/map',
   ALL: '/all',

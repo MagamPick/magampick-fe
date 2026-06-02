@@ -4,6 +4,8 @@ import { PublicOnlyRoute } from '@/features/auth/components/PublicOnlyRoute'
 import { LoginPage } from '@/features/auth/pages/LoginPage'
 import { SignupPage } from '@/features/auth/pages/SignupPage'
 import { WelcomePage } from '@/features/auth/pages/WelcomePage'
+import { KakaoCallbackPage } from '@/features/auth/pages/KakaoCallbackPage'
+import { SocialSignupPage } from '@/features/auth/pages/SocialSignupPage'
 import { TabLayout } from '@/shared/components/TabLayout'
 import { FullscreenColumnLayout } from '@/shared/components/FullscreenColumnLayout'
 import { HomePage } from '@/features/home/pages/HomePage'
@@ -192,6 +194,23 @@ export const router = createBrowserRouter([
     element: (
       <PublicOnlyRoute>
         <SignupPage />
+      </PublicOnlyRoute>
+    ),
+  },
+  // 카카오 소셜 로그인 — 콜백 처리 + 신규 추가정보 위저드 (비로그인 전용)
+  {
+    path: ROUTES.KAKAO_CALLBACK,
+    element: (
+      <PublicOnlyRoute>
+        <KakaoCallbackPage />
+      </PublicOnlyRoute>
+    ),
+  },
+  {
+    path: ROUTES.SOCIAL_SIGNUP,
+    element: (
+      <PublicOnlyRoute>
+        <SocialSignupPage />
       </PublicOnlyRoute>
     ),
   },
