@@ -122,3 +122,30 @@ export type StoreRegistrationInput = z.infer<typeof storeRegistrationSchema>
 
 /** createStore API payload — FE 전용 게이트 플래그(bizVerified) 제외 */
 export type CreateStoreInput = Omit<StoreRegistrationInput, 'bizVerified'>
+
+/**
+ * 매장 정보 수정 폼 (노션 「매장 정보 수정」) — 수정 가능 5필드:
+ * 매장명·주소·상세 주소·전화번호·대표 사진. 사업자번호·대표자명·영업상태·영업시간은 비범위(불변/별도 화면).
+ * 등록 폼에서 사업자 진위확인(대표자명·번호·개업일자) 블록만 뺀 부분집합.
+ */
+export const storeEditSchema = z.object({
+  storeName: z.string().min(1, '매장명을 입력해주세요'),
+  storeAddress: z.string().min(1, '매장 주소를 등록해주세요'),
+  storeAddressDetail: z.string().optional(),
+  storePhone: z.string().min(1, '매장 전화번호를 입력해주세요'),
+  photoAdded: z.boolean().optional(),
+})
+export type StoreEditInput = z.infer<typeof storeEditSchema>
+
+/** updateStore API payload — 대상 매장 id + 수정 필드 */
+export type UpdateStoreInput = StoreEditInput & { storeId: string }
+
+/** 매장 상세 — 수정 폼 미리채움 소스 (getStore 응답). 수정 가능 필드 + id */
+export interface StoreDetail {
+  id: string
+  storeName: string
+  storeAddress: string
+  storeAddressDetail?: string
+  storePhone: string
+  photoAdded: boolean
+}

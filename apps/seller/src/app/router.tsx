@@ -10,6 +10,7 @@ import { ROUTES } from '@/shared/lib/routes'
 import { SellerHomePage } from '@/features/home/pages/SellerHomePage'
 import { StoreManagePage } from '@/features/store/pages/StoreManagePage'
 import { StoreHoursPage } from '@/features/store/pages/StoreHoursPage'
+import { StoreEditPage } from '@/features/store/pages/StoreEditPage'
 import { StoreRegisterPage } from '@/features/store/pages/StoreRegisterPage'
 import { ProductListPage } from '@/features/product/pages/ProductListPage'
 import { ProductCreatePage } from '@/features/product/pages/ProductCreatePage'
@@ -55,6 +56,14 @@ export const router = createBrowserRouter([
     element: (
       <ProtectedRoute>
         <StoreHoursPage />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: ROUTES.STORE_EDIT,
+    element: (
+      <ProtectedRoute>
+        <StoreEditPage />
       </ProtectedRoute>
     ),
   },

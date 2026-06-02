@@ -20,20 +20,9 @@ import { ROUTES } from '@/shared/lib/routes'
 import { useCurrentStoreStore } from '../stores/currentStoreStore'
 import { useCreateStore } from '../hooks/useCreateStore'
 import { useVerifyBusiness } from '../hooks/useVerifyBusiness'
+import { SAMPLE_ADDRESSES } from '../lib/sampleAddresses'
 import { storeRegistrationSchema } from '../types'
 import type { StoreRegistrationInput } from '../types'
-
-// Mock 매장 주소 — 의도적 최소 구현. 실연동 시 카카오(Daum) 우편번호 위젯이 이 시트를 대체.
-const SAMPLE_ADDRESSES = [
-  '서울 강남구 테헤란로 152',
-  '서울 강남구 역삼로 180',
-  '서울 마포구 신촌로 123',
-  '서울 마포구 월드컵북로 396',
-  '서울 송파구 올림픽로 300',
-  '서울 영등포구 여의대로 24',
-  '경기 성남시 분당구 판교역로 235',
-  '서울 용산구 이태원로 200',
-]
 
 // 프로토타입 bizNo input — 숫자 10자리 → 000-00-00000 자동 포맷
 function formatBizNo(value: string): string {
@@ -175,9 +164,14 @@ export function StoreRegisterForm() {
               {photoAdded ? '대표 사진 등록 완료' : '대표 사진 등록'}
             </span>
             <span
-              className={cn('text-[11.5px]', photoAdded ? 'text-secondary-foreground' : 'text-[#bdbdbd]')}
+              className={cn(
+                'text-[11.5px]',
+                photoAdded ? 'text-secondary-foreground' : 'text-[#bdbdbd]',
+              )}
             >
-              {photoAdded ? '탭하면 사진을 제거합니다 (데모)' : '매장 외관이 잘 보이는 사진을 권장해요'}
+              {photoAdded
+                ? '탭하면 사진을 제거합니다 (데모)'
+                : '매장 외관이 잘 보이는 사진을 권장해요'}
             </span>
           </button>
 
@@ -187,7 +181,10 @@ export function StoreRegisterForm() {
             render={({ field }) => (
               <FormItem className="mb-4">
                 <FormLabel>
-                  대표자명<span aria-hidden="true" className="text-primary">*</span>
+                  대표자명
+                  <span aria-hidden="true" className="text-primary">
+                    *
+                  </span>
                 </FormLabel>
                 <FormControl>
                   <Input
@@ -213,7 +210,10 @@ export function StoreRegisterForm() {
             render={({ field }) => (
               <FormItem className="mb-4">
                 <FormLabel>
-                  사업자등록번호<span aria-hidden="true" className="text-primary">*</span>
+                  사업자등록번호
+                  <span aria-hidden="true" className="text-primary">
+                    *
+                  </span>
                 </FormLabel>
                 <div className="relative">
                   <FormControl>
@@ -252,7 +252,10 @@ export function StoreRegisterForm() {
             render={({ field }) => (
               <FormItem className="mb-4">
                 <FormLabel>
-                  개업일자<span aria-hidden="true" className="text-primary">*</span>
+                  개업일자
+                  <span aria-hidden="true" className="text-primary">
+                    *
+                  </span>
                 </FormLabel>
                 <button
                   type="button"
@@ -317,7 +320,10 @@ export function StoreRegisterForm() {
             render={({ field }) => (
               <FormItem className="mb-4">
                 <FormLabel>
-                  매장명<span aria-hidden="true" className="text-primary">*</span>
+                  매장명
+                  <span aria-hidden="true" className="text-primary">
+                    *
+                  </span>
                 </FormLabel>
                 <FormControl>
                   <Input placeholder="예) 마감픽 베이커리 신촌점" {...field} />
@@ -333,11 +339,19 @@ export function StoreRegisterForm() {
             render={({ field }) => (
               <FormItem className="mb-4">
                 <FormLabel>
-                  매장 주소<span aria-hidden="true" className="text-primary">*</span>
+                  매장 주소
+                  <span aria-hidden="true" className="text-primary">
+                    *
+                  </span>
                 </FormLabel>
                 <div className="relative">
                   <FormControl>
-                    <Input placeholder="주소를 검색하세요" readOnly className="pr-[104px]" {...field} />
+                    <Input
+                      placeholder="주소를 검색하세요"
+                      readOnly
+                      className="pr-[104px]"
+                      {...field}
+                    />
                   </FormControl>
                   <button
                     type="button"
@@ -372,7 +386,10 @@ export function StoreRegisterForm() {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>
-                  매장 전화번호<span aria-hidden="true" className="text-primary">*</span>
+                  매장 전화번호
+                  <span aria-hidden="true" className="text-primary">
+                    *
+                  </span>
                 </FormLabel>
                 <FormControl>
                   <Input type="tel" inputMode="numeric" placeholder="02-0000-0000" {...field} />

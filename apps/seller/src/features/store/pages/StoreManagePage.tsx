@@ -51,7 +51,9 @@ export function StoreManagePage() {
                 status ? getStatusDotClass(status.operationStatus) : 'bg-muted-foreground',
               )}
             />
-            {status ? getStatusLabel(status.operationStatus, status.todayCloseTime) : '불러오는 중…'}
+            {status
+              ? getStatusLabel(status.operationStatus, status.todayCloseTime)
+              : '불러오는 중…'}
           </span>
         </div>
       </div>
@@ -71,11 +73,14 @@ export function StoreManagePage() {
             <span className="flex-1 text-[14px] font-semibold text-foreground">영업시간</span>
             <ChevronRight className="size-[18px] text-muted-foreground" />
           </Link>
-          <div className="flex items-center gap-3 border-t border-border px-4 py-3.5 opacity-50">
+          <Link
+            to={ROUTES.STORE_EDIT}
+            className="flex items-center gap-3 border-t border-border px-4 py-3.5 transition active:bg-muted"
+          >
             <span className="text-lg">✏️</span>
             <span className="flex-1 text-[14px] font-semibold text-foreground">매장 정보 수정</span>
-            <span className="text-[11.5px] text-muted-foreground">준비중</span>
-          </div>
+            <ChevronRight className="size-[18px] text-muted-foreground" />
+          </Link>
           <div className="flex items-center gap-3 border-t border-border px-4 py-3.5 opacity-50">
             <span className="text-lg">📋</span>
             <span className="flex-1 text-[14px] font-semibold text-foreground">휴업·폐업 신청</span>
