@@ -42,4 +42,8 @@ export const ROUTES = {
   SUPPORT: '/support',
   SUPPORT_INQUIRY_NEW: '/support/inquiry/new',
   SUPPORT_INQUIRY_DETAIL: (id: string) => `/support/inquiry/${id}`,
+
+  // 알림센터(홈 히어로 종에서 진입) + 알림 설정(마이에서 진입) — 풀스크린, 바텀네비 없음 (프로토타입 51 / 52)
+  NOTIFICATIONS: '/notifications',
+  NOTIFICATION_SETTINGS: '/mypage/notifications',
 } as const
