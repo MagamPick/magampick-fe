@@ -1,5 +1,11 @@
 import { ApiError } from '@/shared/lib/apiError'
-import type { SignupInput, LoginInput } from '../types'
+import type {
+  SignupInput,
+  LoginInput,
+  KakaoScenario,
+  KakaoAuthorizeResult,
+  SocialSignupInput,
+} from '../types'
 
 /**
  * ⚠️ Mock 스텁 — 백엔드 인증 API(BE 완료 NO)가 아직이라 가짜 응답.
@@ -13,6 +19,12 @@ const TAKEN_EMAIL = 'taken@magampick.com'
 const MOCK_OTP = '000000'
 /** Mock: 이 이메일만 로그인 실패로 취급 (그 외 임의 이메일 + 규칙 충족 PW 는 성공) */
 const WRONG_CREDENTIAL_EMAIL = 'wrong@magampick.com'
+/** Mock: 카카오 사용자 정보 (실연동 시 카카오 user-info 조회 결과로 교체) */
+const MOCK_KAKAO_PROFILE = {
+  kakaoId: 'kakao_1029384756',
+  email: 'kakao.user@kakao.com',
+  nickname: '카카오사용자',
+}
 
 export const authApi = {
   async checkEmail(email: string): Promise<{ available: boolean }> {
@@ -61,5 +73,39 @@ export const authApi = {
   async logout(): Promise<void> {
     await delay(300)
     // Mock: 실제로는 서버가 Redis refresh 키 삭제 + clear cookie (auth.md §7).
+  },
+
+  /**
+   * Mock: "카카오 OAuth 왕복 + BE 콜백" 시뮬. 실연동 시 콜백의 ?code 를 BE 로 보내 교환하는 호출로 교체.
+   * (실제 카카오 로그인·동의 화면은 카카오 호스팅 — FE 가 그리지 않음. 소셜 로그인 명세 참조.)
+   */
+  async kakaoAuthorize(scenario: KakaoScenario): Promise<KakaoAuthorizeResult> {
+    await delay(700)
+    switch (scenario) {
+      case 'existing':
+        // 기존 매핑된 카카오 ID → 바로 access 발급 (refresh 는 서버가 HttpOnly cookie)
+        return { status: 'existing', accessToken: `mock-access-token:${MOCK_KAKAO_PROFILE.email}` }
+      case 'new_email':
+        // 신규 + 이메일 동의 O → 추가정보용 프로필 (닉네임 받았으면 prefill)
+        return { status: 'new', profile: { ...MOCK_KAKAO_PROFILE } }
+      case 'new_no_email':
+        // 이메일 동의 거부 → 우리 시스템 필수라 가입 차단 (클라이언트가 재동의 유도)
+        throw new ApiError(400, 'KAKAO_EMAIL_REQUIRED', '카카오 이메일 제공에 동의해야 가입할 수 있어요')
+      case 'email_conflict':
+        // 카카오 이메일이 일반 가입 이메일과 충돌 → 자동 연결 X (도용 방지)
+        throw new ApiError(
+          409,
+          'EMAIL_ALREADY_REGISTERED',
+          '이미 가입된 이메일입니다. 일반 로그인을 이용해주세요',
+        )
+      default:
+        throw new ApiError(400, 'SOCIAL_AUTH_FAILED', '카카오 로그인에 실패했어요')
+    }
+  },
+
+  async socialSignup(input: SocialSignupInput): Promise<{ accessToken: string }> {
+    await delay(800)
+    // Mock: 실제로는 customers(password_hash NULL) + customer_oauth_accounts + 약관 + 주소 한 트랜잭션.
+    return { accessToken: `mock-access-token:${input.email}` }
   },
 }

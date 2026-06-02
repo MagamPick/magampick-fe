@@ -63,3 +63,56 @@ export const loginInputSchema = z.object({
 })
 
 export type LoginInput = z.infer<typeof loginInputSchema>
+
+// ── 소셜 로그인 (카카오) ──────────────────────────────────────────────
+/**
+ * mock 전용 시나리오 — "카카오 왕복 + BE 콜백"이 돌려줄 결과를 고른다. 실연동 시 제거.
+ * (실제 카카오 로그인·동의 화면은 카카오가 호스팅하므로 FE 가 그리지 않는다.)
+ */
+export type KakaoScenario = 'new_email' | 'new_no_email' | 'existing' | 'email_conflict'
+
+/** 카카오 + BE 콜백이 신규 회원에 대해 돌려주는 프로필. 이메일은 우리 시스템 필수, 닉네임은 받으면 prefill */
+export interface KakaoProfile {
+  kakaoId: string
+  email: string
+  nickname?: string
+}
+
+/** kakaoAuthorize 결과 — 기존 매핑이면 바로 토큰, 신규면 추가정보용 프로필 */
+export type KakaoAuthorizeResult =
+  | { status: 'existing'; accessToken: string }
+  | { status: 'new'; profile: KakaoProfile }
+
+/**
+ * 소셜 가입 폼 스키마 — 신규 추가정보 4스텝(약관·본인인증·주소·닉네임)을 회원가입 스텝 컴포넌트와
+ * 공유하려고 SignupInput 과 같은 형상을 유지한다. 단 카카오 가입은 비밀번호를 받지 않으므로
+ * password/passwordConfirm 은 정책 검증 없이 통과(미렌더·미사용), email 은 카카오 제공값.
+ */
+export const socialSignupFormSchema = z
+  .object({
+    agreedTermIds: z.array(z.enum(TERM_IDS)),
+    email: z.string().email('이메일 형식이 아닙니다'),
+    password: z.string(),
+    passwordConfirm: z.string(),
+    name: z.string().min(1, '이름을 입력해주세요'),
+    phone: z.string().regex(/^010-\d{4}-\d{4}$/, '휴대폰 번호를 확인해주세요'),
+    verificationToken: z.string().min(1, '휴대폰 본인인증이 필요합니다'),
+    address: z.string().min(1, '기본 주소를 등록해주세요'),
+    nickname: z.string().min(2, '2자 이상이어야 합니다').max(12, '12자 이하여야 합니다'),
+  })
+  .refine((d) => REQUIRED_TERM_IDS.every((t) => d.agreedTermIds.includes(t)), {
+    message: '필수 약관에 모두 동의해주세요',
+    path: ['agreedTermIds'],
+  })
+
+/** 소셜 가입 제출 payload — 비밀번호 없음(소셜 전용 계정 = password_hash NULL). kakaoId 포함. */
+export interface SocialSignupInput {
+  kakaoId: string
+  email: string
+  agreedTermIds: TermId[]
+  name: string
+  phone: string
+  verificationToken: string
+  address: string
+  nickname: string
+}

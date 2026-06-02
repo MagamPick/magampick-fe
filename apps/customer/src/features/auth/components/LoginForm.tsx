@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
+import { useNavigate } from 'react-router'
 import {
   Form,
   FormField,
@@ -12,12 +13,15 @@ import {
 import { Input } from '@/shared/components/ui/input'
 import { cn } from '@/shared/lib/utils'
 import { ApiError } from '@/shared/lib/apiError'
+import { ROUTES } from '@/shared/lib/routes'
 import { useLogin } from '../hooks/useLogin'
 import { loginInputSchema, type LoginInput } from '../types'
+import { KakaoMockScenarios } from './KakaoMockScenarios'
 
 export function LoginForm() {
+  const navigate = useNavigate()
   const login = useLogin()
-  // 카카오 로그인·비밀번호 찾기는 별도 명세(소셜 로그인 / 비밀번호 재설정)라 이번 단계엔 "준비 중" 안내만.
+  // 비밀번호 찾기는 별도 명세(비밀번호 재설정)라 이번 단계엔 "준비 중" 안내만.
   const [notice, setNotice] = useState<string | null>(null)
 
   const form = useForm<LoginInput>({
@@ -148,9 +152,11 @@ export function LoginForm() {
           <span className="h-px flex-1 bg-border" />
         </div>
 
+        {/* 카카오로 시작하기 — mock 에선 콜백 화면으로 (신규·이메일 동의 happy path).
+            실연동 시: window.location 으로 카카오 호스팅 OAuth 페이지로 리다이렉트. */}
         <button
           type="button"
-          onClick={() => setNotice('카카오 로그인은 준비 중이에요.')}
+          onClick={() => navigate(ROUTES.KAKAO_CALLBACK, { state: { scenario: 'new_email' } })}
           className="flex h-[52px] w-full items-center justify-center gap-2 rounded-xl bg-[#FEE500] text-[15px] font-bold text-[#191600] transition active:scale-[0.98]"
         >
           <span className="text-[17px]" aria-hidden="true">
@@ -158,6 +164,8 @@ export function LoginForm() {
           </span>
           카카오로 시작하기
         </button>
+
+        <KakaoMockScenarios />
 
         {notice && (
           <p

@@ -8,6 +8,11 @@ import { LoginForm } from './LoginForm'
 import { authApi } from '../api/authApi'
 import { useAuthStore } from '../stores/authStore'
 
+const mockNavigate = vi.fn()
+vi.mock('react-router', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('react-router')>()
+  return { ...actual, useNavigate: () => mockNavigate }
+})
 vi.mock('../api/authApi')
 
 function renderForm() {
@@ -64,13 +69,15 @@ describe('LoginForm', () => {
     expect(await screen.findByText('이메일 또는 비밀번호가 일치하지 않습니다')).toBeInTheDocument()
   })
 
-  it('카카오_클릭_시_준비중_안내', async () => {
+  it('카카오_클릭_시_콜백으로_이동', async () => {
     const user = userEvent.setup()
     renderForm()
 
-    await user.click(screen.getByRole('button', { name: /카카오/ }))
+    await user.click(screen.getByRole('button', { name: /카카오로 시작하기/ }))
 
-    expect(await screen.findByText(/준비 중/)).toBeInTheDocument()
+    expect(mockNavigate).toHaveBeenCalledWith('/login/kakao/callback', {
+      state: { scenario: 'new_email' },
+    })
     expect(authApi.login).not.toHaveBeenCalled()
   })
 
