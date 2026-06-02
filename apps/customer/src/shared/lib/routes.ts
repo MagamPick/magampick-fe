@@ -45,6 +45,9 @@ export const ROUTES = {
   // 프로필(내 정보) 수정 — 마이페이지에서 진입, TabLayout 밖 풀스크린 (바텀네비 없음)
   EDIT_PROFILE: '/mypage/edit',
 
+  // 비밀번호 변경 — 로그인 상태(현재 비번 확인 후 변경). 내 정보 수정에서 진입, 풀스크린 보호 라우트
+  PASSWORD_CHANGE: '/mypage/password',
+
   // 알림 설정 — 마이페이지에서 진입, 풀스크린 (프로토타입 61-notif-settings)
   NOTIFICATION_SETTINGS: '/mypage/notifications',
 

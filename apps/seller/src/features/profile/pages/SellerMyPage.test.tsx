@@ -68,11 +68,20 @@ describe('SellerMyPage (사장 마이 허브)', () => {
     )
   })
 
-  it('미구현 메뉴(비밀번호 변경)를 누르면 준비 중 안내가 뜬다', async () => {
+  it('비밀번호 변경은 실제 라우트로 링크된다', async () => {
+    renderMyPage()
+    await waitFor(() => expect(screen.getByText(/김민수/)).toBeInTheDocument())
+    expect(screen.getByRole('link', { name: '비밀번호 변경' })).toHaveAttribute(
+      'href',
+      '/mypage/password',
+    )
+  })
+
+  it('미구현 메뉴(약관 및 정책)를 누르면 준비 중 안내가 뜬다', async () => {
     const user = userEvent.setup()
     renderMyPage()
     await waitFor(() => expect(screen.getByText(/김민수/)).toBeInTheDocument())
-    await user.click(screen.getByRole('button', { name: '비밀번호 변경' }))
+    await user.click(screen.getByRole('button', { name: '약관 및 정책' }))
     expect(await screen.findByText('준비 중인 기능이에요')).toBeInTheDocument()
   })
 

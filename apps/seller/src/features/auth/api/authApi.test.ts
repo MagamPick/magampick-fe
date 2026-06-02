@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { authApi } from './authApi'
-import { PASSWORD_RESET_ERROR } from '../types'
+import { PASSWORD_RESET_ERROR, PASSWORD_CHANGE_ERROR } from '../types'
 
 /**
  * 비밀번호 재설정 mock — 이메일↔휴대폰 매칭 + 새 비번 정책. 사장은 소셜 가입이 없어 SOCIAL_ONLY 케이스 없음.
@@ -70,5 +70,29 @@ describe('authApi 비밀번호 재설정 (mock)', () => {
         authApi.resetPassword({ resetToken: '', newPassword: 'abcd1234!' }),
       ).rejects.toMatchObject({ code: PASSWORD_RESET_ERROR.PHONE_VERIFICATION_REQUIRED })
     })
+  })
+})
+
+/**
+ * 비밀번호 변경 (로그인 상태) mock — 현재 비번 검증 + 새 비번 정책.
+ * 성공 시 현재 기기 세션 유지(자동 로그아웃 X — 노션 「비밀번호 변경」 명세).
+ */
+describe('authApi 비밀번호 변경 (mock)', () => {
+  it('현재 비번이 맞고 새 비번이 정책을 충족하면 성공한다', async () => {
+    await expect(
+      authApi.changePassword({ currentPassword: 'Magampick1!', newPassword: 'abcd1234!' }),
+    ).resolves.toBeUndefined()
+  })
+
+  it('현재 비번이 틀리면 CURRENT_PASSWORD_MISMATCH', async () => {
+    await expect(
+      authApi.changePassword({ currentPassword: 'wrongpass1!', newPassword: 'abcd1234!' }),
+    ).rejects.toMatchObject({ code: PASSWORD_CHANGE_ERROR.CURRENT_PASSWORD_MISMATCH })
+  })
+
+  it('새 비번이 정책 미충족이면 PASSWORD_POLICY_VIOLATION', async () => {
+    await expect(
+      authApi.changePassword({ currentPassword: 'Magampick1!', newPassword: 'weak' }),
+    ).rejects.toMatchObject({ code: PASSWORD_CHANGE_ERROR.PASSWORD_POLICY_VIOLATION })
   })
 })

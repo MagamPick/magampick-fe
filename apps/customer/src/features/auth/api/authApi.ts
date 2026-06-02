@@ -1,5 +1,5 @@
 import { ApiError } from '@/shared/lib/apiError'
-import { passwordSchema, PASSWORD_RESET_ERROR } from '../types'
+import { passwordSchema, PASSWORD_RESET_ERROR, PASSWORD_CHANGE_ERROR } from '../types'
 import type {
   SignupInput,
   LoginInput,
@@ -20,6 +20,8 @@ const TAKEN_EMAIL = 'taken@magampick.com'
 const MOCK_OTP = '000000'
 /** Mock: 이 이메일만 로그인 실패로 취급 (그 외 임의 이메일 + 규칙 충족 PW 는 성공) */
 const WRONG_CREDENTIAL_EMAIL = 'wrong@magampick.com'
+/** Mock: 로그인 사용자의 현재 비밀번호 (실연동 시 BE 가 세션 사용자 해시로 검증) */
+const MOCK_CURRENT_PASSWORD = 'Magampick1!'
 /** Mock: 카카오 사용자 정보 (실연동 시 카카오 user-info 조회 결과로 교체) */
 const MOCK_KAKAO_PROFILE = {
   kakaoId: 'kakao_1029384756',
@@ -177,5 +179,29 @@ export const authApi = {
       )
     }
     // Mock: 실제 갱신 없음
+  },
+
+  /**
+   * 비밀번호 변경 (로그인 상태) — Mock: 현재 비번 검증 후 갱신.
+   * 실연동 시 세션 사용자의 비번 해시 검증 + 해시 업데이트 + 다른 기기 refresh 키 삭제(현재 기기 유지).
+   * 현재 기기 세션 유지 — 자동 로그아웃 X (노션 「비밀번호 변경」 명세).
+   */
+  async changePassword(input: { currentPassword: string; newPassword: string }): Promise<void> {
+    await delay(700)
+    if (input.currentPassword !== MOCK_CURRENT_PASSWORD) {
+      throw new ApiError(
+        400,
+        PASSWORD_CHANGE_ERROR.CURRENT_PASSWORD_MISMATCH,
+        '현재 비밀번호가 일치하지 않습니다',
+      )
+    }
+    if (!passwordSchema.safeParse(input.newPassword).success) {
+      throw new ApiError(
+        400,
+        PASSWORD_CHANGE_ERROR.PASSWORD_POLICY_VIOLATION,
+        '비밀번호는 8자 이상, 영문·숫자·특수문자를 포함해야 합니다',
+      )
+    }
+    // Mock: 실제 갱신 없음 (현재 기기 세션 유지)
   },
 }

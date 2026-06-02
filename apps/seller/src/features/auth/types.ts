@@ -113,3 +113,30 @@ export const passwordResetSchema = z
   })
 
 export type PasswordResetInput = z.infer<typeof passwordResetSchema>
+
+// ── 비밀번호 변경 (로그인 상태) ───────────────────────────────────────
+/** 비밀번호 변경 에러 코드 (노션 「비밀번호 변경」 명세) */
+export const PASSWORD_CHANGE_ERROR = {
+  /** 현재 비밀번호 불일치 */
+  CURRENT_PASSWORD_MISMATCH: 'CURRENT_PASSWORD_MISMATCH',
+  /** 새 비밀번호 정책 미충족 */
+  PASSWORD_POLICY_VIOLATION: 'PASSWORD_POLICY_VIOLATION',
+} as const
+
+/**
+ * 비밀번호 변경 폼 (로그인 상태 — 노션 「비밀번호 변경」 명세).
+ * 현재 비번 확인 후 새 비번으로 갱신. 새 비번은 가입/재설정과 동일 passwordSchema(§8) 공유.
+ * "새 비번 ≠ 현재 비번" 강제 규칙 없음(재설정과 동일 — 기존 비번 동일 허용).
+ */
+export const passwordChangeSchema = z
+  .object({
+    currentPassword: z.string().min(1, '현재 비밀번호를 입력해 주세요'),
+    newPassword: passwordSchema,
+    newPasswordConfirm: z.string(),
+  })
+  .refine((d) => d.newPassword === d.newPasswordConfirm, {
+    message: '비밀번호가 일치하지 않습니다',
+    path: ['newPasswordConfirm'],
+  })
+
+export type PasswordChangeInput = z.infer<typeof passwordChangeSchema>

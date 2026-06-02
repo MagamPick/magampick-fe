@@ -37,6 +37,9 @@ export const ROUTES = {
   MYPAGE: '/mypage',
   EDIT_PROFILE: '/mypage/edit',
 
+  // 비밀번호 변경 — 로그인 상태(현재 비번 확인 후 변경). 마이/내 정보 수정에서 진입, 풀스크린 보호 라우트
+  PASSWORD_CHANGE: '/mypage/password',
+
   // 공지사항 조회 + 고객센터(문의하기) — 마이 허브에서 진입, 풀스크린(바텀네비 없음, Phase 11)
   NOTICES: '/notices',
   SUPPORT: '/support',

@@ -6,6 +6,12 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { EditProfilePage } from './EditProfilePage'
 import { __resetProfileStoreForTest } from '../api/profileApi'
 
+const mockNavigate = vi.fn()
+vi.mock('react-router', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('react-router')>()
+  return { ...actual, useNavigate: () => mockNavigate }
+})
+
 function renderPage() {
   const qc = new QueryClient({
     defaultOptions: { queries: { retry: false, gcTime: 0 }, mutations: { retry: false } },
@@ -20,7 +26,10 @@ function renderPage() {
 }
 
 describe('EditProfilePage (내 정보 수정)', () => {
-  beforeEach(() => __resetProfileStoreForTest())
+  beforeEach(() => {
+    __resetProfileStoreForTest()
+    mockNavigate.mockClear()
+  })
   afterEach(() => {
     cleanup()
     vi.restoreAllMocks()
@@ -41,11 +50,11 @@ describe('EditProfilePage (내 정보 수정)', () => {
     expect(await screen.findByText('닉네임 수정')).toBeInTheDocument()
   })
 
-  it('비밀번호 변경은 준비 중 안내가 뜬다 (명세 비범위)', async () => {
+  it('비밀번호 변경을 누르면 비밀번호 변경 화면으로 이동한다', async () => {
     const user = userEvent.setup()
     renderPage()
     await waitFor(() => expect(screen.getByText('마감픽사용자')).toBeInTheDocument())
     await user.click(screen.getByRole('button', { name: '비밀번호 변경' }))
-    expect(await screen.findByText('준비 중인 기능이에요')).toBeInTheDocument()
+    expect(mockNavigate).toHaveBeenCalledWith('/mypage/password')
   })
 })
