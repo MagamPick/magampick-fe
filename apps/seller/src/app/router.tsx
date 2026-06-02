@@ -26,6 +26,10 @@ import { EditProfilePage } from '@/features/profile/pages/EditProfilePage'
 import { ReviewManagePage } from '@/features/reviews/pages/ReviewManagePage'
 import { RefundManagePage } from '@/features/refund/pages/RefundManagePage'
 import { SettlementHistoryPage } from '@/features/settlement/pages/SettlementHistoryPage'
+import { NoticeListPage } from '@/features/notices/pages/NoticeListPage'
+import { SupportPage } from '@/features/support/pages/SupportPage'
+import { InquiryFormPage } from '@/features/support/pages/InquiryFormPage'
+import { InquiryDetailPage } from '@/features/support/pages/InquiryDetailPage'
 import { NotificationCenterPage } from '@/features/notifications/pages/NotificationCenterPage'
 import { NotificationSettingsPage } from '@/features/notifications/pages/NotificationSettingsPage'
 
@@ -156,6 +160,39 @@ export const router = createBrowserRouter([
     element: (
       <ProtectedRoute>
         <EditProfilePage />
+      </ProtectedRoute>
+    ),
+  },
+  // 공지사항 조회 + 고객센터(문의하기) — 마이 허브에서 진입, 풀스크린 보호 라우트 (Phase 11)
+  {
+    path: ROUTES.NOTICES,
+    element: (
+      <ProtectedRoute>
+        <NoticeListPage />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: ROUTES.SUPPORT,
+    element: (
+      <ProtectedRoute>
+        <SupportPage />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: ROUTES.SUPPORT_INQUIRY_NEW,
+    element: (
+      <ProtectedRoute>
+        <InquiryFormPage />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: '/support/inquiry/:id',
+    element: (
+      <ProtectedRoute>
+        <InquiryDetailPage />
       </ProtectedRoute>
     ),
   },
