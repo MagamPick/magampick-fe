@@ -15,6 +15,9 @@ export const ROUTES = {
   ORDERS: '/orders',
   MYPAGE: '/mypage',
 
+  // 검색 — 키워드 검색·자동완성·최근 검색어 (TabLayout 밖 풀스크린 — 바텀네비 없음, 프로토타입 53-search)
+  SEARCH: '/search',
+
   // 매장 상세 + 매장 위치 (TabLayout 밖 풀스크린 — 바텀네비 없음)
   STORE_DETAIL: (id: string) => `/store/${id}`,
   STORE_LOCATION: (id: string) => `/store/${id}/location`,
