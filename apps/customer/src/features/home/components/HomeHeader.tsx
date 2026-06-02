@@ -1,16 +1,16 @@
 import { Bell, ChevronDown, ShoppingCart } from 'lucide-react'
 import { Link } from 'react-router'
 import { ROUTES } from '@/shared/lib/routes'
-import { useComingSoon } from '@/shared/hooks/useComingSoon'
+import { useUnreadCount } from '@/features/notifications/hooks/useUnreadCount'
 import { useHomeAddress } from '../hooks/useHomeAddress'
 
 /**
  * 홈 상단 헤더 — 기본 주소지(피드 기준점) + 알림/장바구니. 스크롤해도 상단 고정.
- * 주소지 칩 → 주소 설정(/addresses), 장바구니 → /cart. 알림은 미구현이라 탭 시 "준비 중" 안내.
+ * 주소지 칩 → 주소 설정(/addresses), 알림 → 알림센터(미읽음 수 뱃지), 장바구니 → /cart.
  */
 export function HomeHeader() {
-  const { show } = useComingSoon()
   const { data } = useHomeAddress()
+  const { data: unreadCount = 0 } = useUnreadCount()
   const label = data?.label ?? '위치 불러오는 중…'
 
   return (
@@ -26,14 +26,21 @@ export function HomeHeader() {
         <ChevronDown className="size-4 flex-shrink-0 text-muted-foreground" aria-hidden />
       </Link>
       <div className="flex flex-shrink-0">
-        <button
-          type="button"
+        <Link
+          to={ROUTES.NOTIFICATIONS}
           aria-label="알림"
-          onClick={() => show('알림은 준비 중이에요.')}
-          className="inline-flex size-11 items-center justify-center text-foreground"
+          className="relative inline-flex size-11 items-center justify-center text-foreground"
         >
           <Bell className="size-[22px]" aria-hidden />
-        </button>
+          {unreadCount > 0 && (
+            <span
+              className="absolute right-1.5 top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold leading-none text-white"
+              aria-hidden
+            >
+              {unreadCount > 99 ? '99+' : unreadCount}
+            </span>
+          )}
+        </Link>
         <Link
           to={ROUTES.CART}
           aria-label="장바구니"
