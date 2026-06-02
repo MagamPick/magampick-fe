@@ -54,7 +54,7 @@ function SellerMyPageContent() {
 
       <MenuGroup title="설정">
         <MenuRow icon="🔔" label="알림 설정" to={ROUTES.NOTIFICATION_SETTINGS} />
-        <MenuRow icon="🔒" label="비밀번호 변경" onClick={soon} />
+        <MenuRow icon="🔒" label="비밀번호 변경" to={ROUTES.PASSWORD_CHANGE} />
         <MenuRow icon="📄" label="약관 및 정책" onClick={soon} />
       </MenuGroup>
 

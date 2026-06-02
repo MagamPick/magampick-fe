@@ -4,6 +4,7 @@ import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { ComingSoonProvider } from '@/shared/components/ComingSoonToast'
 import { ScreenContainer } from '@/shared/components/ScreenContainer'
 import { useComingSoon } from '@/shared/hooks/useComingSoon'
+import { ROUTES } from '@/shared/lib/routes'
 import { useProfile } from '../hooks/useProfile'
 import { NameEditSheet } from '../components/NameEditSheet'
 
@@ -85,8 +86,12 @@ function EditProfileContent() {
                 <span className={ROW_VALUE}>{profile.email}</span>
               </div>
 
-              {/* 비밀번호 변경 — 비범위(별도 인증 기능) */}
-              <button type="button" onClick={soon} className={EDIT_ROW}>
+              {/* 비밀번호 변경 — 로그인 상태 현재 비번 확인 후 변경 */}
+              <button
+                type="button"
+                onClick={() => navigate(ROUTES.PASSWORD_CHANGE)}
+                className={EDIT_ROW}
+              >
                 <span className="flex-1 text-[14.5px] font-semibold text-foreground">
                   비밀번호 변경
                 </span>

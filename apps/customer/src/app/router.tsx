@@ -7,6 +7,7 @@ import { WelcomePage } from '@/features/auth/pages/WelcomePage'
 import { KakaoCallbackPage } from '@/features/auth/pages/KakaoCallbackPage'
 import { SocialSignupPage } from '@/features/auth/pages/SocialSignupPage'
 import { PasswordResetPage } from '@/features/auth/pages/PasswordResetPage'
+import { PasswordChangePage } from '@/features/auth/pages/PasswordChangePage'
 import { TabLayout } from '@/shared/components/TabLayout'
 import { FullscreenColumnLayout } from '@/shared/components/FullscreenColumnLayout'
 import { HomePage } from '@/features/home/pages/HomePage'
@@ -64,6 +65,15 @@ export const router = createBrowserRouter([
     element: (
       <ProtectedRoute>
         <EditProfilePage />
+      </ProtectedRoute>
+    ),
+  },
+  // 비밀번호 변경 — 로그인 상태 현재 비번 확인 후 변경 (풀스크린 보호 라우트)
+  {
+    path: ROUTES.PASSWORD_CHANGE,
+    element: (
+      <ProtectedRoute>
+        <PasswordChangePage />
       </ProtectedRoute>
     ),
   },
