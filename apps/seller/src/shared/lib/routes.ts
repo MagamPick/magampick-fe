@@ -36,4 +36,10 @@ export const ROUTES = {
   // 마이 허브(바텀네비 탭) + 내 정보 수정(풀스크린, 바텀네비 없음)
   MYPAGE: '/mypage',
   EDIT_PROFILE: '/mypage/edit',
+
+  // 공지사항 조회 + 고객센터(문의하기) — 마이 허브에서 진입, 풀스크린(바텀네비 없음, Phase 11)
+  NOTICES: '/notices',
+  SUPPORT: '/support',
+  SUPPORT_INQUIRY_NEW: '/support/inquiry/new',
+  SUPPORT_INQUIRY_DETAIL: (id: string) => `/support/inquiry/${id}`,
 } as const

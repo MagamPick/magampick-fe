@@ -59,8 +59,8 @@ function SellerMyPageContent() {
       </MenuGroup>
 
       <MenuGroup title="지원">
-        <MenuRow icon="📢" label="공지사항" onClick={soon} />
-        <MenuRow icon="🎧" label="고객센터" onClick={soon} />
+        <MenuRow icon="📢" label="공지사항" to={ROUTES.NOTICES} />
+        <MenuRow icon="🎧" label="고객센터" to={ROUTES.SUPPORT} />
         <MenuRow icon="ℹ️" label="앱 버전" value="v1.0.0" />
         <MenuRow icon="🚪" label="로그아웃" danger onClick={handleLogout} />
         <MenuRow icon="🗑️" label="회원 탈퇴" danger onClick={soon} />

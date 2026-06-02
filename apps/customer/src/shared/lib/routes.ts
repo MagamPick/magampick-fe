@@ -58,4 +58,10 @@ export const ROUTES = {
   ADDRESSES: '/addresses',
   ADDRESS_NEW: '/addresses/new',
   ADDRESS_EDIT: (id: string) => `/addresses/${id}/edit`,
+
+  // 공지사항 조회 + 고객센터(문의하기) — 마이페이지에서 진입, 풀스크린(바텀네비 없음, Phase 11)
+  NOTICES: '/notices',
+  SUPPORT: '/support',
+  SUPPORT_INQUIRY_NEW: '/support/inquiry/new',
+  SUPPORT_INQUIRY_DETAIL: (id: string) => `/support/inquiry/${id}`,
 } as const
