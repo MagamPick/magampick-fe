@@ -2,13 +2,16 @@ import { Bell, User } from 'lucide-react'
 import { Link } from 'react-router'
 import { StoreSwitcher } from '@/features/store/components/StoreSwitcher'
 import { ROUTES } from '@/shared/lib/routes'
+import { useUnreadCount } from '@/features/notifications/hooks/useUnreadCount'
 
 /**
  * 사장 홈 히어로 — 오렌지 그라디언트 헤더 (프로토타입 .ms-hero).
- * 매장 선택기만 실동작. 평점·리뷰·알림은 정적/비활성 (별도 기능).
- * 프로필 아이콘 → 마이 허브 (로그아웃·내 정보 수정·설정 등은 거기 메뉴 행. 프로토타입 24-mypage).
+ * 매장 선택기 + 알림센터 진입(미읽음 뱃지). 평점·리뷰는 정적.
+ * 프로필 아이콘 → 마이 허브 (로그아웃·내 정보 수정·설정 등은 거기 메뉴 행).
  */
 export function HomeHero() {
+  const { data: unreadCount = 0 } = useUnreadCount()
+
   return (
     <header className="relative overflow-hidden rounded-b-3xl bg-gradient-to-br from-primary to-secondary-foreground px-5 pb-7 pt-[calc(env(safe-area-inset-top,0px)+1.75rem)] text-white shadow-e3">
       <div className="relative flex items-center gap-3">
@@ -24,14 +27,21 @@ export function HomeHero() {
             <span>412 리뷰</span>
           </div>
         </div>
-        <button
-          type="button"
-          className="relative flex size-10 shrink-0 items-center justify-center rounded-full bg-white/20"
+        <Link
+          to={ROUTES.NOTIFICATIONS}
           aria-label="알림"
+          className="relative flex size-10 shrink-0 items-center justify-center rounded-full bg-white/20"
         >
           <Bell className="size-5" />
-          <span className="absolute right-2.5 top-2 size-2 rounded-full bg-warning ring-2 ring-primary" aria-hidden />
-        </button>
+          {unreadCount > 0 && (
+            <span
+              className="absolute right-0 top-0 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-warning px-1 text-[10px] font-extrabold leading-none text-foreground ring-2 ring-primary"
+              aria-hidden
+            >
+              {unreadCount > 99 ? '99+' : unreadCount}
+            </span>
+          )}
+        </Link>
         <Link
           to={ROUTES.MYPAGE}
           aria-label="마이"

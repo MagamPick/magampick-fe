@@ -59,11 +59,20 @@ describe('SellerMyPage (사장 마이 허브)', () => {
     expect(screen.getByRole('link', { name: '수정' })).toHaveAttribute('href', '/mypage/edit')
   })
 
-  it('미구현 메뉴(알림 설정)를 누르면 준비 중 안내가 뜬다', async () => {
+  it('알림 설정은 실제 라우트로 링크된다', async () => {
+    renderMyPage()
+    await waitFor(() => expect(screen.getByText(/김민수/)).toBeInTheDocument())
+    expect(screen.getByRole('link', { name: '알림 설정' })).toHaveAttribute(
+      'href',
+      '/mypage/notifications',
+    )
+  })
+
+  it('미구현 메뉴(비밀번호 변경)를 누르면 준비 중 안내가 뜬다', async () => {
     const user = userEvent.setup()
     renderMyPage()
     await waitFor(() => expect(screen.getByText(/김민수/)).toBeInTheDocument())
-    await user.click(screen.getByRole('button', { name: '알림 설정' }))
+    await user.click(screen.getByRole('button', { name: '비밀번호 변경' }))
     expect(await screen.findByText('준비 중인 기능이에요')).toBeInTheDocument()
   })
 
