@@ -14,6 +14,7 @@ import { StoreLocationPage } from '@/features/store-detail/pages/StoreLocationPa
 import { ProductDetailPage } from '@/features/product-detail/pages/ProductDetailPage'
 import { MapTab } from '@/shared/components/tabs/MapTab'
 import { StoreListPage } from '@/features/store-list/pages/StoreListPage'
+import { SearchPage } from '@/features/search/pages/SearchPage'
 import { FavoritesPage } from '@/features/favorites/pages/FavoritesPage'
 import { OrderListPage } from '@/features/order/pages/OrderListPage'
 import { OrderDetailPage } from '@/features/order/pages/OrderDetailPage'
@@ -56,6 +57,15 @@ export const router = createBrowserRouter([
     element: (
       <ProtectedRoute>
         <EditProfilePage />
+      </ProtectedRoute>
+    ),
+  },
+  // 검색 — 키워드 검색·자동완성·최근 검색어 (풀스크린 보호 라우트, 프로토타입 53-search)
+  {
+    path: ROUTES.SEARCH,
+    element: (
+      <ProtectedRoute>
+        <SearchPage />
       </ProtectedRoute>
     ),
   },

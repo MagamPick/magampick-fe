@@ -1,18 +1,26 @@
 import { describe, it, expect } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { ComingSoonProvider } from '@/shared/components/ComingSoonToast'
+import { MemoryRouter, Routes, Route, useLocation } from 'react-router'
 import { SearchBarButton } from './SearchBarButton'
 
+function LocationDisplay() {
+  const loc = useLocation()
+  return <div data-testid="loc">{loc.pathname}</div>
+}
+
 describe('SearchBarButton', () => {
-  it('탭하면_검색_준비중_안내', async () => {
+  it('탭하면_검색화면으로_이동', async () => {
     const user = userEvent.setup()
     render(
-      <ComingSoonProvider>
-        <SearchBarButton />
-      </ComingSoonProvider>,
+      <MemoryRouter initialEntries={['/']}>
+        <Routes>
+          <Route path="/" element={<SearchBarButton />} />
+          <Route path="/search" element={<LocationDisplay />} />
+        </Routes>
+      </MemoryRouter>,
     )
     await user.click(screen.getByRole('button', { name: /검색해 보세요/ }))
-    expect(await screen.findByText('검색은 준비 중이에요.')).toBeInTheDocument()
+    expect(screen.getByTestId('loc')).toHaveTextContent('/search')
   })
 })
