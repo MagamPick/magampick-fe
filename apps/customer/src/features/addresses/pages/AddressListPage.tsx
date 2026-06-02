@@ -3,6 +3,9 @@ import { useNavigate } from 'react-router'
 import { ChevronLeft, Search, LocateFixed, Plus } from 'lucide-react'
 import { ROUTES } from '@/shared/lib/routes'
 import { ScreenContainer } from '@/shared/components/ScreenContainer'
+import { EmptyState } from '@/shared/components/EmptyState'
+import { ErrorState } from '@/shared/components/ErrorState'
+import { ListRowSkeleton } from '@/shared/components/Skeletons'
 import { AddressCard } from '../components/AddressCard'
 import { AddressSearchSheet } from '../components/AddressSearchSheet'
 import { useAddresses } from '../hooks/useAddresses'
@@ -17,7 +20,7 @@ import type { AddressSearchResult } from '../types'
  */
 export function AddressListPage() {
   const navigate = useNavigate()
-  const { data: addresses, isPending } = useAddresses()
+  const { data: addresses, isPending, isError, refetch } = useAddresses()
   const setDefault = useSetDefaultAddress()
   const reverseGeocode = useReverseGeocode()
   const [sheetOpen, setSheetOpen] = useState(false)
@@ -83,7 +86,9 @@ export function AddressListPage() {
 
         {/* 목록 */}
         {isPending ? (
-          <p className="py-10 text-center text-sm text-muted-foreground">불러오는 중…</p>
+          <ListRowSkeleton className="mt-2" media={false} />
+        ) : isError ? (
+          <ErrorState onRetry={() => refetch()}>주소를 불러오지 못했어요.</ErrorState>
         ) : sortedAddresses.length > 0 ? (
           <div className="mt-1">
             {sortedAddresses.map((address) => (
@@ -97,14 +102,11 @@ export function AddressListPage() {
             ))}
           </div>
         ) : (
-          <div className="px-5 py-14 text-center">
-            <div className="text-[44px]">📍</div>
-            <p className="mt-3 text-sm font-semibold text-muted-foreground">
-              저장된 주소가 없어요.
-              <br />
-              위에서 새 주소를 추가해보세요.
-            </p>
-          </div>
+          <EmptyState icon="📍">
+            저장된 주소가 없어요.
+            <br />
+            위에서 새 주소를 추가해보세요.
+          </EmptyState>
         )}
       </main>
 

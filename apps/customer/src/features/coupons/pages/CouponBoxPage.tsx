@@ -4,6 +4,8 @@ import { ChevronLeft } from 'lucide-react'
 import { ScreenContainer } from '@/shared/components/ScreenContainer'
 import { SegTabs, type SegTabItem } from '@/shared/components/SegTabs'
 import { EmptyState } from '@/shared/components/EmptyState'
+import { ErrorState } from '@/shared/components/ErrorState'
+import { CardSkeleton } from '@/shared/components/Skeletons'
 import { ROUTES } from '@/shared/lib/routes'
 import { useCoupons } from '../hooks/useCoupons'
 import type { CouponStatus } from '../types'
@@ -16,7 +18,7 @@ import { CouponCard } from '../components/CouponCard'
 export function CouponBoxPage() {
   const navigate = useNavigate()
   const [tab, setTab] = useState<CouponStatus>('usable')
-  const { data: coupons, isLoading } = useCoupons()
+  const { data: coupons, isPending, isError, refetch } = useCoupons()
 
   const counts = useMemo(() => {
     const c = { usable: 0, used: 0, expired: 0 }
@@ -55,8 +57,10 @@ export function CouponBoxPage() {
       <SegTabs ariaLabel="쿠폰 상태" tabs={tabs} value={tab} onChange={setTab} />
 
       <main className="flex-1">
-        {isLoading ? (
-          <p className="py-16 text-center text-sm text-muted-foreground">불러오는 중…</p>
+        {isPending ? (
+          <CardSkeleton className="px-5 pt-3" />
+        ) : isError ? (
+          <ErrorState onRetry={() => refetch()}>쿠폰을 불러오지 못했어요.</ErrorState>
         ) : visible.length > 0 ? (
           <div className="flex flex-col gap-2.5 px-5 pb-6 pt-3">
             {visible.map((coupon) => (
@@ -64,16 +68,19 @@ export function CouponBoxPage() {
             ))}
           </div>
         ) : (
-          <EmptyState icon="🎟">
+          <EmptyState
+            icon="🎟"
+            action={
+              <button
+                type="button"
+                onClick={() => navigate(ROUTES.EVENTS)}
+                className="min-h-8 px-1 text-[13px] font-bold text-secondary-foreground underline"
+              >
+                이벤트에서 쿠폰을 받아보세요
+              </button>
+            }
+          >
             해당 쿠폰이 없어요.
-            <br />
-            <button
-              type="button"
-              onClick={() => navigate(ROUTES.EVENTS)}
-              className="mt-2 inline-block min-h-8 px-1 text-[13px] font-bold text-secondary-foreground underline"
-            >
-              이벤트에서 쿠폰을 받아보세요
-            </button>
           </EmptyState>
         )}
       </main>

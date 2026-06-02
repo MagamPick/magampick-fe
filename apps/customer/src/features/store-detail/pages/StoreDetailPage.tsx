@@ -5,6 +5,7 @@ import { ScreenContainer } from '@/shared/components/ScreenContainer'
 import { useComingSoon } from '@/shared/hooks/useComingSoon'
 import { PullToRefresh } from '@/shared/components/PullToRefresh'
 import { Button } from '@/shared/components/ui/button'
+import { ErrorState } from '@/shared/components/ErrorState'
 import { ROUTES } from '@/shared/lib/routes'
 import { storeDetailParamsSchema } from '../types'
 import { useStoreDetail } from '../hooks/useStoreDetail'
@@ -39,7 +40,7 @@ export function StoreDetailPage() {
 function StoreDetailView({ storeId }: { storeId: string }) {
   const navigate = useNavigate()
   const { show } = useComingSoon()
-  const { data: store, isPending, isError } = useStoreDetail(storeId)
+  const { data: store, isPending, isError, refetch } = useStoreDetail(storeId)
   const refresh = useStoreDetailRefresh(storeId)
   const toggleFavorite = useToggleFavorite()
   const [searchParams] = useSearchParams()
@@ -108,8 +109,8 @@ function StoreDetailView({ storeId }: { storeId: string }) {
 
   if (isError || !store) {
     return (
-      <ScreenContainer variant="bleed" className="flex flex-col items-center justify-center gap-4 px-8 text-center">
-        <p className="text-sm text-muted-foreground">매장 정보를 불러오지 못했어요.</p>
+      <ScreenContainer variant="bleed" className="flex flex-col items-center justify-center">
+        <ErrorState onRetry={() => refetch()}>매장 정보를 불러오지 못했어요.</ErrorState>
         <Button variant="outline" onClick={handleBack}>
           뒤로 가기
         </Button>

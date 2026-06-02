@@ -1,3 +1,4 @@
+import { EmptyState } from '@/shared/components/EmptyState'
 import { MyReviewCard } from './MyReviewCard'
 import type { MyReview } from '../types'
 
@@ -10,12 +11,7 @@ interface Props {
 /** 내가 쓴 리뷰 목록 — 요약(개수·평균) + 카드. 비어 있으면 안내. 프로토타입 62-my-reviews */
 export function MyReviewList({ reviews, onEdit, onDelete }: Props) {
   if (reviews.length === 0) {
-    return (
-      <div className="flex flex-col items-center justify-center gap-2 py-20 text-center">
-        <span className="text-[40px]">✍️</span>
-        <p className="text-sm text-muted-foreground">작성한 리뷰가 없어요.</p>
-      </div>
-    )
+    return <EmptyState icon="✍️">작성한 리뷰가 없어요.</EmptyState>
   }
 
   const average = reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length

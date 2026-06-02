@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { Navigate, useNavigate, useParams } from 'react-router'
 import { ChevronLeft } from 'lucide-react'
 import { cn } from '@/shared/lib/utils'
+import { ErrorState } from '@/shared/components/ErrorState'
 import { ROUTES } from '@/shared/lib/routes'
 import { useCartStore } from '@/features/cart/stores/cartStore'
 import { useOrder } from '../hooks/useOrder'
@@ -23,7 +24,7 @@ export function OrderDetailPage() {
   const parsed = paramsSchema.safeParse(params)
   const id = parsed.success ? parsed.data.id : ''
 
-  const { data: order, isLoading, isError } = useOrder(id)
+  const { data: order, isLoading, isError, refetch } = useOrder(id)
   const cancel = useCancelOrder(id)
   const refund = useRequestRefund(id)
   const addItem = useCartStore((s) => s.addItem)
@@ -96,10 +97,9 @@ export function OrderDetailPage() {
         )}
 
         {!isLoading && (isError || !order) && (
-          <div className="px-8 py-16 text-center">
-            <p className="text-[40px]">🧾</p>
-            <p className="mt-3 text-[14px] text-muted-foreground">주문을 찾을 수 없어요.</p>
-          </div>
+          <ErrorState icon="🧾" onRetry={() => refetch()}>
+            주문을 찾을 수 없어요.
+          </ErrorState>
         )}
 
         {order && (

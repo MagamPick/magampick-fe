@@ -1,6 +1,9 @@
 import { useNavigate, useSearchParams } from 'react-router'
 import { cn } from '@/shared/lib/utils'
 import { ScreenContainer } from '@/shared/components/ScreenContainer'
+import { EmptyState } from '@/shared/components/EmptyState'
+import { ErrorState } from '@/shared/components/ErrorState'
+import { ListRowSkeleton } from '@/shared/components/Skeletons'
 import { ROUTES } from '@/shared/lib/routes'
 import { useOrders } from '../hooks/useOrders'
 import { CustomerOrderCard } from '../components/CustomerOrderCard'
@@ -27,7 +30,7 @@ export function OrderListPage() {
   const setSegment = (s: Segment) =>
     setSearchParams(s === 'all' ? {} : { segment: s }, { replace: true })
 
-  const { data: orders, isLoading } = useOrders()
+  const { data: orders, isPending, isError, refetch } = useOrders()
   const visible = filterOrders(orders ?? [], segment)
 
   return (
@@ -62,25 +65,22 @@ export function OrderListPage() {
 
       {/* 목록 */}
       <div className="flex flex-col gap-2.5 px-4 py-4 pb-6">
-        {isLoading && (
-          <p className="py-16 text-center text-[14px] text-muted-foreground">불러오는 중…</p>
+        {isPending ? (
+          <ListRowSkeleton className="px-1 pt-2" />
+        ) : isError ? (
+          <ErrorState onRetry={() => refetch()}>주문 내역을 불러오지 못했어요.</ErrorState>
+        ) : visible.length === 0 ? (
+          <EmptyState icon="🧾">주문 내역이 없어요.</EmptyState>
+        ) : (
+          visible.map((order) => (
+            <CustomerOrderCard
+              key={order.id}
+              order={order}
+              onClick={() => navigate(ROUTES.ORDER_DETAIL(order.id))}
+              onReviewClick={() => navigate(ROUTES.REVIEW_WRITE(order.id))}
+            />
+          ))
         )}
-
-        {!isLoading && visible.length === 0 && (
-          <div className="flex flex-col items-center justify-center gap-2 py-20 text-center">
-            <span className="text-[40px]">🧾</span>
-            <p className="text-[14px] text-muted-foreground">주문 내역이 없어요.</p>
-          </div>
-        )}
-
-        {visible.map((order) => (
-          <CustomerOrderCard
-            key={order.id}
-            order={order}
-            onClick={() => navigate(ROUTES.ORDER_DETAIL(order.id))}
-            onReviewClick={() => navigate(ROUTES.REVIEW_WRITE(order.id))}
-          />
-        ))}
       </div>
     </ScreenContainer>
   )

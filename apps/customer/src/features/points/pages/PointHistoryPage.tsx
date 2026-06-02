@@ -4,6 +4,8 @@ import { ChevronLeft } from 'lucide-react'
 import { ScreenContainer } from '@/shared/components/ScreenContainer'
 import { SegTabs, type SegTabItem } from '@/shared/components/SegTabs'
 import { EmptyState } from '@/shared/components/EmptyState'
+import { ErrorState } from '@/shared/components/ErrorState'
+import { ListRowSkeleton } from '@/shared/components/Skeletons'
 import { usePointSummary } from '../hooks/usePointSummary'
 import { usePointHistory } from '../hooks/usePointHistory'
 import type { PointHistoryFilter } from '../types'
@@ -24,7 +26,7 @@ export function PointHistoryPage() {
   const navigate = useNavigate()
   const [filter, setFilter] = useState<PointHistoryFilter>('all')
   const { data: summary } = usePointSummary()
-  const { data: history, isLoading } = usePointHistory(filter)
+  const { data: history, isPending, isError, refetch } = usePointHistory(filter)
 
   return (
     <ScreenContainer variant="page">
@@ -46,8 +48,10 @@ export function PointHistoryPage() {
           <SegTabs ariaLabel="포인트 내역 필터" tabs={TABS} value={filter} onChange={setFilter} />
         </div>
 
-        {isLoading ? (
-          <p className="py-16 text-center text-sm text-muted-foreground">불러오는 중…</p>
+        {isPending ? (
+          <ListRowSkeleton className="px-5 pt-3" media={false} />
+        ) : isError ? (
+          <ErrorState onRetry={() => refetch()}>포인트 내역을 불러오지 못했어요.</ErrorState>
         ) : history && history.length > 0 ? (
           <ul className="px-5 pb-6 pt-1">
             {history.map((txn) => (
