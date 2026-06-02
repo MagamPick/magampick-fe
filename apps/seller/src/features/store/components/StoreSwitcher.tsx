@@ -8,31 +8,53 @@ import { useStores } from '../hooks/useStores'
 import { useCurrentStoreStore } from '../stores/currentStoreStore'
 import { getStatusDotClass, getStoreListLabel } from '../lib/transitions'
 
+interface Props {
+  /**
+   * 트리거 모양 — `hero`: 홈 히어로의 흰 텍스트 매장명(기본) / `chip`: 통계 등 밝은 헤더의 테두리 칩.
+   * 어느 쪽이든 같은 매장 전환 시트를 연다(시트 로직 공유).
+   */
+  variant?: 'hero' | 'chip'
+}
+
 /**
- * 매장 전환 모달 (노션: 보유 매장 목록 조회) — 히어로 매장명 탭 → 보유 매장 목록.
+ * 매장 전환 모달 (노션: 보유 매장 목록 조회) — 매장명 트리거 탭 → 보유 매장 목록.
  * 각 항목은 매장명 + 영업 상태 라벨. 선택 시 현재 매장 전환, 하단 [매장 추가]로 경로 B 등록 진입.
  */
-export function StoreSwitcher() {
+export function StoreSwitcher({ variant = 'hero' }: Props) {
   const [open, setOpen] = useState(false)
   const navigate = useNavigate()
   const { data: stores } = useStores()
   const selectedStoreId = useCurrentStoreStore((s) => s.selectedStoreId)
   const selectStore = useCurrentStoreStore((s) => s.selectStore)
   const current = stores?.find((s) => s.id === selectedStoreId)
+  const name = current?.name ?? '매장 선택'
 
   return (
     <>
-      <button
-        type="button"
-        onClick={() => setOpen(true)}
-        className="inline-flex max-w-full items-center gap-1 text-left text-white"
-        aria-label="매장 전환"
-      >
-        <span className="truncate text-[18px] font-bold tracking-tight">
-          {current?.name ?? '매장 선택'}
-        </span>
-        <ChevronDown className="size-3.5 shrink-0" />
-      </button>
+      {variant === 'chip' ? (
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          aria-label="매장 전환"
+          className="inline-flex h-9 max-w-[200px] items-center gap-1.5 rounded-[18px] border border-[#FFD9C7] bg-secondary px-3 text-[12.5px] font-bold tracking-[-0.2px] text-secondary-foreground transition active:bg-[#FFD9C7]"
+        >
+          <span aria-hidden className="text-[14px] leading-none">
+            🏪
+          </span>
+          <span className="truncate">{name}</span>
+          <ChevronDown className="size-3.5 shrink-0 text-primary" />
+        </button>
+      ) : (
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          className="inline-flex max-w-full items-center gap-1 text-left text-white"
+          aria-label="매장 전환"
+        >
+          <span className="truncate text-[18px] font-bold tracking-tight">{name}</span>
+          <ChevronDown className="size-3.5 shrink-0" />
+        </button>
+      )}
 
       <Sheet open={open} onOpenChange={setOpen}>
         <SheetContent
@@ -63,7 +85,10 @@ export function StoreSwitcher() {
                   </span>
                   <span className="ml-3 inline-flex shrink-0 items-center gap-1.5 text-[12.5px] font-bold text-muted-foreground">
                     <span
-                      className={cn('size-2 rounded-full', getStatusDotClass(store.operationStatus))}
+                      className={cn(
+                        'size-2 rounded-full',
+                        getStatusDotClass(store.operationStatus),
+                      )}
                     />
                     {getStoreListLabel(store.operationStatus)}
                   </span>

@@ -4,7 +4,7 @@ import { PublicOnlyRoute } from '@/features/auth/components/PublicOnlyRoute'
 import { LoginPage } from '@/features/auth/pages/LoginPage'
 import { SignupPage } from '@/features/auth/pages/SignupPage'
 import { TabLayout } from '@/shared/components/TabLayout'
-import { AnalyticsTab } from '@/shared/components/tabs/AnalyticsTab'
+import { AnalyticsPage } from '@/features/analytics/pages/AnalyticsPage'
 import { NotFoundPage } from '@/shared/components/NotFoundPage'
 import { ROUTES } from '@/shared/lib/routes'
 import { SellerHomePage } from '@/features/home/pages/SellerHomePage'
@@ -39,7 +39,7 @@ export const router = createBrowserRouter([
       { index: true, element: <SellerHomePage /> },
       { path: ROUTES.ORDERS, element: <OrderListPage /> },
       { path: ROUTES.PRODUCTS, element: <ProductListPage /> },
-      { path: ROUTES.ANALYTICS, element: <AnalyticsTab /> },
+      { path: ROUTES.ANALYTICS, element: <AnalyticsPage /> },
       { path: ROUTES.MYPAGE, element: <SellerMyPage /> },
     ],
   },

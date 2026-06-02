@@ -64,4 +64,20 @@ describe('StoreSwitcher — 매장 전환 모달 (보유 매장 목록 조회)',
 
     expect(navigateSpy).toHaveBeenCalledWith('/store/new')
   })
+
+  it('chip variant 는 현재 매장명 칩을 보여주고 같은 전환 시트를 연다(통계 헤더용)', async () => {
+    const user = userEvent.setup()
+    const Wrapper = createQueryWrapper()
+    render(
+      <Wrapper>
+        <MemoryRouter>
+          <StoreSwitcher variant="chip" />
+        </MemoryRouter>
+      </Wrapper>,
+    )
+    // 로드되면 칩에 현재 매장명이 뜬다(전환 전엔 칩에만 존재)
+    expect(await screen.findByText('마감픽 베이커리 역삼점')).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: '매장 전환' }))
+    expect(await screen.findByText('영업중')).toBeInTheDocument()
+  })
 })
