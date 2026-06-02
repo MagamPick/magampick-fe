@@ -24,6 +24,9 @@ import { AddressFormPage } from '@/features/addresses/pages/AddressFormPage'
 import { CartPage } from '@/features/cart/pages/CartPage'
 import { CheckoutPage } from '@/features/order/pages/CheckoutPage'
 import { OrderSuccessPage } from '@/features/order/pages/OrderSuccessPage'
+import { PointHistoryPage } from '@/features/points/pages/PointHistoryPage'
+import { CouponBoxPage } from '@/features/coupons/pages/CouponBoxPage'
+import { EventPage } from '@/features/coupons/pages/EventPage'
 import { NotFoundPage } from '@/shared/components/NotFoundPage'
 import { ROUTES } from '@/shared/lib/routes'
 
@@ -135,6 +138,31 @@ export const router = createBrowserRouter([
     element: (
       <ProtectedRoute>
         <OrderDetailPage />
+      </ProtectedRoute>
+    ),
+  },
+  // 혜택 — 포인트 내역 / 쿠폰함 / 이벤트 (풀스크린 보호 라우트, 프로토타입 55~57, Phase 8)
+  {
+    path: ROUTES.POINTS,
+    element: (
+      <ProtectedRoute>
+        <PointHistoryPage />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: ROUTES.COUPONS,
+    element: (
+      <ProtectedRoute>
+        <CouponBoxPage />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: ROUTES.EVENTS,
+    element: (
+      <ProtectedRoute>
+        <EventPage />
       </ProtectedRoute>
     ),
   },

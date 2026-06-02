@@ -33,6 +33,11 @@ export const ROUTES = {
   // 프로필(내 정보) 수정 — 마이페이지에서 진입, TabLayout 밖 풀스크린 (바텀네비 없음)
   EDIT_PROFILE: '/mypage/edit',
 
+  // 혜택 — 포인트 내역 / 쿠폰함 / 이벤트(쿠폰 받기). 마이페이지에서 진입, 풀스크린 (Phase 8)
+  POINTS: '/mypage/points',
+  COUPONS: '/mypage/coupons',
+  EVENTS: '/mypage/events',
+
   // 리뷰 — 내가 쓴 리뷰 목록 + 작성/수정 (TabLayout 밖 풀스크린)
   MY_REVIEWS: '/reviews/my',
   /** 픽업 완료 주문에 리뷰 작성 (주문 탭에서 진입) */

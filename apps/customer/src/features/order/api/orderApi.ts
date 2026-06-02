@@ -1,5 +1,5 @@
-import { orderSchema, type Order, type OrderStatus } from '../types'
-import type { CartAmounts, CartItem, CartStoreInfo, Pickup } from '@/features/cart/types'
+import { orderSchema, type Order, type OrderAmounts, type OrderStatus } from '../types'
+import type { CartItem, CartStoreInfo, Pickup } from '@/features/cart/types'
 
 /**
  * ⚠️ Mock 스텁 — 주문 BE(order 도메인 미구현)가 아직이라 클라이언트에서 가짜 생성/저장.
@@ -150,7 +150,8 @@ export interface CreateOrderInput {
   items: CartItem[]
   pickup: Pickup
   memo: string
-  amounts: CartAmounts
+  /** 결제 금액 — 쿠폰·포인트·적립 예정 포함 (calcCheckoutAmounts 결과) */
+  amounts: OrderAmounts
   paymentKey: string
 }
 
