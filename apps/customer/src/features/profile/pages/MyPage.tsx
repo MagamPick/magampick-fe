@@ -68,7 +68,7 @@ function MyPageContent() {
 
       <MenuGroup title="설정 · 지원">
         <MenuRow icon="📍" label="주소 관리" to={ROUTES.ADDRESSES} />
-        <MenuRow icon="🔔" label="알림 설정" onClick={soon} />
+        <MenuRow icon="🔔" label="알림 설정" to={ROUTES.NOTIFICATION_SETTINGS} />
         <MenuRow icon="📢" label="공지사항" onClick={soon} />
         <MenuRow icon="🎧" label="고객센터" onClick={soon} />
         <MenuRow icon="ℹ️" label="앱 버전" value="v1.0.0" />
