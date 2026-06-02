@@ -23,6 +23,7 @@ import { SellerMyPage } from '@/features/profile/pages/SellerMyPage'
 import { EditProfilePage } from '@/features/profile/pages/EditProfilePage'
 import { ReviewManagePage } from '@/features/reviews/pages/ReviewManagePage'
 import { RefundManagePage } from '@/features/refund/pages/RefundManagePage'
+import { SettlementHistoryPage } from '@/features/settlement/pages/SettlementHistoryPage'
 
 export const router = createBrowserRouter([
   {
@@ -127,6 +128,14 @@ export const router = createBrowserRouter([
     element: (
       <ProtectedRoute>
         <RefundManagePage />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: ROUTES.SETTLEMENT,
+    element: (
+      <ProtectedRoute>
+        <SettlementHistoryPage />
       </ProtectedRoute>
     ),
   },

@@ -13,6 +13,20 @@ vi.mock('@/features/auth/hooks/useLogout', () => ({
   useLogout: () => ({ mutate: logoutMutate, isPending: false }),
 }))
 
+// 정산 요약 카드는 settlement 훅을 mock — 마이 허브 테스트는 메뉴/프로필 연결만 검증
+vi.mock('@/features/settlement/hooks/useSettlementSummary', () => ({
+  useSettlementSummary: () => ({
+    data: {
+      cycleId: 'c1',
+      periodLabel: '6월 1차 · 6/1~6/15',
+      netAmount: 2_805_000,
+      depositDate: new Date(2026, 5, 10).toISOString(),
+      status: 'SCHEDULED',
+    },
+    isPending: false,
+  }),
+}))
+
 function renderMyPage() {
   const qc = new QueryClient({
     defaultOptions: { queries: { retry: false, gcTime: 0 }, mutations: { retry: false } },
@@ -41,14 +55,15 @@ describe('SellerMyPage (사장 마이 허브)', () => {
     renderMyPage()
     await waitFor(() => expect(screen.getByText(/김민수/)).toBeInTheDocument())
     expect(screen.getByRole('link', { name: '보유 매장' })).toHaveAttribute('href', '/store')
+    expect(screen.getByRole('link', { name: '정산 내역' })).toHaveAttribute('href', '/settlement')
     expect(screen.getByRole('link', { name: '수정' })).toHaveAttribute('href', '/mypage/edit')
   })
 
-  it('미구현 메뉴(정산 내역)를 누르면 준비 중 안내가 뜬다', async () => {
+  it('미구현 메뉴(알림 설정)를 누르면 준비 중 안내가 뜬다', async () => {
     const user = userEvent.setup()
     renderMyPage()
     await waitFor(() => expect(screen.getByText(/김민수/)).toBeInTheDocument())
-    await user.click(screen.getByRole('button', { name: '정산 내역' }))
+    await user.click(screen.getByRole('button', { name: '알림 설정' }))
     expect(await screen.findByText('준비 중인 기능이에요')).toBeInTheDocument()
   })
 

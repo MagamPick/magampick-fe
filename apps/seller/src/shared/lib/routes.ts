@@ -27,6 +27,9 @@ export const ROUTES = {
   // 환불 관리 (마이 허브에서 진입 — 환불 요청 승인/거부)
   REFUNDS: '/refunds',
 
+  // 정산 내역 (마이 허브에서 진입 — 이번 회차/회차별 내역·수수료 안내)
+  SETTLEMENT: '/settlement',
+
   // 마이 허브(바텀네비 탭) + 내 정보 수정(풀스크린, 바텀네비 없음)
   MYPAGE: '/mypage',
   EDIT_PROFILE: '/mypage/edit',
