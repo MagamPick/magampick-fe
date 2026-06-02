@@ -26,6 +26,8 @@ import { EditProfilePage } from '@/features/profile/pages/EditProfilePage'
 import { ReviewManagePage } from '@/features/reviews/pages/ReviewManagePage'
 import { RefundManagePage } from '@/features/refund/pages/RefundManagePage'
 import { SettlementHistoryPage } from '@/features/settlement/pages/SettlementHistoryPage'
+import { NotificationCenterPage } from '@/features/notifications/pages/NotificationCenterPage'
+import { NotificationSettingsPage } from '@/features/notifications/pages/NotificationSettingsPage'
 
 export const router = createBrowserRouter([
   {
@@ -154,6 +156,23 @@ export const router = createBrowserRouter([
     element: (
       <ProtectedRoute>
         <EditProfilePage />
+      </ProtectedRoute>
+    ),
+  },
+  // 알림센터 / 알림 설정 — 풀스크린 보호 라우트 (바텀네비 없음, 프로토타입 51 / 52)
+  {
+    path: ROUTES.NOTIFICATIONS,
+    element: (
+      <ProtectedRoute>
+        <NotificationCenterPage />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: ROUTES.NOTIFICATION_SETTINGS,
+    element: (
+      <ProtectedRoute>
+        <NotificationSettingsPage />
       </ProtectedRoute>
     ),
   },
