@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import {
   getStatusLabel,
+  getStoreListLabel,
   getAvailableActions,
   canTransition,
 } from './transitions'
@@ -17,6 +18,18 @@ describe('getStatusLabel — 영업 상태 라벨', () => {
   })
   it('CLOSED_TODAY 는 오늘 영업 종료', () => {
     expect(getStatusLabel('CLOSED_TODAY')).toBe('오늘 영업 종료')
+  })
+})
+
+describe('getStoreListLabel — 매장 전환 모달 단축 라벨', () => {
+  it('OPEN 은 영업중', () => {
+    expect(getStoreListLabel('OPEN')).toBe('영업중')
+  })
+  it('BREAK 은 휴식중', () => {
+    expect(getStoreListLabel('BREAK')).toBe('휴식중')
+  })
+  it('CLOSED_TODAY 는 오늘 종료', () => {
+    expect(getStoreListLabel('CLOSED_TODAY')).toBe('오늘 종료')
   })
 })
 

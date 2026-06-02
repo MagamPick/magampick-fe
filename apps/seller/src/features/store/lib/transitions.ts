@@ -7,6 +7,13 @@ export function getStatusLabel(status: OperationStatus, todayCloseTime?: string)
   return '오늘 영업 종료' // CLOSED_TODAY
 }
 
+/** 매장 전환 모달의 항목별 단축 라벨 (노션: 보유 매장 목록 조회 — 영업중/휴식중/오늘 종료) */
+export function getStoreListLabel(status: OperationStatus): string {
+  if (status === 'OPEN') return '영업중'
+  if (status === 'BREAK') return '휴식중'
+  return '오늘 종료' // CLOSED_TODAY
+}
+
 /** 인디케이터 dot 색 — globals.css 토큰 클래스 */
 export function getStatusDotClass(status: OperationStatus): string {
   if (status === 'OPEN') return 'bg-success'

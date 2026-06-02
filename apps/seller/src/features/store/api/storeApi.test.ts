@@ -6,10 +6,90 @@ const today = WEEKDAYS[new Date().getDay()]
 
 beforeEach(() => resetStoreState())
 
+/** 유효한 매장 등록 입력 (경로 B) — 사업자번호 앞 3자리 000 아님 → 진위확인 통과 */
+const validStoreInput = {
+  representativeName: '김사장',
+  businessNumber: '123-45-67890',
+  openDate: '2020-03-02',
+  storeName: '마감픽 베이커리 신촌점',
+  storeAddress: '서울 마포구 신촌로 123',
+  storeAddressDetail: '1층',
+  storePhone: '02-1234-5678',
+  photoAdded: true,
+}
+
 describe('storeApi.getStores — 보유 매장 목록', () => {
   it('보유 매장 2개(역삼점·강남점)를 반환', async () => {
     const stores = await storeApi.getStores()
     expect(stores.map((s) => s.id)).toEqual(['s1', 's2'])
+  })
+
+  it('각 매장에 영업 상태(operationStatus) 포함 — 역삼점 OPEN / 강남점 CLOSED_TODAY', async () => {
+    const stores = await storeApi.getStores()
+    expect(stores.find((s) => s.id === 's1')?.operationStatus).toBe('OPEN')
+    expect(stores.find((s) => s.id === 's2')?.operationStatus).toBe('CLOSED_TODAY')
+  })
+})
+
+describe('storeApi.checkBusinessNumber — 사업자 진위확인 (mock)', () => {
+  it('정상 사업자번호(000 시작 아님) + 대표자명 + 개업일자 → verified', async () => {
+    const res = await storeApi.checkBusinessNumber({
+      businessNumber: '123-45-67890',
+      representativeName: '김사장',
+      openDate: '2020-03-02',
+    })
+    expect(res.verified).toBe(true)
+  })
+
+  it('앞 3자리 000 이면 조회 실패 (BUSINESS_NUMBER_INVALID)', async () => {
+    await expect(
+      storeApi.checkBusinessNumber({
+        businessNumber: '000-45-67890',
+        representativeName: '김사장',
+        openDate: '2020-03-02',
+      }),
+    ).rejects.toMatchObject({ code: 'BUSINESS_NUMBER_INVALID' })
+  })
+
+  it('대표자명·개업일자 누락 시 거부 (INVALID_INPUT)', async () => {
+    await expect(
+      storeApi.checkBusinessNumber({
+        businessNumber: '123-45-67890',
+        representativeName: '',
+        openDate: '',
+      }),
+    ).rejects.toMatchObject({ code: 'INVALID_INPUT' })
+  })
+})
+
+describe('storeApi.createStore — 매장 등록 (경로 B)', () => {
+  it('등록 성공 시 CLOSED_TODAY·영업시간 0개 새 매장을 반환하고 목록에 추가', async () => {
+    const created = await storeApi.createStore(validStoreInput)
+    expect(created.operationStatus).toBe('CLOSED_TODAY')
+    expect(created.name).toBe(validStoreInput.storeName)
+
+    const list = await storeApi.getStores()
+    expect(list.map((s) => s.id)).toContain(created.id)
+    expect(await storeApi.getBusinessHours(created.id)).toEqual([])
+  })
+
+  it('등록 직후 매장 상태 = CLOSED_TODAY · canOpenToday=false (영업 요일 0개)', async () => {
+    const created = await storeApi.createStore(validStoreInput)
+    const st = await storeApi.getStoreStatus(created.id)
+    expect(st.operationStatus).toBe('CLOSED_TODAY')
+    expect(st.canOpenToday).toBe(false)
+  })
+
+  it('동일 사업자번호로 매장이 이미 있어도 등록 허용 (UNIQUE 없음)', async () => {
+    await storeApi.createStore(validStoreInput)
+    await storeApi.createStore(validStoreInput)
+    expect((await storeApi.getStores()).length).toBe(4) // 시드 2 + 2
+  })
+
+  it('사업자번호가 10자리가 아니면 거부 (BUSINESS_NUMBER_FORMAT_INVALID)', async () => {
+    await expect(
+      storeApi.createStore({ ...validStoreInput, businessNumber: '123-45' }),
+    ).rejects.toMatchObject({ code: 'BUSINESS_NUMBER_FORMAT_INVALID' })
   })
 })
 

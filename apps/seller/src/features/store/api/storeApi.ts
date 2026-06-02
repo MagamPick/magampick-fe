@@ -1,6 +1,13 @@
 import { ApiError } from '@/shared/lib/apiError'
 import { WEEKDAYS, WEEKDAY_ORDER } from '../types'
-import type { BusinessHour, OperationStatus, StoreStatus, StoreSummary, Weekday } from '../types'
+import type {
+  BusinessHour,
+  CreateStoreInput,
+  OperationStatus,
+  StoreStatus,
+  StoreSummary,
+  Weekday,
+} from '../types'
 import { canTransition } from '../lib/transitions'
 import { hasTodayHoursChanged } from '../lib/businessHours'
 
@@ -17,6 +24,8 @@ interface StoreRecord {
   operationStatus: OperationStatus
   /** 영업시간 (영업 요일만 — 휴무 요일은 없음). businessDays·todayCloseTime 파생의 source */
   businessHours: BusinessHour[]
+  /** 사업자번호(숫자 10자리) — per-store·UNIQUE X. mock 보관용(UI 미표시) */
+  businessNumber?: string
 }
 
 /** 데모 시드: 역삼점(전 요일 09:00–21:00 → OPEN·오늘 항상 영업) / 강남점(전휴무 → 항상 비활성) */
@@ -73,7 +82,52 @@ function toStatus(store: StoreRecord): StoreStatus {
 export const storeApi = {
   async getStores(): Promise<StoreSummary[]> {
     await delay(300)
-    return stores.map((s) => ({ id: s.id, name: s.name }))
+    return stores.map((s) => ({ id: s.id, name: s.name, operationStatus: s.operationStatus }))
+  },
+
+  /**
+   * 사업자 진위확인 — Mock(국세청 사업자등록 API 대체): 앞 3자리 000 이면 실패.
+   * 진위확인 3요소(사업자번호+대표자명+개업일자) 필수. 실연동 시 국세청 API 로 교체.
+   */
+  async checkBusinessNumber(input: {
+    businessNumber: string
+    representativeName: string
+    openDate: string
+  }): Promise<{ verified: true }> {
+    await delay(600)
+    const digits = input.businessNumber.replace(/\D/g, '')
+    if (digits.length !== 10 || !input.representativeName.trim() || !input.openDate) {
+      throw new ApiError(400, 'INVALID_INPUT', '사업자번호·대표자명·개업일자를 모두 입력해주세요')
+    }
+    if (digits.slice(0, 3) === '000') {
+      throw new ApiError(404, 'BUSINESS_NUMBER_INVALID', '조회되지 않는 사업자등록번호입니다')
+    }
+    return { verified: true }
+  },
+
+  /**
+   * 매장 등록 (경로 B) — 자동 승인. 외부 검증·지오코딩·사진 업로드는 트랜잭션 전 처리됐다고 가정(mock).
+   * 좌표·사진은 mock 생략. 중복 사업자번호 허용(UNIQUE X). 초기값: operation_status CLOSED_TODAY, 영업시간 0개.
+   */
+  async createStore(input: CreateStoreInput): Promise<StoreSummary> {
+    await delay(700)
+    const digits = input.businessNumber.replace(/\D/g, '')
+    if (digits.length !== 10) {
+      throw new ApiError(
+        422,
+        'BUSINESS_NUMBER_FORMAT_INVALID',
+        '사업자등록번호 형식이 올바르지 않습니다',
+      )
+    }
+    const record: StoreRecord = {
+      id: `s${stores.length + 1}`,
+      name: input.storeName,
+      operationStatus: 'CLOSED_TODAY',
+      businessHours: [],
+      businessNumber: digits,
+    }
+    stores.push(record)
+    return { id: record.id, name: record.name, operationStatus: record.operationStatus }
   },
 
   async getStoreStatus(storeId: string): Promise<StoreStatus> {

@@ -10,6 +10,7 @@ export const ROUTES = {
 
   STORE_MANAGE: '/store',
   STORE_HOURS: '/store/hours',
+  STORE_NEW: '/store/new',
 
   PRODUCTS: '/products',
   PRODUCT_NEW: '/products/new',

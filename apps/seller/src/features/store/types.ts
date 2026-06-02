@@ -24,10 +24,11 @@ export const WEEKDAY_LABEL: Record<Weekday, string> = {
   sun: '일요일',
 }
 
-/** 보유 매장 요약 — 헤더 매장 선택기용 */
+/** 보유 매장 요약 — 헤더 매장 선택기·전환 모달용 (영업 상태 라벨 포함) */
 export interface StoreSummary {
   id: string
   name: string
+  operationStatus: OperationStatus
 }
 
 /** 매장 영업 상태 — 카드/시트 렌더 소스 */
@@ -95,3 +96,29 @@ export const businessHoursFormSchema = z.object({
 })
 export type BusinessHoursForm = z.infer<typeof businessHoursFormSchema>
 export type DayHoursForm = BusinessHoursForm['days'][number]
+
+/**
+ * 매장 등록 신청 폼 (경로 B — 로그인 사장 추가 등록). 회원가입 Step5 매장 필드와 동일 골격.
+ * 디테일·정책 → 노션 「매장 등록 신청」. 사업자번호는 진위확인(번호+대표자명+개업일자) 후 bizVerified.
+ * 대표 사진은 선택(mock) — OCI 업로드/실패 거부는 BE·연동 소관.
+ */
+export const storeRegistrationSchema = z
+  .object({
+    representativeName: z.string().min(1, '대표자명을 입력해주세요'),
+    businessNumber: z.string().regex(/^\d{3}-\d{2}-\d{5}$/, '사업자등록번호를 확인해주세요'),
+    openDate: z.string().min(1, '개업일자를 선택해주세요'),
+    bizVerified: z.boolean(),
+    storeName: z.string().min(1, '매장명을 입력해주세요'),
+    storeAddress: z.string().min(1, '매장 주소를 등록해주세요'),
+    storeAddressDetail: z.string().optional(),
+    storePhone: z.string().min(1, '매장 전화번호를 입력해주세요'),
+    photoAdded: z.boolean().optional(),
+  })
+  .refine((d) => d.bizVerified, {
+    message: '사업자등록번호 조회를 완료해주세요',
+    path: ['bizVerified'],
+  })
+export type StoreRegistrationInput = z.infer<typeof storeRegistrationSchema>
+
+/** createStore API payload — FE 전용 게이트 플래그(bizVerified) 제외 */
+export type CreateStoreInput = Omit<StoreRegistrationInput, 'bizVerified'>
