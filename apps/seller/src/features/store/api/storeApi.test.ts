@@ -118,19 +118,19 @@ describe('storeApi.transitionStatus — 상태 전환', () => {
     expect(reopened.operationStatus).toBe('OPEN')
   })
   it('강남점(영업 요일 0개) 영업 시작 시 STORE_CLOSED_TODAY 거부', async () => {
-    await expect(
-      storeApi.transitionStatus({ storeId: 's2', to: 'OPEN' }),
-    ).rejects.toMatchObject({ code: 'STORE_CLOSED_TODAY' })
+    await expect(storeApi.transitionStatus({ storeId: 's2', to: 'OPEN' })).rejects.toMatchObject({
+      code: 'STORE_CLOSED_TODAY',
+    })
   })
   it('OPEN 에서 다시 OPEN 같은 금지 전이는 INVALID_STATE_TRANSITION', async () => {
-    await expect(
-      storeApi.transitionStatus({ storeId: 's1', to: 'OPEN' }),
-    ).rejects.toMatchObject({ code: 'INVALID_STATE_TRANSITION' })
+    await expect(storeApi.transitionStatus({ storeId: 's1', to: 'OPEN' })).rejects.toMatchObject({
+      code: 'INVALID_STATE_TRANSITION',
+    })
   })
   it('CLOSED_TODAY → BREAK 금지 전이 거부', async () => {
-    await expect(
-      storeApi.transitionStatus({ storeId: 's2', to: 'BREAK' }),
-    ).rejects.toMatchObject({ code: 'INVALID_STATE_TRANSITION' })
+    await expect(storeApi.transitionStatus({ storeId: 's2', to: 'BREAK' })).rejects.toMatchObject({
+      code: 'INVALID_STATE_TRANSITION',
+    })
   })
 })
 
@@ -188,17 +188,17 @@ describe('storeApi.saveBusinessHours — 영업시간 저장', () => {
   it('영업중(OPEN) + 오늘 요일 시간 수정 포함 저장 → TODAY_BUSINESS_HOURS_LOCKED 거부', async () => {
     const current = await storeApi.getBusinessHours('s1')
     const next = current.map((h) => (h.day === today ? { ...h, closeTime: '23:00' } : h))
-    await expect(
-      storeApi.saveBusinessHours({ storeId: 's1', hours: next }),
-    ).rejects.toMatchObject({ code: 'TODAY_BUSINESS_HOURS_LOCKED' })
+    await expect(storeApi.saveBusinessHours({ storeId: 's1', hours: next })).rejects.toMatchObject({
+      code: 'TODAY_BUSINESS_HOURS_LOCKED',
+    })
   })
 
   it('영업중(OPEN) + 오늘 요일 삭제(휴무 전환) 저장 → TODAY_BUSINESS_HOURS_LOCKED 거부', async () => {
     const current = await storeApi.getBusinessHours('s1')
     const next = current.filter((h) => h.day !== today)
-    await expect(
-      storeApi.saveBusinessHours({ storeId: 's1', hours: next }),
-    ).rejects.toMatchObject({ code: 'TODAY_BUSINESS_HOURS_LOCKED' })
+    await expect(storeApi.saveBusinessHours({ storeId: 's1', hours: next })).rejects.toMatchObject({
+      code: 'TODAY_BUSINESS_HOURS_LOCKED',
+    })
   })
 
   it('영업중(OPEN) + 다른 요일만 변경은 허용', async () => {
@@ -208,5 +208,86 @@ describe('storeApi.saveBusinessHours — 영업시간 저장', () => {
     const saved = await storeApi.saveBusinessHours({ storeId: 's1', hours: next })
     expect(saved.find((h) => h.day === otherDay)?.closeTime).toBe('20:00')
     expect(saved.find((h) => h.day === today)?.closeTime).toBe('21:00')
+  })
+})
+
+describe('storeApi.getStore — 매장 상세 (수정 폼 미리채움)', () => {
+  it('역삼점(s1) 상세 — 매장명·주소·전화·사진 반환', async () => {
+    const d = await storeApi.getStore('s1')
+    expect(d).toMatchObject({ id: 's1', storeName: '마감픽 베이커리 역삼점', photoAdded: true })
+    expect(d.storeAddress).toBeTruthy()
+    expect(d.storePhone).toBeTruthy()
+  })
+
+  it('없는 매장 id 는 STORE_NOT_FOUND 거부', async () => {
+    await expect(storeApi.getStore('nope')).rejects.toMatchObject({ code: 'STORE_NOT_FOUND' })
+  })
+})
+
+describe('storeApi.updateStore — 매장 정보 수정', () => {
+  it('수정 후 getStore 가 새 값을 반환 (즉시 반영)', async () => {
+    const updated = await storeApi.updateStore({
+      storeId: 's1',
+      storeName: '마감픽 베이커리 역삼본점',
+      storeAddress: '서울 강남구 테헤란로 152',
+      storeAddressDetail: '2층',
+      storePhone: '02-9999-0000',
+      photoAdded: true,
+    })
+    expect(updated.storeName).toBe('마감픽 베이커리 역삼본점')
+
+    const reread = await storeApi.getStore('s1')
+    expect(reread.storeName).toBe('마감픽 베이커리 역삼본점')
+    expect(reread.storeAddress).toBe('서울 강남구 테헤란로 152')
+    expect(reread.storePhone).toBe('02-9999-0000')
+  })
+
+  it('매장명 변경이 보유 매장 목록(getStores)에도 반영', async () => {
+    await storeApi.updateStore({
+      storeId: 's1',
+      storeName: '새 이름',
+      storeAddress: '서울 강남구 역삼로 180',
+      storePhone: '02-501-1234',
+      photoAdded: true,
+    })
+    const list = await storeApi.getStores()
+    expect(list.find((s) => s.id === 's1')?.name).toBe('새 이름')
+  })
+
+  it('전화만 바꿔도 매장명·주소 등 다른 필드는 보존', async () => {
+    const before = await storeApi.getStore('s1')
+    await storeApi.updateStore({
+      storeId: 's1',
+      storeName: before.storeName,
+      storeAddress: before.storeAddress,
+      storeAddressDetail: before.storeAddressDetail,
+      storePhone: '02-111-2222',
+      photoAdded: before.photoAdded,
+    })
+    const after = await storeApi.getStore('s1')
+    expect(after.storePhone).toBe('02-111-2222')
+    expect(after.storeName).toBe(before.storeName)
+    expect(after.storeAddress).toBe(before.storeAddress)
+  })
+
+  it('없는 매장 id 는 STORE_NOT_FOUND 거부', async () => {
+    await expect(
+      storeApi.updateStore({
+        storeId: 'nope',
+        storeName: 'x',
+        storeAddress: 'y',
+        storePhone: 'z',
+      }),
+    ).rejects.toMatchObject({ code: 'STORE_NOT_FOUND' })
+  })
+})
+
+describe('storeApi.createStore — 등록 후 정보 영속화', () => {
+  it('등록한 매장도 getStore 로 주소·전화가 조회된다 (미리채움 가능)', async () => {
+    const created = await storeApi.createStore(validStoreInput)
+    const d = await storeApi.getStore(created.id)
+    expect(d.storeName).toBe(validStoreInput.storeName)
+    expect(d.storeAddress).toBe(validStoreInput.storeAddress)
+    expect(d.storePhone).toBe(validStoreInput.storePhone)
   })
 })

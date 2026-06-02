@@ -4,8 +4,10 @@ import type {
   BusinessHour,
   CreateStoreInput,
   OperationStatus,
+  StoreDetail,
   StoreStatus,
   StoreSummary,
+  UpdateStoreInput,
   Weekday,
 } from '../types'
 import { canTransition } from '../lib/transitions'
@@ -26,6 +28,12 @@ interface StoreRecord {
   businessHours: BusinessHour[]
   /** 사업자번호(숫자 10자리) — per-store·UNIQUE X. mock 보관용(UI 미표시) */
   businessNumber?: string
+  /** 매장 정보 수정 대상 필드 (노션: 매장 정보 수정) — 미리채움·UPDATE source */
+  address: string
+  addressDetail?: string
+  phone: string
+  /** 대표 사진 — mock 토글(실 업로드는 BE·연동). 등록/수정 폼의 photoAdded 와 매핑 */
+  photoAdded: boolean
 }
 
 /** 데모 시드: 역삼점(전 요일 09:00–21:00 → OPEN·오늘 항상 영업) / 강남점(전휴무 → 항상 비활성) */
@@ -36,12 +44,20 @@ function seed(): StoreRecord[] {
       name: '마감픽 베이커리 역삼점',
       operationStatus: 'OPEN',
       businessHours: WEEKDAY_ORDER.map((day) => ({ day, openTime: '09:00', closeTime: '21:00' })),
+      address: '서울 강남구 역삼로 180',
+      addressDetail: '1층',
+      phone: '02-501-1234',
+      photoAdded: true,
     },
     {
       id: 's2',
       name: '마감픽 베이커리 강남점',
       operationStatus: 'CLOSED_TODAY',
       businessHours: [],
+      address: '서울 강남구 테헤란로 152',
+      addressDetail: '2층 201호',
+      phone: '02-555-6789',
+      photoAdded: true,
     },
   ]
 }
@@ -76,6 +92,18 @@ function toStatus(store: StoreRecord): StoreStatus {
     operationStatus: store.operationStatus,
     canOpenToday: Boolean(th),
     todayCloseTime: th?.closeTime,
+  }
+}
+
+/** 수정 폼 미리채움용 상세 매핑 (record → StoreDetail) */
+function toDetail(store: StoreRecord): StoreDetail {
+  return {
+    id: store.id,
+    storeName: store.name,
+    storeAddress: store.address,
+    storeAddressDetail: store.addressDetail,
+    storePhone: store.phone,
+    photoAdded: store.photoAdded,
   }
 }
 
@@ -125,9 +153,35 @@ export const storeApi = {
       operationStatus: 'CLOSED_TODAY',
       businessHours: [],
       businessNumber: digits,
+      address: input.storeAddress,
+      addressDetail: input.storeAddressDetail?.trim() || undefined,
+      phone: input.storePhone,
+      photoAdded: Boolean(input.photoAdded),
     }
     stores.push(record)
     return { id: record.id, name: record.name, operationStatus: record.operationStatus }
+  },
+
+  /** 매장 상세 — 수정 폼 미리채움 source (5필드 + id) */
+  async getStore(storeId: string): Promise<StoreDetail> {
+    await delay(300)
+    return toDetail(find(storeId))
+  },
+
+  /**
+   * 매장 정보 수정 — 5필드(매장명·주소·상세·전화·사진) 즉시 반영(자동 승인, 재승인 X).
+   * 변경 필드 외부 호출(주소→지오코딩 / 사진→OCI)·권한(STORE_NOT_OWNED/UNAUTHORIZED)은
+   * BE·연동 소관(mock 생략) — 등록/영업시간 mock 과 동일 방침.
+   */
+  async updateStore(input: UpdateStoreInput): Promise<StoreDetail> {
+    await delay(500)
+    const store = find(input.storeId)
+    store.name = input.storeName
+    store.address = input.storeAddress
+    store.addressDetail = input.storeAddressDetail?.trim() || undefined
+    store.phone = input.storePhone
+    store.photoAdded = Boolean(input.photoAdded)
+    return toDetail(store)
   },
 
   async getStoreStatus(storeId: string): Promise<StoreStatus> {
@@ -135,10 +189,7 @@ export const storeApi = {
     return toStatus(find(storeId))
   },
 
-  async transitionStatus(input: {
-    storeId: string
-    to: OperationStatus
-  }): Promise<StoreStatus> {
+  async transitionStatus(input: { storeId: string; to: OperationStatus }): Promise<StoreStatus> {
     await delay(400)
     const store = find(input.storeId)
     const from = store.operationStatus

@@ -4,4 +4,5 @@ export const storeKeys = {
   list: () => [...storeKeys.all, 'list'] as const,
   status: (storeId: string) => [...storeKeys.all, storeId, 'status'] as const,
   businessHours: (storeId: string) => [...storeKeys.all, storeId, 'businessHours'] as const,
+  detail: (storeId: string) => [...storeKeys.all, storeId, 'detail'] as const,
 }
