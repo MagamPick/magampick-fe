@@ -3,6 +3,8 @@ import { ScreenContainer } from '@/shared/components/ScreenContainer'
 import { useComingSoon } from '@/shared/hooks/useComingSoon'
 import { ROUTES } from '@/shared/lib/routes'
 import { useLogout } from '@/features/auth/hooks/useLogout'
+import { usePointSummary } from '@/features/points/hooks/usePointSummary'
+import { useCoupons } from '@/features/coupons/hooks/useCoupons'
 import { useProfile } from '../hooks/useProfile'
 import { useProfileStats } from '../hooks/useProfileStats'
 import { ProfileHeader } from '../components/ProfileHeader'
@@ -19,8 +21,15 @@ const COMING_SOON = '준비 중인 기능이에요'
 function MyPageContent() {
   const { data: profile } = useProfile()
   const { data: stats } = useProfileStats()
+  const { data: pointSummary } = usePointSummary()
+  const { data: coupons } = useCoupons()
   const { show } = useComingSoon()
   const logout = useLogout()
+
+  const pointValue =
+    pointSummary != null ? `${pointSummary.balance.toLocaleString('ko-KR')}P` : undefined
+  const usableCouponValue =
+    coupons != null ? `${coupons.filter((c) => c.status === 'usable').length}장` : undefined
 
   const soon = () => show(COMING_SOON)
   const handleLogout = () => {
@@ -47,9 +56,9 @@ function MyPageContent() {
       )}
 
       <MenuGroup title="혜택">
-        <MenuRow icon="🎉" label="이벤트" onClick={soon} />
-        <MenuRow icon="🪙" label="포인트" onClick={soon} />
-        <MenuRow icon="🎁" label="쿠폰함" onClick={soon} />
+        <MenuRow icon="🎉" label="이벤트" to={ROUTES.EVENTS} />
+        <MenuRow icon="🪙" label="포인트" value={pointValue} to={ROUTES.POINTS} />
+        <MenuRow icon="🎁" label="쿠폰함" value={usableCouponValue} to={ROUTES.COUPONS} />
       </MenuGroup>
 
       <MenuGroup title="활동">

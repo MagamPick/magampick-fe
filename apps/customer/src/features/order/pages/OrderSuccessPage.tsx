@@ -58,6 +58,12 @@ export function OrderSuccessPage() {
           <InfoRow label="매장" value={order.storeName} />
           <InfoRow label="픽업 시간" value={pickupLabel(order.pickup)} highlight />
           <InfoRow label="결제 금액" value={won(order.amounts.payTotal)} />
+          {(order.amounts.earnedPoints ?? 0) > 0 && (
+            <InfoRow
+              label="적립 예정"
+              value={`${(order.amounts.earnedPoints ?? 0).toLocaleString('ko-KR')}P`}
+            />
+          )}
           <InfoRow label="결제 수단" value="토스페이" />
         </div>
 

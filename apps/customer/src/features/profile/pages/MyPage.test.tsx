@@ -13,6 +13,14 @@ vi.mock('@/features/auth/hooks/useLogout', () => ({
   useLogout: () => ({ mutate: logoutMutate, isPending: false }),
 }))
 
+// 혜택 value 배지용 — 포인트/쿠폰 mock api (값은 검증 안 함, 지연 호출 제거로 결정성 확보)
+vi.mock('@/features/points/api/pointApi', () => ({
+  pointApi: { getSummary: vi.fn().mockResolvedValue({ balance: 2450 }) },
+}))
+vi.mock('@/features/coupons/api/couponApi', () => ({
+  couponApi: { listCoupons: vi.fn().mockResolvedValue([]) },
+}))
+
 function renderMyPage() {
   const qc = new QueryClient({
     defaultOptions: { queries: { retry: false, gcTime: 0 }, mutations: { retry: false } },
@@ -48,11 +56,19 @@ describe('MyPage (마이페이지 허브)', () => {
     expect(screen.getByRole('link', { name: '수정' })).toHaveAttribute('href', '/mypage/edit')
   })
 
-  it('미구현 메뉴(포인트)를 누르면 준비 중 안내가 뜬다', async () => {
+  it('혜택 메뉴(이벤트·포인트·쿠폰함)는 실제 라우트로 링크된다', async () => {
+    renderMyPage()
+    await waitFor(() => expect(screen.getByText(/마감픽사용자/)).toBeInTheDocument())
+    expect(screen.getByRole('link', { name: /이벤트/ })).toHaveAttribute('href', '/mypage/events')
+    expect(screen.getByRole('link', { name: /포인트/ })).toHaveAttribute('href', '/mypage/points')
+    expect(screen.getByRole('link', { name: /쿠폰함/ })).toHaveAttribute('href', '/mypage/coupons')
+  })
+
+  it('미구현 메뉴(알림 설정)를 누르면 준비 중 안내가 뜬다', async () => {
     const user = userEvent.setup()
     renderMyPage()
     await waitFor(() => expect(screen.getByText(/마감픽사용자/)).toBeInTheDocument())
-    await user.click(screen.getByRole('button', { name: '포인트' }))
+    await user.click(screen.getByRole('button', { name: '알림 설정' }))
     expect(await screen.findByText('준비 중인 기능이에요')).toBeInTheDocument()
   })
 

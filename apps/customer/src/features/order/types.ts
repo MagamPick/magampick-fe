@@ -11,11 +11,21 @@ import { cartItemSchema, pickupSchema } from '@/features/cart/types'
 export const paymentMethodSchema = z.literal('toss')
 export type PaymentMethod = z.infer<typeof paymentMethodSchema>
 
-/** 금액 요약 — 정상가 합계 / 할인액 / 결제 예정(=결제) 금액 */
+/**
+ * 금액 요약 — 정상가 합계 / 할인액 / 결제 금액.
+ * 쿠폰·포인트·적립 예정은 Phase 8(혜택)에서 추가 — 옵셔널(기존 주문 seed/fixture 후방 호환,
+ * 미지정 = 혜택 미적용 주문). 신규 결제는 calcCheckoutAmounts 로 전부 채워 저장.
+ */
 export const orderAmountsSchema = z.object({
   normalTotal: z.number(),
   discountTotal: z.number(),
+  /** 쿠폰 할인액 (일반 상품분, Phase 8) */
+  couponDiscount: z.number().optional(),
+  /** 사용 포인트 (1P=1원, Phase 8) */
+  pointUsed: z.number().optional(),
   payTotal: z.number(),
+  /** 적립 예정 포인트 — 픽업완료 시 적립(실결제액 1% floor, Phase 8) */
+  earnedPoints: z.number().optional(),
 })
 export type OrderAmounts = z.infer<typeof orderAmountsSchema>
 

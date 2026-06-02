@@ -165,6 +165,22 @@ export function OrderDetailPage() {
                       </span>
                     </div>
                   )}
+                  {(order.amounts.couponDiscount ?? 0) > 0 && (
+                    <div className="flex justify-between text-[13px]">
+                      <span className="text-muted-foreground">쿠폰 할인</span>
+                      <span className="font-semibold text-primary">
+                        -{won(order.amounts.couponDiscount ?? 0)}
+                      </span>
+                    </div>
+                  )}
+                  {(order.amounts.pointUsed ?? 0) > 0 && (
+                    <div className="flex justify-between text-[13px]">
+                      <span className="text-muted-foreground">포인트 사용</span>
+                      <span className="font-semibold text-primary">
+                        -{won(order.amounts.pointUsed ?? 0)}
+                      </span>
+                    </div>
+                  )}
                   <div className="flex justify-between pt-1 text-[14px] font-extrabold">
                     <span>결제 금액</span>
                     <span className="text-primary">{won(order.amounts.payTotal)}</span>
