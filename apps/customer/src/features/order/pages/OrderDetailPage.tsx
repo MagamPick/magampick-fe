@@ -2,13 +2,17 @@ import { useState } from 'react'
 import { z } from 'zod'
 import { Navigate, useNavigate, useParams } from 'react-router'
 import { ChevronLeft } from 'lucide-react'
+import { cn } from '@/shared/lib/utils'
 import { ROUTES } from '@/shared/lib/routes'
 import { useCartStore } from '@/features/cart/stores/cartStore'
 import { useOrder } from '../hooks/useOrder'
 import { useCancelOrder } from '../hooks/useCancelOrder'
+import { useRequestRefund } from '../hooks/useRequestRefund'
 import { OrderStepper } from '../components/OrderStepper'
 import { CancelOrderSheet } from '../components/CancelOrderSheet'
-import { PICKUP_WAITING_STATUSES } from '../types'
+import { RefundRequestSheet } from '../components/RefundRequestSheet'
+import { canRequestRefund, REFUND_STATUS_LABEL } from '../lib/refundPolicy'
+import { PICKUP_WAITING_STATUSES, type Refund } from '../types'
 
 const paramsSchema = z.object({ id: z.string().min(1) })
 const won = (n: number) => `${n.toLocaleString('ko-KR')}원`
@@ -21,9 +25,11 @@ export function OrderDetailPage() {
 
   const { data: order, isLoading, isError } = useOrder(id)
   const cancel = useCancelOrder(id)
+  const refund = useRequestRefund(id)
   const addItem = useCartStore((s) => s.addItem)
 
   const [cancelOpen, setCancelOpen] = useState(false)
+  const [refundOpen, setRefundOpen] = useState(false)
 
   if (!parsed.success) return <Navigate to={ROUTES.HOME} replace />
 
@@ -44,6 +50,10 @@ export function OrderDetailPage() {
         navigate(ROUTES.ORDERS)
       },
     })
+  }
+
+  const handleRequestRefund = (reason: string) => {
+    refund.mutate(reason, { onSuccess: () => setRefundOpen(false) })
   }
 
   const handleReorder = () => {
@@ -100,7 +110,9 @@ export function OrderDetailPage() {
             {/* 픽업 코드 */}
             {showCode && (
               <div className="mx-5 rounded-[16px] border-2 border-primary/30 bg-primary/5 px-5 py-4 text-center">
-                <p className="mb-1 text-[12px] font-semibold text-muted-foreground">픽업 인증 코드</p>
+                <p className="mb-1 text-[12px] font-semibold text-muted-foreground">
+                  픽업 인증 코드
+                </p>
                 <p className="font-mono text-[32px] font-extrabold tracking-[0.3em] text-primary">
                   {order.pickupCode}
                 </p>
@@ -170,6 +182,29 @@ export function OrderDetailPage() {
                   {order.memo && <Row label="요청사항" value={order.memo} />}
                 </dl>
               </section>
+
+              {/* 환불 — 픽업 완료 주문: 요청됨이면 상태 배너, 아니면 요청 진입(가능 기간 내) */}
+              {order.status === 'COMPLETED' && order.refund && (
+                <RefundStatusCard refund={order.refund} amount={order.amounts.payTotal} />
+              )}
+              {order.status === 'COMPLETED' && !order.refund && canRequestRefund(order) && (
+                <section className="rounded-[14px] border border-border bg-card p-4">
+                  <p className="text-[13px] font-bold text-foreground">
+                    받으신 상품에 문제가 있나요?
+                  </p>
+                  <p className="mt-1 text-[12.5px] leading-relaxed text-muted-foreground">
+                    픽업 완료 후 3일 이내에 환불을 요청할 수 있어요. 전액 환불·사장님 승인 후
+                    처리돼요.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => setRefundOpen(true)}
+                    className="mt-3 h-11 w-full rounded-xl bg-background text-[14px] font-bold text-foreground transition active:scale-[0.98]"
+                  >
+                    환불 요청
+                  </button>
+                </section>
+              )}
             </div>
           </div>
         )}
@@ -236,6 +271,14 @@ export function OrderDetailPage() {
         onConfirm={handleCancel}
         isPending={cancel.isPending}
       />
+
+      <RefundRequestSheet
+        open={refundOpen}
+        onOpenChange={setRefundOpen}
+        onConfirm={handleRequestRefund}
+        amount={order?.amounts.payTotal ?? 0}
+        isPending={refund.isPending}
+      />
     </div>
   )
 }
@@ -246,5 +289,46 @@ function Row({ label, value }: { label: string; value: string }) {
       <dt className="shrink-0 text-[13px] text-muted-foreground">{label}</dt>
       <dd className="text-right text-[13.5px] font-semibold text-foreground">{value}</dd>
     </div>
+  )
+}
+
+/** 환불 상태 배너 — 요청됨(처리중)/완료/거부(+거부 사유) 별 톤. (노션 「환불 요청」·「환불 승인/거부」) */
+function RefundStatusCard({ refund, amount }: { refund: Refund; amount: number }) {
+  const tone =
+    refund.status === 'APPROVED'
+      ? 'border-success/30 bg-success/5'
+      : refund.status === 'REJECTED'
+        ? 'border-destructive/30 bg-destructive/5'
+        : 'border-primary/30 bg-primary/5'
+  const labelTone =
+    refund.status === 'APPROVED'
+      ? 'text-success'
+      : refund.status === 'REJECTED'
+        ? 'text-destructive'
+        : 'text-primary'
+
+  return (
+    <section className={cn('rounded-[14px] border p-4', tone)}>
+      <div className="flex items-center justify-between">
+        <p className={cn('text-[14px] font-bold', labelTone)}>
+          {REFUND_STATUS_LABEL[refund.status]}
+        </p>
+        <span className="text-[13px] font-bold text-foreground">{won(amount)}</span>
+      </div>
+      <p className="mt-1.5 text-[12.5px] leading-relaxed text-muted-foreground">
+        사유: {refund.reason}
+      </p>
+      {refund.status === 'REQUESTED' && (
+        <p className="mt-1 text-[12px] text-muted-foreground">사장님 승인을 기다리고 있어요.</p>
+      )}
+      {refund.status === 'APPROVED' && (
+        <p className="mt-1 text-[12px] text-muted-foreground">전액 환불이 완료됐어요.</p>
+      )}
+      {refund.status === 'REJECTED' && refund.rejectReason && (
+        <p className="mt-2 rounded-lg bg-card px-3 py-2 text-[12.5px] leading-relaxed text-foreground">
+          거부 사유: {refund.rejectReason}
+        </p>
+      )}
+    </section>
   )
 }

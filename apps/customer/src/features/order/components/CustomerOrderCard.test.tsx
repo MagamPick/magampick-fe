@@ -60,4 +60,19 @@ describe('CustomerOrderCard', () => {
     render(<CustomerOrderCard order={{ ...base, status: 'CANCELLED' }} onClick={() => {}} />)
     expect(screen.queryByText('4728')).not.toBeInTheDocument()
   })
+
+  it('완료 주문에 환불 정보가 있으면 환불 상태 칩을 표시한다', () => {
+    render(
+      <CustomerOrderCard
+        order={{
+          ...base,
+          status: 'COMPLETED',
+          completedAt: new Date().toISOString(),
+          refund: { status: 'REQUESTED', reason: '사유', requestedAt: new Date().toISOString() },
+        }}
+        onClick={() => {}}
+      />,
+    )
+    expect(screen.getByText('환불 처리 중')).toBeInTheDocument()
+  })
 })

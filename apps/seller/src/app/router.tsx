@@ -21,6 +21,7 @@ import { OrderDetailPage } from '@/features/order/pages/OrderDetailPage'
 import { SellerMyPage } from '@/features/profile/pages/SellerMyPage'
 import { EditProfilePage } from '@/features/profile/pages/EditProfilePage'
 import { ReviewManagePage } from '@/features/reviews/pages/ReviewManagePage'
+import { RefundManagePage } from '@/features/refund/pages/RefundManagePage'
 
 export const router = createBrowserRouter([
   {
@@ -109,6 +110,14 @@ export const router = createBrowserRouter([
     element: (
       <ProtectedRoute>
         <ReviewManagePage />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: ROUTES.REFUNDS,
+    element: (
+      <ProtectedRoute>
+        <RefundManagePage />
       </ProtectedRoute>
     ),
   },

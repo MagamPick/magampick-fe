@@ -35,6 +35,35 @@ export type OrderStatus = z.infer<typeof orderStatusSchema>
 export const PICKUP_WAITING_STATUSES: OrderStatus[] = ['PENDING', 'PREPARING', 'READY']
 export const DONE_STATUSES: OrderStatus[] = ['COMPLETED', 'NO_SHOW', 'REJECTED', 'CANCELLED']
 
+/** 환불 정책 상수 (노션 「환불 요청」: 픽업 후 3일 이내·사유 필수·전액) */
+export const REFUND_WINDOW_DAYS = 3
+export const REFUND_REASON_MAX = 200
+
+/**
+ * 환불 상태 — 픽업 완료(COMPLETED) 주문에 얹히는 별도 라이프사이클.
+ * 주문 7-상태 머신(orderStatusSchema)은 그대로 두고 환불은 sub-field 로 분리.
+ */
+export const refundStatusSchema = z.enum([
+  'REQUESTED', // 환불 요청됨 — 사장 승인 대기
+  'APPROVED', // 승인됨 — 전액 환불 완료
+  'REJECTED', // 거부됨 — 사장 거부 사유
+])
+export type RefundStatus = z.infer<typeof refundStatusSchema>
+
+/** 환불 정보 — 요청 시 생성, 승인/거부 시 갱신 (노션 「환불 요청」·「환불 승인/거부」) */
+export const refundSchema = z.object({
+  status: refundStatusSchema,
+  /** 소비자 환불 사유 (필수) */
+  reason: z.string(),
+  /** 요청 시각 (ISO) — 사장 3일 자동승인 기한 계산 */
+  requestedAt: z.string(),
+  /** 사장 거부 사유 (REJECTED 시, 소비자에게 노출) */
+  rejectReason: z.string().optional(),
+  /** 승인/거부 처리 시각 (ISO) */
+  resolvedAt: z.string().optional(),
+})
+export type Refund = z.infer<typeof refundSchema>
+
 /** 주문 — 장바구니 스냅샷 + 픽업/메모/금액 + 발급 코드 */
 export const orderSchema = z.object({
   id: z.string(),
@@ -57,5 +86,7 @@ export const orderSchema = z.object({
   createdAt: z.string(),
   /** 완료/취소 처리 시각 (ISO) — DONE_STATUSES 에서 카드 날짜 표시용 */
   completedAt: z.string().optional(),
+  /** 환불 정보 — 픽업 완료 후 수동 환불 요청 시 생성(노션 「환불 요청」). 미요청이면 없음 */
+  refund: refundSchema.optional(),
 })
 export type Order = z.infer<typeof orderSchema>

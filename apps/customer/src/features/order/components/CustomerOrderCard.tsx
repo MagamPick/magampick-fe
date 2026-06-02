@@ -1,6 +1,7 @@
 import { cn } from '@/shared/lib/utils'
-import type { Order, OrderStatus } from '../types'
+import type { Order, OrderStatus, RefundStatus } from '../types'
 import { PICKUP_WAITING_STATUSES, DONE_STATUSES } from '../types'
+import { REFUND_STATUS_LABEL } from '../lib/refundPolicy'
 
 function formatDate(iso: string): string {
   const d = new Date(iso)
@@ -40,6 +41,13 @@ const DONE_DATE_LABEL: Partial<Record<OrderStatus, string>> = {
   CANCELLED: '주문 취소',
   REJECTED: '주문 거절',
   NO_SHOW: '미수령',
+}
+
+/** 환불 상태 칩 색 — 완료 카드에서 환불 진행 표시 */
+const REFUND_CHIP: Record<RefundStatus, string> = {
+  REQUESTED: 'bg-primary/10 text-primary',
+  APPROVED: 'bg-success/10 text-success',
+  REJECTED: 'bg-destructive/10 text-destructive',
 }
 
 export function CustomerOrderCard({ order, onClick, onReviewClick }: Props) {
@@ -104,8 +112,18 @@ export function CustomerOrderCard({ order, onClick, onReviewClick }: Props) {
       {/* 리뷰 쓰기 — 완료 주문, 날짜 행과 같은 높이로 인라인 (button 중첩 방지) */}
       {isCompleted && (
         <div className="flex items-center justify-between border-t border-border px-4 py-2.5">
-          <span className="text-[12px] text-muted-foreground">
+          <span className="flex items-center gap-1.5 text-[12px] text-muted-foreground">
             {formatDate(doneDate)} {doneLabel}
+            {order.refund && (
+              <span
+                className={cn(
+                  'rounded-full px-2 py-0.5 text-[11px] font-bold',
+                  REFUND_CHIP[order.refund.status],
+                )}
+              >
+                {REFUND_STATUS_LABEL[order.refund.status]}
+              </span>
+            )}
           </span>
           <button
             type="button"

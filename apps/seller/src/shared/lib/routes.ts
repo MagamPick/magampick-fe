@@ -23,6 +23,9 @@ export const ROUTES = {
   // 리뷰 관리 (마이 허브·홈에서 진입)
   REVIEWS: '/reviews',
 
+  // 환불 관리 (마이 허브에서 진입 — 환불 요청 승인/거부)
+  REFUNDS: '/refunds',
+
   // 마이 허브(바텀네비 탭) + 내 정보 수정(풀스크린, 바텀네비 없음)
   MYPAGE: '/mypage',
   EDIT_PROFILE: '/mypage/edit',
