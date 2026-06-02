@@ -1,14 +1,17 @@
 import type { ReactNode } from 'react'
 import { cn } from '@/shared/lib/utils'
 
-/** 빈 상태 안내 (프로토타입 `.empty-state`) — 큰 이모지 + 안내 문구 */
+/** 빈 상태 안내 (프로토타입 `.empty-state`) — 큰 이모지 + 안내 문구 + 선택적 CTA */
 export function EmptyState({
   icon,
   children,
+  action,
   className,
 }: {
   icon: string
   children: ReactNode
+  /** 선택적 CTA (예: "쿠폰 받으러 가기" 버튼/링크) — 메시지 아래 중앙 정렬로 노출 */
+  action?: ReactNode
   className?: string
 }) {
   return (
@@ -17,6 +20,7 @@ export function EmptyState({
         {icon}
       </div>
       <div className="mt-3 text-sm font-semibold text-muted-foreground">{children}</div>
+      {action && <div className="mt-4 flex justify-center">{action}</div>}
     </div>
   )
 }

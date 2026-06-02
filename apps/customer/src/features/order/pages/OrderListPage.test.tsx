@@ -83,4 +83,25 @@ describe('OrderListPage', () => {
 
     expect(await screen.findByText(/주문 내역이 없어요/)).toBeInTheDocument()
   })
+
+  it('로딩 중에는 스켈레톤을 표시한다', () => {
+    vi.mocked(orderApi.listOrders).mockReturnValue(new Promise<Order[]>(() => {}))
+
+    const { container } = renderPage()
+
+    expect(container.querySelectorAll('[data-slot="skeleton-row"]').length).toBeGreaterThan(0)
+  })
+
+  it('에러 시 ErrorState 를 보여주고 다시 시도로 재요청한다', async () => {
+    vi.mocked(orderApi.listOrders).mockRejectedValue(new Error('boom'))
+
+    renderPage()
+
+    expect(await screen.findByText('주문 내역을 불러오지 못했어요.')).toBeInTheDocument()
+
+    vi.mocked(orderApi.listOrders).mockResolvedValue([pending])
+    await userEvent.click(screen.getByRole('button', { name: '다시 시도' }))
+
+    expect(await screen.findByText('스윗아워')).toBeInTheDocument()
+  })
 })

@@ -1,3 +1,4 @@
+import { EmptyState } from '@/shared/components/EmptyState'
 import { StoreListCard } from '@/features/store-list/components/StoreListCard'
 import { StoreSortTabs } from '@/features/store-list/components/StoreSortTabs'
 import type { StoreSort } from '@/features/store-list/types'
@@ -19,14 +20,11 @@ export function SearchResults({ result, sort, onSortChange }: SearchResultsProps
 
   if (stores.length === 0 && products.length === 0) {
     return (
-      <div className="px-5 py-16 text-center">
-        <div className="text-[44px]">🔍</div>
-        <p className="mt-2.5 text-sm leading-relaxed text-muted-foreground">
-          검색 결과가 없어요.
-          <br />
-          다른 키워드로 검색해 보세요.
-        </p>
-      </div>
+      <EmptyState icon="🔍">
+        검색 결과가 없어요.
+        <br />
+        다른 키워드로 검색해 보세요.
+      </EmptyState>
     )
   }
 

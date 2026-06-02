@@ -2,6 +2,8 @@ import { useNavigate } from 'react-router'
 import { ChevronLeft } from 'lucide-react'
 import { ScreenContainer } from '@/shared/components/ScreenContainer'
 import { EmptyState } from '@/shared/components/EmptyState'
+import { ErrorState } from '@/shared/components/ErrorState'
+import { CardSkeleton } from '@/shared/components/Skeletons'
 import { useEvents } from '../hooks/useEvents'
 import { useClaimEvent } from '../hooks/useClaimEvent'
 import { EventCard } from '../components/EventCard'
@@ -12,7 +14,7 @@ import { EventCard } from '../components/EventCard'
  */
 export function EventPage() {
   const navigate = useNavigate()
-  const { data: events, isLoading } = useEvents()
+  const { data: events, isPending, isError, refetch } = useEvents()
   const claim = useClaimEvent()
 
   const handleClaim = (id: string) => {
@@ -47,8 +49,10 @@ export function EventPage() {
           </div>
         </div>
 
-        {isLoading ? (
-          <p className="py-16 text-center text-sm text-muted-foreground">불러오는 중…</p>
+        {isPending ? (
+          <CardSkeleton className="px-5 pt-1.5" />
+        ) : isError ? (
+          <ErrorState onRetry={() => refetch()}>이벤트를 불러오지 못했어요.</ErrorState>
         ) : events && events.length > 0 ? (
           <div className="flex flex-col gap-2.5 px-5 pb-6 pt-1.5">
             {events.map((event) => (

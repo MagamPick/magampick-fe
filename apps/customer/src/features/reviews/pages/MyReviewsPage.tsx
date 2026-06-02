@@ -1,6 +1,8 @@
 import { useNavigate } from 'react-router'
 import { ChevronLeft } from 'lucide-react'
 import { ScreenContainer } from '@/shared/components/ScreenContainer'
+import { ErrorState } from '@/shared/components/ErrorState'
+import { ListRowSkeleton } from '@/shared/components/Skeletons'
 import { ROUTES } from '@/shared/lib/routes'
 import { useMyReviews } from '../hooks/useMyReviews'
 import { useDeleteReview } from '../hooks/useDeleteReview'
@@ -10,7 +12,7 @@ import type { MyReview } from '../types'
 /** 내가 쓴 리뷰 (프로토타입 62-my-reviews). 수정 → 작성 화면, 삭제 → 확인 후 mock 제거. */
 export function MyReviewsPage() {
   const navigate = useNavigate()
-  const { data: reviews, isPending } = useMyReviews()
+  const { data: reviews, isPending, isError, refetch } = useMyReviews()
   const del = useDeleteReview()
 
   const handleEdit = (review: MyReview) => navigate(ROUTES.REVIEW_EDIT(review.id))
@@ -33,12 +35,12 @@ export function MyReviewsPage() {
       </header>
 
       <main className="flex-1">
-        {isPending || !reviews ? (
-          <div className="px-5 pt-4">
-            <div className="h-[120px] animate-pulse rounded-[14px] bg-muted" />
-          </div>
+        {isPending ? (
+          <ListRowSkeleton className="px-5 pt-4" />
+        ) : isError ? (
+          <ErrorState onRetry={() => refetch()}>리뷰를 불러오지 못했어요.</ErrorState>
         ) : (
-          <MyReviewList reviews={reviews} onEdit={handleEdit} onDelete={handleDelete} />
+          <MyReviewList reviews={reviews ?? []} onEdit={handleEdit} onDelete={handleDelete} />
         )}
       </main>
     </ScreenContainer>

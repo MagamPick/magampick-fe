@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router'
 import { useAuthStore } from '@/features/auth/stores/authStore'
 import { ScreenContainer } from '@/shared/components/ScreenContainer'
+import { ErrorState } from '@/shared/components/ErrorState'
+import { ListRowSkeleton } from '@/shared/components/Skeletons'
 import type { StoreSort } from '@/features/store-list/types'
 import { AutocompleteDropdown } from '../components/AutocompleteDropdown'
 import { RecentSearches } from '../components/RecentSearches'
@@ -12,22 +14,6 @@ import { useDebouncedValue } from '../hooks/useDebouncedValue'
 import { useKeywordSearch } from '../hooks/useKeywordSearch'
 import { useSearchHistory } from '../hooks/useSearchHistory'
 import { searchParamsSchema } from '../types'
-
-function ResultsSkeleton() {
-  return (
-    <div className="px-5 pt-4">
-      {[0, 1, 2].map((i) => (
-        <div key={i} className="flex items-center gap-3 border-b border-border py-[13px]">
-          <div className="size-16 flex-shrink-0 animate-pulse rounded-[12px] bg-muted" />
-          <div className="flex-1 space-y-2">
-            <div className="h-3.5 w-1/2 animate-pulse rounded bg-muted" />
-            <div className="h-3 w-1/3 animate-pulse rounded bg-muted" />
-          </div>
-        </div>
-      ))}
-    </div>
-  )
-}
 
 /**
  * 검색 (소비자) — 한 화면 3-state: 검색 홈(최근 검색어) / 자동완성(입력 중) / 결과(제출).
@@ -90,11 +76,11 @@ export function SearchPage() {
 
       {mode === 'results' &&
         (search.isPending ? (
-          <ResultsSkeleton />
+          <ListRowSkeleton className="px-5 pt-4" />
         ) : search.isError ? (
-          <p className="px-5 py-10 text-sm font-medium text-muted-foreground">
+          <ErrorState onRetry={() => search.refetch()}>
             지금은 검색하지 못했어요. 잠시 후 다시 시도해주세요.
-          </p>
+          </ErrorState>
         ) : search.data ? (
           <SearchResults result={search.data} sort={sort} onSortChange={handleSortChange} />
         ) : null)}

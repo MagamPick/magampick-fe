@@ -3,6 +3,9 @@ import { Bell } from 'lucide-react'
 import { useSearchParams } from 'react-router'
 import { ComingSoonProvider } from '@/shared/components/ComingSoonToast'
 import { ScreenContainer } from '@/shared/components/ScreenContainer'
+import { EmptyState } from '@/shared/components/EmptyState'
+import { ErrorState } from '@/shared/components/ErrorState'
+import { ListRowSkeleton } from '@/shared/components/Skeletons'
 import { useComingSoon } from '@/shared/hooks/useComingSoon'
 import { SearchBarButton } from '@/shared/components/SearchBarButton'
 import { PullToRefresh } from '@/shared/components/PullToRefresh'
@@ -27,22 +30,6 @@ function NotificationBell() {
   )
 }
 
-function ListSkeleton() {
-  return (
-    <div>
-      {[0, 1, 2, 3].map((i) => (
-        <div key={i} className="flex items-center gap-3 border-b border-border py-[13px]">
-          <div className="size-16 flex-shrink-0 animate-pulse rounded-[12px] bg-muted" />
-          <div className="flex-1 space-y-2">
-            <div className="h-3.5 w-1/2 animate-pulse rounded bg-muted" />
-            <div className="h-3 w-1/3 animate-pulse rounded bg-muted" />
-          </div>
-        </div>
-      ))}
-    </div>
-  )
-}
-
 function StoreListBody({
   sort,
   onSortChange,
@@ -50,7 +37,7 @@ function StoreListBody({
   sort: StoreSort
   onSortChange: (next: StoreSort) => void
 }) {
-  const { data, isPending, isError, hasNextPage, isFetchingNextPage, fetchNextPage } =
+  const { data, isPending, isError, hasNextPage, isFetchingNextPage, fetchNextPage, refetch } =
     useStoreList(sort)
   const sentinelRef = useRef<HTMLDivElement>(null)
 
@@ -75,18 +62,11 @@ function StoreListBody({
       <StoreSortTabs value={sort} onChange={onSortChange} />
       <div className="px-5">
         {isPending ? (
-          <ListSkeleton />
+          <ListRowSkeleton className="py-2" />
         ) : isError ? (
-          <p className="px-1 py-5 text-sm font-medium text-muted-foreground">
-            지금은 불러오지 못했어요. 잠시 후 다시 시도해주세요.
-          </p>
+          <ErrorState onRetry={() => refetch()} />
         ) : items.length === 0 ? (
-          <div className="px-5 py-14 text-center">
-            <div className="text-[44px]">🏪</div>
-            <p className="mt-3 text-sm font-semibold text-muted-foreground">
-              주변 5km에 둘러볼 매장이 없어요.
-            </p>
-          </div>
+          <EmptyState icon="🏪">주변 5km에 둘러볼 매장이 없어요.</EmptyState>
         ) : (
           <>
             <p className="px-1 pb-2 pt-1 text-[13px] font-semibold text-muted-foreground">

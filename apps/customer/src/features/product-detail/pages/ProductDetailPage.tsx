@@ -3,6 +3,7 @@ import { ComingSoonProvider } from '@/shared/components/ComingSoonToast'
 import { PullToRefresh } from '@/shared/components/PullToRefresh'
 import { Button } from '@/shared/components/ui/button'
 import { ScreenContainer } from '@/shared/components/ScreenContainer'
+import { ErrorState } from '@/shared/components/ErrorState'
 import { ROUTES } from '@/shared/lib/routes'
 import { productDetailParamsSchema, type ProductKind } from '../types'
 import { useProductDetail } from '../hooks/useProductDetail'
@@ -34,7 +35,7 @@ export function ProductDetailPage() {
 
 function ProductDetailView({ kind, productId }: { kind: ProductKind; productId: string }) {
   const navigate = useNavigate()
-  const { data: product, isPending, isError } = useProductDetail(kind, productId)
+  const { data: product, isPending, isError, refetch } = useProductDetail(kind, productId)
   const refresh = useProductDetailRefresh(kind, productId)
 
   const handleBack = () => navigate(-1)
@@ -54,11 +55,8 @@ function ProductDetailView({ kind, productId }: { kind: ProductKind; productId: 
 
   if (isError || !product) {
     return (
-      <ScreenContainer
-        variant="bleed"
-        className="flex flex-col items-center justify-center gap-4 px-8 text-center"
-      >
-        <p className="text-sm text-muted-foreground">상품 정보를 불러오지 못했어요.</p>
+      <ScreenContainer variant="bleed" className="flex flex-col items-center justify-center">
+        <ErrorState onRetry={() => refetch()}>상품 정보를 불러오지 못했어요.</ErrorState>
         <Button variant="outline" onClick={handleBack}>
           뒤로 가기
         </Button>
