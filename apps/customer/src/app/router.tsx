@@ -6,6 +6,7 @@ import { SignupPage } from '@/features/auth/pages/SignupPage'
 import { WelcomePage } from '@/features/auth/pages/WelcomePage'
 import { KakaoCallbackPage } from '@/features/auth/pages/KakaoCallbackPage'
 import { SocialSignupPage } from '@/features/auth/pages/SocialSignupPage'
+import { PasswordResetPage } from '@/features/auth/pages/PasswordResetPage'
 import { TabLayout } from '@/shared/components/TabLayout'
 import { FullscreenColumnLayout } from '@/shared/components/FullscreenColumnLayout'
 import { HomePage } from '@/features/home/pages/HomePage'
@@ -221,6 +222,15 @@ export const router = createBrowserRouter([
     element: (
       <PublicOnlyRoute>
         <SocialSignupPage />
+      </PublicOnlyRoute>
+    ),
+  },
+  // 비밀번호 재설정 — 비로그인 전용 (로그인 화면 [비밀번호 찾기] 진입)
+  {
+    path: ROUTES.PASSWORD_RESET,
+    element: (
+      <PublicOnlyRoute>
+        <PasswordResetPage />
       </PublicOnlyRoute>
     ),
   },

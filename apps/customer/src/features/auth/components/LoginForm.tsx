@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useNavigate } from 'react-router'
@@ -21,8 +20,6 @@ import { KakaoMockScenarios } from './KakaoMockScenarios'
 export function LoginForm() {
   const navigate = useNavigate()
   const login = useLogin()
-  // 비밀번호 찾기는 별도 명세(비밀번호 재설정)라 이번 단계엔 "준비 중" 안내만.
-  const [notice, setNotice] = useState<string | null>(null)
 
   const form = useForm<LoginInput>({
     resolver: zodResolver(loginInputSchema),
@@ -30,7 +27,6 @@ export function LoginForm() {
   })
 
   const onSubmit = (values: LoginInput) => {
-    setNotice(null)
     login.mutate(values)
   }
 
@@ -125,7 +121,7 @@ export function LoginForm() {
           />
           <button
             type="button"
-            onClick={() => setNotice('비밀번호 찾기는 준비 중이에요.')}
+            onClick={() => navigate(ROUTES.PASSWORD_RESET)}
             className="inline-flex min-h-11 items-center px-1 py-1.5 text-[13px] font-semibold text-muted-foreground"
           >
             비밀번호 찾기
@@ -166,16 +162,6 @@ export function LoginForm() {
         </button>
 
         <KakaoMockScenarios />
-
-        {notice && (
-          <p
-            role="status"
-            aria-live="polite"
-            className="mt-3 text-center text-[13px] text-muted-foreground"
-          >
-            {notice}
-          </p>
-        )}
       </form>
     </Form>
   )

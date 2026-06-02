@@ -3,6 +3,7 @@ import { ProtectedRoute } from '@/features/auth/components/ProtectedRoute'
 import { PublicOnlyRoute } from '@/features/auth/components/PublicOnlyRoute'
 import { LoginPage } from '@/features/auth/pages/LoginPage'
 import { SignupPage } from '@/features/auth/pages/SignupPage'
+import { PasswordResetPage } from '@/features/auth/pages/PasswordResetPage'
 import { TabLayout } from '@/shared/components/TabLayout'
 import { AnalyticsPage } from '@/features/analytics/pages/AnalyticsPage'
 import { NotFoundPage } from '@/shared/components/NotFoundPage'
@@ -169,6 +170,15 @@ export const router = createBrowserRouter([
     element: (
       <PublicOnlyRoute>
         <SignupPage />
+      </PublicOnlyRoute>
+    ),
+  },
+  // 비밀번호 재설정 — 비로그인 전용 (로그인 화면 [비밀번호 찾기] 진입)
+  {
+    path: ROUTES.PASSWORD_RESET,
+    element: (
+      <PublicOnlyRoute>
+        <PasswordResetPage />
       </PublicOnlyRoute>
     ),
   },

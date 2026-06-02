@@ -2,6 +2,8 @@ export const ROUTES = {
   HOME: '/',
   LOGIN: '/login',
   SIGNUP: '/signup',
+  // 비밀번호 재설정 — 이메일→휴대폰 본인인증→새 비번 (비로그인 전용, 프로토타입 11-forgot)
+  PASSWORD_RESET: '/password-reset',
 
   // 주문(바텀네비 탭) + 주문 상세(풀스크린, 바텀네비 없음)
   ORDERS: '/orders',

@@ -1,6 +1,6 @@
-import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
+import { useNavigate } from 'react-router'
 import {
   Form,
   FormField,
@@ -11,13 +11,13 @@ import {
 } from '@/shared/components/ui/form'
 import { Input } from '@/shared/components/ui/input'
 import { ApiError } from '@/shared/lib/apiError'
+import { ROUTES } from '@/shared/lib/routes'
 import { useLogin } from '../hooks/useLogin'
 import { loginInputSchema, type LoginInput } from '../types'
 
 export function LoginForm() {
+  const navigate = useNavigate()
   const login = useLogin()
-  // 비밀번호 찾기는 별도 명세(비밀번호 재설정, auth.md §13)라 이번 단계엔 "준비 중" 안내만.
-  const [notice, setNotice] = useState<string | null>(null)
 
   const form = useForm<LoginInput>({
     resolver: zodResolver(loginInputSchema),
@@ -25,7 +25,6 @@ export function LoginForm() {
   })
 
   const onSubmit = (values: LoginInput) => {
-    setNotice(null)
     login.mutate(values)
   }
 
@@ -81,7 +80,7 @@ export function LoginForm() {
         <div className="mb-[22px] mt-2 flex justify-end">
           <button
             type="button"
-            onClick={() => setNotice('비밀번호 찾기는 준비 중이에요.')}
+            onClick={() => navigate(ROUTES.PASSWORD_RESET)}
             className="inline-flex min-h-11 items-center px-1 py-1.5 text-[13px] font-semibold text-muted-foreground"
           >
             비밀번호 찾기
@@ -101,16 +100,6 @@ export function LoginForm() {
         >
           {login.isPending ? '로그인 중...' : '로그인'}
         </button>
-
-        {notice && (
-          <p
-            role="status"
-            aria-live="polite"
-            className="mt-3 text-center text-[13px] text-muted-foreground"
-          >
-            {notice}
-          </p>
-        )}
       </form>
     </Form>
   )

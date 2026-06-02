@@ -80,3 +80,36 @@ export const loginInputSchema = z.object({
 })
 
 export type LoginInput = z.infer<typeof loginInputSchema>
+
+// ── 비밀번호 재설정 ───────────────────────────────────────────────────
+/** 비밀번호 재설정 에러 코드 (노션 AC) */
+export const PASSWORD_RESET_ERROR = {
+  /** 이메일 미등록 또는 이메일↔휴대폰 불일치 — 존재 여부 비노출 위해 동일 코드 */
+  RESET_VERIFICATION_FAILED: 'RESET_VERIFICATION_FAILED',
+  /** 본인인증 토큰 없거나 만료 */
+  PHONE_VERIFICATION_REQUIRED: 'PHONE_VERIFICATION_REQUIRED',
+  /** 소셜 전용 계정(password_hash NULL) — 사장은 소셜 가입 없음(방어용 코드) */
+  SOCIAL_ONLY_ACCOUNT: 'SOCIAL_ONLY_ACCOUNT',
+  /** 새 비밀번호 정책 미충족 */
+  PASSWORD_POLICY_VIOLATION: 'PASSWORD_POLICY_VIOLATION',
+} as const
+
+/**
+ * 비밀번호 재설정 폼 (노션 명세: 이메일 → 휴대폰 본인인증 → 새 비밀번호).
+ * 휴대폰 unique X 정책상 이메일+휴대폰 쌍으로 계정 식별. verificationToken 은 본인인증(OTP) 결과.
+ * newPassword 는 가입과 동일한 passwordSchema(§8) 공유.
+ */
+export const passwordResetSchema = z
+  .object({
+    email: z.string().email('이메일 형식이 아닙니다'),
+    phone: z.string().regex(/^010-\d{4}-\d{4}$/, '휴대폰 번호를 확인해주세요'),
+    verificationToken: z.string().min(1, '휴대폰 본인인증이 필요합니다'),
+    newPassword: passwordSchema,
+    newPasswordConfirm: z.string(),
+  })
+  .refine((d) => d.newPassword === d.newPasswordConfirm, {
+    message: '비밀번호가 일치하지 않습니다',
+    path: ['newPasswordConfirm'],
+  })
+
+export type PasswordResetInput = z.infer<typeof passwordResetSchema>
