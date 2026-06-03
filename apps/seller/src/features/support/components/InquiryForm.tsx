@@ -127,7 +127,7 @@ export function InquiryForm({ onSubmitted }: { onSubmitted?: (inquiry: Inquiry) 
         <button
           type="submit"
           disabled={!form.formState.isValid || submit.isPending}
-          className="h-[54px] w-full rounded-xl bg-primary text-base font-bold text-white disabled:bg-[#f0d9ce]"
+          className="h-[54px] w-full rounded-xl bg-primary text-base font-bold text-white disabled:bg-primary-disabled"
         >
           {submit.isPending ? '보내는 중...' : '문의 보내기'}
         </button>

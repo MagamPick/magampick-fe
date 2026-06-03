@@ -457,7 +457,7 @@ export function ClearanceCreatePage() {
                     type="button"
                     onClick={goNext}
                     disabled={!stepValid || (step === TOTAL && create.isPending)}
-                    className="h-[54px] flex-1 rounded-xl bg-primary text-base font-bold tracking-[-0.3px] text-white transition active:scale-[0.98] disabled:bg-[#f0d9ce] disabled:active:scale-100"
+                    className="h-[54px] flex-1 rounded-xl bg-primary text-base font-bold tracking-[-0.3px] text-white transition active:scale-[0.98] disabled:bg-primary-disabled disabled:active:scale-100"
                   >
                     {step < TOTAL ? '다음' : create.isPending ? '등록 중…' : '마감 할인 등록'}
                   </button>

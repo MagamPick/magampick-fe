@@ -87,7 +87,7 @@ export function NicknameEditSheet({ open, onOpenChange, currentNickname }: Nickn
             <button
               type="submit"
               disabled={saveDisabled}
-              className="mt-5 h-[54px] w-full rounded-xl bg-primary text-base font-bold tracking-[-0.3px] text-white transition active:scale-[0.98] disabled:bg-[#f0d9ce] disabled:active:scale-100"
+              className="mt-5 h-[54px] w-full rounded-xl bg-primary text-base font-bold tracking-[-0.3px] text-white transition active:scale-[0.98] disabled:bg-primary-disabled disabled:active:scale-100"
             >
               {update.isPending ? '저장 중…' : '저장'}
             </button>

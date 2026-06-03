@@ -174,7 +174,7 @@ export function ProductDetailPage() {
                 <button
                   type="button"
                   disabled
-                  className="flex h-[54px] w-full items-center justify-center gap-1.5 rounded-xl bg-[#f0d9ce] text-base font-bold text-white"
+                  className="flex h-[54px] w-full items-center justify-center gap-1.5 rounded-xl bg-primary-disabled text-base font-bold text-white"
                 >
                   <Zap className="size-[18px]" /> 이 상품으로 마감 할인 등록
                 </button>

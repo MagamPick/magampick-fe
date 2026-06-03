@@ -133,7 +133,7 @@ export function SignupPage() {
                 type="button"
                 onClick={goNext}
                 disabled={!stepValid || signup.isPending}
-                className="h-[54px] flex-1 rounded-xl bg-primary text-base font-bold tracking-[-0.3px] text-white transition active:scale-[0.98] disabled:bg-[#f0d9ce] disabled:active:scale-100"
+                className="h-[54px] flex-1 rounded-xl bg-primary text-base font-bold tracking-[-0.3px] text-white transition active:scale-[0.98] disabled:bg-primary-disabled disabled:active:scale-100"
               >
                 {step < TOTAL_STEPS ? '다음' : signup.isPending ? '가입 중...' : '가입 완료'}
               </button>

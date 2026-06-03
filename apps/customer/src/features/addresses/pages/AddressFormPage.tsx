@@ -239,7 +239,7 @@ export function AddressFormPage() {
             <button
               type="submit"
               disabled={saveDisabled}
-              className="h-[54px] w-full rounded-xl bg-primary text-base font-bold tracking-[-0.3px] text-white transition active:scale-[0.98] disabled:bg-[#f0d9ce] disabled:active:scale-100"
+              className="h-[54px] w-full rounded-xl bg-primary text-base font-bold tracking-[-0.3px] text-white transition active:scale-[0.98] disabled:bg-primary-disabled disabled:active:scale-100"
             >
               {mutation.isPending ? '저장 중…' : isEdit ? '저장' : '추가하기'}
             </button>
