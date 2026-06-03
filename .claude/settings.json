@@ -6,6 +6,7 @@
   },
   "permissions": {
     "defaultMode": "auto",
+    "additionalDirectories": ["../prototype"],
     "allow": [
       "Bash(git *)",
       "PowerShell(git *)",

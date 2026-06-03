@@ -161,14 +161,16 @@ export function useLogin() {
 // features/auth/types.ts
 export const loginInputSchema = z.object({
   email: z.string().email('이메일 형식이 아닙니다'),
-  password: z.string().min(8, '8자 이상').regex(
-    /^(?=.*[A-Za-z])(?=.*\d)(?=.*[^A-Za-z\d]).+$/,
-    '영문, 숫자, 특수문자를 포함해야 합니다'
-  ),
-  keepSignedIn: z.boolean().default(true),
+  password: z.string().min(1, '비밀번호를 입력해 주세요'), // 필수 여부만 — 구성 규칙 검증 X
+  keepSignedIn: z.boolean(),                               // 폼 defaultValues 에서 true
 })
 export type LoginInput = z.infer<typeof loginInputSchema>
 ```
+
+> **로그인은 비밀번호 구성 규칙(8자·영문·숫자·특수)을 검증/노출하지 않는다.** 가입 폼은 `passwordSchema`(§8)로
+> 강함을 강제하지만, 로그인 폼에서 같은 규칙을 노출하면 ① 비밀번호 정책이 외부에 드러나고 ② 규칙 도입 이전에
+> 가입한 계정이 로그인조차 못 하게 된다. 따라서 로그인은 **이메일 형식 + 비밀번호 필수**만 클라이언트에서 보고,
+> 실제 자격 판정은 서버가 하여 실패는 `LOGIN_FAILED` 단일 메시지로 거부한다 (계정 존재 여부도 비노출 — §4).
 
 폼은 [`form-convention.md`](form-convention.md) 패턴.
 
@@ -393,9 +395,54 @@ export const APP_ROLE = 'SELLER' as const
 
 ---
 
-## 13. 비밀번호 재설정 (MVP 비범위 — 별도 노션 명세)
+## 13. 비밀번호 재설정
 
-별도 노션 페이지로 분리. MVP 단계엔 미구현. UI 진입점 (`[비밀번호 재설정]` 링크) 만 로그인 화면에 노출하고 클릭 시 "준비 중" 안내 또는 노션 명세 작성 후 구현.
+비로그인 사용자가 **이메일 → 휴대폰 본인인증 → 새 비밀번호** 3단계로 본인 확인 후 비번을 재설정한다 (소비자·사장 공통). 노션 "비밀번호 재설정" 명세 기준.
+
+### 흐름
+1. **이메일** 입력 — 존재 여부 비노출(형식만 검증)
+2. **휴대폰 본인인증** (§11 OTP — `usePhoneVerification` 재사용) → 인증 성공 후 이메일↔휴대폰 매칭. 휴대폰 unique X 정책상 (이메일+휴대폰) 쌍으로만 계정 식별 (프로토타입 11-forgot 은 휴대폰만이라 이메일 Step 을 명세대로 추가)
+3. **새 비밀번호** (§8 `passwordSchema` 공유) → 갱신 시 해당 계정 refresh 토큰 일괄 무효화 (모든 기기 강제 로그아웃)
+4. **완료** → 로그인 화면. **자동 로그인 X** — 새 비번으로 재로그인
+
+### 에러 (노션 AC)
+- `RESET_VERIFICATION_FAILED` — 이메일 미등록·이메일↔휴대폰 불일치 동일 메시지 (존재 비노출)
+- `PHONE_VERIFICATION_REQUIRED` — 본인인증 토큰 없음/만료
+- `SOCIAL_ONLY_ACCOUNT` — 카카오 가입(`password_hash` NULL, 소비자 한정) → "카카오로 로그인" 안내
+- `PASSWORD_POLICY_VIOLATION` — 새 비번 정책 미충족
+
+### 진입점 / 라우트
+- 로그인 화면 `[비밀번호 찾기]` → `ROUTES.PASSWORD_RESET` (`/password-reset`, PublicOnly)
+
+### Mock (BE 완료 전)
+- `authApi.verifyPasswordResetIdentity` / `resetPassword` 스텁 — 등록 계정 시드(이메일+휴대폰)로 매칭, OTP `000000` 통과 (§11). BE 완료 후 실 axios + 이메일↔휴대폰 매칭·refresh 무효화로 교체 (FE 연동 PR).
+
+---
+
+## 13-2. 비밀번호 변경 (로그인 상태)
+
+로그인 사용자가 **현재 비밀번호 확인 → 새 비밀번호** 로 비번을 변경한다 (소비자·사장 공통). 비로그인 §13 재설정과 별개 — 이미 인증된 세션이라 OTP 대신 **현재 비번**으로 본인 확인. 노션 「비밀번호 변경」 명세 기준 (Phase 1 범위 편입 2026-06-03).
+
+### 흐름 (단일 화면)
+1. **현재 비밀번호** — 필수. 불일치 시 거부
+2. **새 비밀번호** (§8 `passwordSchema` 공유) — 기존 비번과 동일 허용 (강제 변경 규칙 없음, 재설정과 동일)
+3. **새 비밀번호 확인** — 새 비번과 일치
+4. **완료** → 완료 화면 후 진입점 복귀. **현재 기기 로그인 유지** (재로그인 X). 갱신 시 **다른 기기**의 refresh 만 무효화(현재 기기 제외) — §13 재설정(모든 기기 무효화)과 다름
+
+### 에러
+- `CURRENT_PASSWORD_MISMATCH` — 현재 비밀번호 불일치 ("현재 비밀번호가 일치하지 않습니다")
+- `PASSWORD_POLICY_VIOLATION` — 새 비번 정책 미충족
+
+### 진입점 / 라우트
+- 소비자: 마이 → 내 정보 수정 → `[비밀번호 변경]`
+- 사장: 마이 → 설정 → `[비밀번호 변경]`, 또는 마이 → 내 정보 수정 → `[비밀번호 변경]`
+- → `ROUTES.PASSWORD_CHANGE` (`/mypage/password`, **ProtectedRoute** — 로그인 전용)
+
+### 소셜 전용 계정 (엣지)
+- 카카오 가입(`password_hash` NULL, 소비자 한정)은 현재 비번이 없어 변경 불가 — BE 연동 시 진입 차단/안내(`SOCIAL_ONLY_ACCOUNT`). MVP mock 은 진입점 노출 유지(세션 사용자 type 판별은 BE 영역).
+
+### Mock (BE 완료 전)
+- `authApi.changePassword` 스텁 — 현재 비번 `Magampick1!` 통과(그 외 불일치), 새 비번 `passwordSchema` 검증. BE 완료 후 실 axios + 세션 사용자 해시 검증·다른 기기 refresh 무효화로 교체 (FE 연동 PR).
 
 ---
 
@@ -436,7 +483,8 @@ export const APP_ROLE = 'SELLER' as const
 
 ## 보류 / TODO
 
-- [ ] **비밀번호 재설정 흐름** — MVP 비범위. 노션에 별도 명세 페이지 만들어지면 그때 작성
+- [x] **비밀번호 재설정 흐름** — mock UI 구현 완료 (§13, 소비자·사장). BE 연동(실 매칭·refresh 무효화)은 연동 PR 대기
+- [x] **비밀번호 변경 (로그인 상태)** — mock UI 구현 완료 (§13-2, 소비자·사장). BE 연동(현재 비번 검증·다른 기기 refresh 무효화)은 연동 PR 대기
 - [ ] **소셜 로그인 추가** (네이버 / 구글) — 카카오만 MVP. 노션 명세 따름
 - [ ] **관리자 로그인 / 가입** — 관리자 웹 별도 정의 (추후)
 - [ ] **Refresh token rotation** — 노션 명세상 백로그. 도입 시점 결정 시 추가
@@ -445,3 +493,6 @@ export const APP_ROLE = 'SELLER' as const
 
 ## 변경 이력
 - 2026-05-29: 초안 작성 — 노션 명세 (`로그인/로그아웃` 페이지) 기반. 백엔드 docs/auth.md 와 차이 (노션이 진실).
+- 2026-05-31: §5 로그인 폼 — 비밀번호 클라이언트 검증을 구성 규칙(strict) → 필수 여부만으로 변경 (정책 노출·구규칙 계정 차단 방지). 소비자 로그인/로그아웃 UI(mock) 구현 중 결정.
+- 2026-06-02: §13 비밀번호 재설정 — "MVP 비범위" → mock UI 구현 반영 (이메일→휴대폰 본인인증→새 비번, 소비자·사장). 로그인 [비밀번호 찾기] 진입점 연결. BE 연동 대기.
+- 2026-06-03: §13-2 비밀번호 변경 (로그인 상태) 신설 — 노션 「비밀번호 변경」 명세 Phase 1 범위 편입. mock UI (현재 비번→새 비번, 소비자·사장), 성공 후 현재 기기 유지. 마이/내 정보 수정 진입점 연결. BE 연동 대기.

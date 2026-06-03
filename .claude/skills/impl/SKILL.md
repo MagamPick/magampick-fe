@@ -197,10 +197,13 @@ pnpm test --run path/to/XXX.test.tsx
 ```
 
 **3. 컴포넌트 구현**: shadcn 컴포넌트 + Tailwind 토큰 = [`styling-convention.md`](../../../docs/styling-convention.md) / [`coding-convention.md`](../../../docs/coding-convention.md) (예정)
+- **프로토타입 정독 (UI 구현 전 필수)**: [`prototype-index.md`](../../../docs/prototype-index.md) 로 화면 소스 위치 찾기 → 해당 `scripts/NN.js`(구조·상태·검증 로직) + `styles/*.css`(정확한 px·radius·색)에서 **스펙 추출**. 눈대중 X — shadcn/라이브러리 기본값이 프로토타입과 다르면(예: `Input` 기본 높이) 오버라이드.
 - 폼은 react-hook-form + Zod + shadcn `<Form>` 조합 = [`form-convention.md`](../../../docs/form-convention.md) (예정)
 - 라우팅 / Link / Guard = [`routing-convention.md`](../../../docs/routing-convention.md) (예정)
 
 **4. 재실행 → green**.
+
+**5. 스크린샷 대조 (UI 화면 — 임시 검증)**: dev 서버를 **슬롯 포트**로 띄우고(`pnpm --filter <app> dev -- --port <슬롯포트> --strictPort` — wt1=`15173` / wt2=`25173` / wt3=`35173`, 충돌 시 +30000), Playwright(headless 393×852)로 단계·화면별 스크린샷 → 프로토타입과 대조 → 교정. 스크립트·스크린샷은 **커밋 전 삭제** (커밋 E2E §5-6 과 별개). 자세한 절차·포트 표 = [`prototype-index.md`](../../../docs/prototype-index.md) "구현 충실도".
 
 ### 5-5. 페이지 / 라우트 셸
 
@@ -268,7 +271,24 @@ pnpm test
 - {convention 따라 자동 적용된 mechanical detail 은 적지 않음}
 ```
 
-보고 직후 머지까지 같은 세션에서 끝낸다 ([`AGENTS.md` 워크플로우](../../../AGENTS.md) / [`git-workflow.md §4`](../../../docs/git-workflow.md)):
+### 7-0. 커밋 전 확인 게이트 (사용자 OK ★)
+
+빌드 통과 + 위 보고 후, **커밋하기 전에** 사용자 확인을 받는다. 작업 종류로 분기:
+
+**A. UI 작업** (화면 신규/변경 또는 화면 동작 변화) — dev 서버 + 2-파트 보고 → 사용자 클릭 확인 → OK 후 커밋:
+1. dev 서버를 **슬롯 포트**로 띄움: `pnpm --filter <app> dev -- --port <슬롯포트> --strictPort` (wt1=`15173` / wt2=`25173` / wt3=`35173`, 충돌 시 +30000). 포트 표 = [`prototype-index.md`](../../../docs/prototype-index.md) "구현 충실도"
+2. **2-파트 보고**:
+   - **① 만든 화면** — 만들거나 바꾼 화면·라우트 + 열어볼 URL
+   - **② UI 체크리스트** — 화면별로 묶고, 각 항목 = 사용자가 직접 해볼 **동작·상호작용·fidelity** (`X 하면 Y 돼야 함` — 정상 + 상호작용으로 도달하는 비활성/엣지), 끝에 end-to-end 흐름 2~3개. 화면 진입에 필요한 **입력 힌트**(로그인 계정·OTP 코드 등)는 제공
+     - ⚠️ **렌더된 mock 값(가격·거리·이름·평점·시각)을 항목에 쓰지 않는다** — 구조/동작/fidelity로 표현, 값은 `{placeholder}`로. (더미값 대조 = 검증가치 0 + mock 바뀌면 stale.) **평소 화면에 안 뜨는 상태(빈·에러·0건)는 체크리스트에서 데이터로 찾게 하지 말고 단위 테스트로** (눈 확인 필요 시 dev 토글/카탈로그).
+3. 사용자 클릭 OK 전엔 **커밋 보류**. 이슈 나오면 고치고 체크리스트 다시 제시. (임시 dev 서버·스크린샷·임시 router 연결 등은 OK 후 정리)
+
+**B. 순수 로직** (훅 / 유틸 / API 클라이언트 등 화면에 안 보임) — UI 체크리스트 없이 **테스트로 검증**:
+- 핵심 동작·엣지케이스를 테스트로 커버(TDD)하고 "이런 동작 테스트로 검증됨" 한 줄 보고. 별도 dev 서버 게이트 없이 아래 커밋 메시지 검토로.
+
+> 분담: **로직 정확성 = 테스트(자동)** / **시각·상호작용 = 사용자 눈(UI 체크리스트)**. "테스트로만 검증"은 테스트가 핵심 동작을 실제로 커버할 때만 유효(TDD 필수). UI 체크리스트엔 동작의 시각적 결과도 들어가므로 UI-관측 로직은 거기서 한 번 더 걸러진다.
+
+**7-0 확인 게이트 통과 후** 머지까지 같은 세션에서 끝낸다 ([`AGENTS.md` 워크플로우](../../../AGENTS.md) / [`git-workflow.md §4`](../../../docs/git-workflow.md)):
 
 1. **커밋 메시지 검토** — `<emoji> <type>: <subject>` **한 줄만** ([`commit-convention.md` §2](../../../docs/commit-convention.md) — body / footer 사용 안 함). 작성한 메시지 + 커밋 파일 목록 사용자에게 보여주고 OK 받기. `commit-msg` hook 우회 / `--no-verify` 금지
 2. **커밋 + 푸시** — 첫 push 는 `git push -u origin feat/<slug>`

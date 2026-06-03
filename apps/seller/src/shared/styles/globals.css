@@ -1,0 +1,122 @@
+@import 'tailwindcss';
+@import 'tw-animate-css';
+
+@custom-variant dark (&:is(.dark *));
+
+/* ============================================================
+   @theme inline — CSS 변수를 Tailwind 유틸로 노출
+   (bg-primary, text-muted-foreground, rounded-lg, font-sans, text-display ...)
+   ============================================================ */
+@theme inline {
+  /* shadcn 시맨틱 */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary-disabled: var(--primary-disabled);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  /* 마감픽 고유 토큰 */
+  --color-cream: var(--cream);
+  --color-cream-deep: var(--cream-deep);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-info: var(--info);
+
+  /* 상태 보조 토큰 (placeholder / subtle 배경 / warning foreground) */
+  --color-placeholder: var(--placeholder);
+  --color-success-subtle: var(--success-subtle);
+  --color-warning-subtle: var(--warning-subtle);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-destructive-subtle: var(--destructive-subtle);
+  --color-info-subtle: var(--info-subtle);
+
+  /* radius 스케일 (base 0.75rem = 12px) */
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+
+  /* 폰트 */
+  --font-sans: 'Pretendard', system-ui, -apple-system, sans-serif;
+
+  /* typography scale (프로토타입 01-tokens.css) */
+  --text-display: 22px;
+  --text-h2: 18px;
+  --text-h3: 16px;
+  --text-body: 14px;
+  --text-meta: 12.5px;
+  --text-caption: 11.5px;
+
+  /* elevation */
+  --shadow-e1: 0 1px 2px rgb(15 15 15 / 0.04), 0 1px 1px rgb(15 15 15 / 0.03);
+  --shadow-e2: 0 4px 12px rgb(15 15 15 / 0.06), 0 1px 2px rgb(15 15 15 / 0.04);
+  --shadow-e3: 0 10px 24px rgb(15 15 15 / 0.08), 0 2px 4px rgb(15 15 15 / 0.04);
+}
+
+/* ============================================================
+   :root — 디자인 토큰 값 (프로토타입 styles/01-tokens.css 기준)
+   다크모드는 MVP 미지원 — 출시 후 .dark 블록 추가
+   ============================================================ */
+:root {
+  --radius: 0.75rem; /* 12px — 프로토타입 button radius */
+
+  --background: #f7f7f7;
+  --foreground: #1a1a1a;
+  --card: #ffffff;
+  --card-foreground: #1a1a1a;
+  --popover: #ffffff;
+  --popover-foreground: #1a1a1a;
+
+  --primary: #ff6b35;
+  --primary-foreground: #ffffff;
+  --primary-disabled: #f0d9ce; /* 비활성 primary 버튼 — 프로토타입 disabled 색 */
+  --secondary: #fff0eb;
+  --secondary-foreground: #e85427;
+  --muted: #f1f1f1;
+  --muted-foreground: #767676;
+  --accent: #fff0eb;
+  --accent-foreground: #e85427;
+  --destructive: #dc3545;
+
+  --border: #e5e5e5;
+  --input: #e5e5e5;
+  --ring: #ff6b35;
+
+  /* 마감픽 고유 */
+  --cream: #fbf1e0;
+  --cream-deep: #f3e2c7;
+  --success: #28a745;
+  --warning: #ffc107;
+  --info: #0d6efd;
+
+  /* 상태 보조 — 프로토타입 하드코딩 색 토큰화 (subtle 배경 / placeholder / warning foreground) */
+  --placeholder: #bdbdbd; /* 입력 placeholder·비활성 텍스트 (muted-foreground 보다 옅은 회색) */
+  --success-subtle: #eaf7ee; /* 성공 안내 배경 */
+  --warning-subtle: #fff6e5; /* 경고 안내 배경 */
+  --warning-foreground: #b07a00; /* 경고/긴급 텍스트 (warning 위 가독 amber) */
+  --destructive-subtle: #fcebec; /* 에러 안내 배경 */
+  --info-subtle: #e6f0fe; /* 정보 안내 배경 */
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+  }
+}

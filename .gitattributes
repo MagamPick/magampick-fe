@@ -1,0 +1,32 @@
+# 기본 — 모든 텍스트 파일 LF 로 통일 (Windows 도)
+* text=auto eol=lf
+
+# 명시적 텍스트 (안전)
+*.ts text eol=lf
+*.tsx text eol=lf
+*.js text eol=lf
+*.jsx text eol=lf
+*.json text eol=lf
+*.md text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+*.css text eol=lf
+*.html text eol=lf
+*.sh text eol=lf
+
+# Shell hooks — LF 필수 (Git 실행)
+.githooks/* text eol=lf
+
+# 바이너리
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.webp binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.otf binary
+*.eot binary
+*.pdf binary
