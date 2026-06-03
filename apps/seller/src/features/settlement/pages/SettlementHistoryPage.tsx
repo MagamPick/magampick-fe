@@ -1,6 +1,9 @@
 import { useNavigate } from 'react-router'
 import { ChevronLeft } from 'lucide-react'
 import { ScreenContainer } from '@/shared/components/ScreenContainer'
+import { EmptyState } from '@/shared/components/EmptyState'
+import { ErrorState } from '@/shared/components/ErrorState'
+import { ListRowSkeleton } from '@/shared/components/Skeletons'
 import { useCurrentStoreStore } from '@/features/store/stores/currentStoreStore'
 import { useSettlementCycles } from '../hooks/useSettlementCycles'
 import { SettlementSummaryCard } from '../components/SettlementSummaryCard'
@@ -15,7 +18,7 @@ import { FeeGuideCard } from '../components/FeeGuideCard'
 export function SettlementHistoryPage() {
   const navigate = useNavigate()
   const storeId = useCurrentStoreStore((s) => s.selectedStoreId)
-  const { data: cycles, isPending } = useSettlementCycles(storeId)
+  const { data: cycles, isPending, isError, refetch } = useSettlementCycles(storeId)
   const list = cycles ?? []
 
   return (
@@ -37,9 +40,15 @@ export function SettlementHistoryPage() {
       <section className="mx-5 mt-3 rounded-[16px] border border-border bg-card px-[18px] py-4">
         <h2 className="mb-1.5 text-[13px] font-bold text-muted-foreground">정산 내역</h2>
         {isPending ? (
-          <p className="py-10 text-center text-[14px] text-muted-foreground">불러오는 중…</p>
+          <ListRowSkeleton className="py-2" media={false} />
+        ) : isError ? (
+          <ErrorState className="py-8" onRetry={() => refetch()}>
+            정산 내역을 불러오지 못했어요.
+          </ErrorState>
         ) : list.length === 0 ? (
-          <p className="py-10 text-center text-[14px] text-muted-foreground">정산 내역이 없어요.</p>
+          <EmptyState className="py-8" icon="💰">
+            정산 내역이 없어요.
+          </EmptyState>
         ) : (
           <div>
             {list.map((cycle) => (

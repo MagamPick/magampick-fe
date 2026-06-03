@@ -3,6 +3,9 @@ import { Link, useSearchParams } from 'react-router'
 import { cn } from '@/shared/lib/utils'
 import { ROUTES } from '@/shared/lib/routes'
 import { ScreenContainer } from '@/shared/components/ScreenContainer'
+import { EmptyState } from '@/shared/components/EmptyState'
+import { ErrorState } from '@/shared/components/ErrorState'
+import { ListRowSkeleton } from '@/shared/components/Skeletons'
 import { useCurrentStoreStore } from '@/features/store/stores/currentStoreStore'
 import { useClearances } from '@/features/clearance/hooks/useClearances'
 import { DealCard } from '@/features/clearance/components/DealCard'
@@ -32,8 +35,18 @@ export function ProductListPage() {
   const tab: Tab = searchParams.get('tab') === 'deal' ? 'deal' : 'normal'
   const setTab = (next: Tab) => setSearchParams(next === 'deal' ? { tab: 'deal' } : {}, { replace: true })
 
-  const { data: products, isLoading: loadingProducts } = useProducts(storeId)
-  const { data: clearances, isLoading: loadingClearances } = useClearances(storeId)
+  const {
+    data: products,
+    isPending: loadingProducts,
+    isError: productsError,
+    refetch: refetchProducts,
+  } = useProducts(storeId)
+  const {
+    data: clearances,
+    isPending: loadingClearances,
+    isError: clearancesError,
+    refetch: refetchClearances,
+  } = useClearances(storeId)
 
   const [filter, setFilter] = useState<CategoryFilter>('all')
 
@@ -43,7 +56,7 @@ export function ProductListPage() {
   const visibleProducts = (products ?? []).filter(
     (p) => filter === 'all' || p.category === filter,
   )
-  const productsEmpty = !loadingProducts && visibleProducts.length === 0
+  const productsEmpty = !loadingProducts && !productsError && visibleProducts.length === 0
 
   const liveDeals = (clearances ?? []).filter((c) => c.status === 'ACTIVE')
   const endedDeals = (clearances ?? []).filter((c) => c.status !== 'ACTIVE')
@@ -116,20 +129,22 @@ export function ProductListPage() {
           </div>
 
           <div className="mt-2 flex flex-col gap-2 px-5">
-            {loadingProducts && (
-              <p className="py-16 text-center text-[14px] text-muted-foreground">불러오는 중…</p>
+            {loadingProducts && <ListRowSkeleton className="py-2" />}
+
+            {!loadingProducts && productsError && (
+              <ErrorState onRetry={() => refetchProducts()}>상품을 불러오지 못했어요.</ErrorState>
             )}
 
-            {productsEmpty && (
-              <div className="px-8 py-16 text-center">
-                <p className="text-[40px]">🍞</p>
-                <p className="mt-3 whitespace-pre-line text-[14px] leading-relaxed text-muted-foreground">
-                  {(products?.length ?? 0) === 0
-                    ? '아직 등록된 상품이 없어요.\n첫 상품을 등록해 보세요.'
-                    : '이 카테고리에는 상품이 없어요.'}
-                </p>
-              </div>
-            )}
+            {productsEmpty &&
+              ((products?.length ?? 0) === 0 ? (
+                <EmptyState icon="🍞">
+                  아직 등록된 상품이 없어요.
+                  <br />
+                  첫 상품을 등록해 보세요.
+                </EmptyState>
+              ) : (
+                <EmptyState icon="🍞">이 카테고리에는 상품이 없어요.</EmptyState>
+              ))}
 
             {visibleProducts.map((p) => (
               <Link key={p.id} to={ROUTES.PRODUCT_DETAIL(p.id)} className="block">
@@ -157,18 +172,24 @@ export function ProductListPage() {
             <span aria-hidden>🔥</span> 마감 할인 등록하기
           </Link>
 
-          {loadingClearances && (
-            <p className="py-16 text-center text-[14px] text-muted-foreground">불러오는 중…</p>
+          {loadingClearances && <ListRowSkeleton className="py-2" />}
+
+          {!loadingClearances && clearancesError && (
+            <ErrorState onRetry={() => refetchClearances()}>
+              마감 할인을 불러오지 못했어요.
+            </ErrorState>
           )}
 
-          {!loadingClearances && liveDeals.length === 0 && endedDeals.length === 0 && (
-            <div className="px-8 py-16 text-center">
-              <p className="text-[40px]">🔥</p>
-              <p className="mt-3 whitespace-pre-line text-[14px] leading-relaxed text-muted-foreground">
-                진행 중인 마감 할인이 없어요.{'\n'}판매 중인 상품을 마감 할인으로 등록해 보세요.
-              </p>
-            </div>
-          )}
+          {!loadingClearances &&
+            !clearancesError &&
+            liveDeals.length === 0 &&
+            endedDeals.length === 0 && (
+              <EmptyState icon="🔥">
+                진행 중인 마감 할인이 없어요.
+                <br />
+                판매 중인 상품을 마감 할인으로 등록해 보세요.
+              </EmptyState>
+            )}
 
           {liveDeals.length > 0 && (
             <section className="mt-4 px-5">

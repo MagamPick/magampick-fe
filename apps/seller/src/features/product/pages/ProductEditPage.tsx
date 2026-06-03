@@ -2,6 +2,7 @@ import { z } from 'zod'
 import { Navigate, useNavigate, useParams } from 'react-router'
 import { ChevronLeft } from 'lucide-react'
 import { ROUTES } from '@/shared/lib/routes'
+import { ErrorState } from '@/shared/components/ErrorState'
 import { useProduct } from '../hooks/useProduct'
 import { ProductForm } from '../components/ProductForm'
 
@@ -13,7 +14,7 @@ export function ProductEditPage() {
   const params = useParams()
   const parsed = paramsSchema.safeParse(params)
   const id = parsed.success ? parsed.data.id : ''
-  const { data: product, isLoading, isError } = useProduct(id)
+  const { data: product, isLoading, isError, refetch } = useProduct(id)
 
   if (!parsed.success) return <Navigate to={ROUTES.HOME} replace />
 
@@ -35,9 +36,7 @@ export function ProductEditPage() {
         <p className="py-16 text-center text-[14px] text-muted-foreground">불러오는 중…</p>
       )}
       {!isLoading && (isError || !product) && (
-        <p className="py-16 text-center text-[14px] text-muted-foreground">
-          상품을 찾을 수 없어요.
-        </p>
+        <ErrorState onRetry={() => refetch()}>상품을 찾을 수 없어요.</ErrorState>
       )}
       {product && <ProductForm mode="edit" product={product} />}
     </div>

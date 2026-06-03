@@ -152,4 +152,36 @@ describe('OrderListPage', () => {
     await user.click(screen.getByText('버터 크루아상 외 2건'))
     expect(screen.getByText('상세화면 o1')).toBeInTheDocument()
   })
+
+  // --- 비동기 상태 분기 (스켈레톤 / 에러 / 빈) ---
+  function mockOrdersState(over: Record<string, unknown>) {
+    vi.mocked(useOrders).mockReturnValue({
+      data: undefined,
+      isPending: false,
+      isError: false,
+      refetch: vi.fn(),
+      ...over,
+    } as unknown as ReturnType<typeof useOrders>)
+  }
+
+  it('로딩 중이면 스켈레톤을 노출한다', () => {
+    mockOrdersState({ isPending: true })
+    const { container } = renderPage()
+    expect(container.querySelectorAll('[data-slot="skeleton-row"]').length).toBeGreaterThan(0)
+  })
+
+  it('에러면 ErrorState 와 다시 시도(refetch)를 노출한다', async () => {
+    const refetch = vi.fn()
+    mockOrdersState({ isError: true, refetch })
+    renderPage()
+    expect(screen.getByText('주문 목록을 불러오지 못했어요.')).toBeInTheDocument()
+    await userEvent.click(screen.getByRole('button', { name: '다시 시도' }))
+    expect(refetch).toHaveBeenCalled()
+  })
+
+  it('신규 주문이 0건이면 EmptyState 를 노출한다', () => {
+    mockOrdersState({ data: [] })
+    renderPage()
+    expect(screen.getByText('새로 들어온 주문이 없어요.')).toBeInTheDocument()
+  })
 })

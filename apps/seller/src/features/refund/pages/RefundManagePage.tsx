@@ -3,6 +3,9 @@ import { useNavigate, useSearchParams } from 'react-router'
 import { ChevronLeft } from 'lucide-react'
 import { cn } from '@/shared/lib/utils'
 import { ScreenContainer } from '@/shared/components/ScreenContainer'
+import { EmptyState } from '@/shared/components/EmptyState'
+import { ErrorState } from '@/shared/components/ErrorState'
+import { ListRowSkeleton } from '@/shared/components/Skeletons'
 import { useCurrentStoreStore } from '@/features/store/stores/currentStoreStore'
 import { useRefundRequests } from '../hooks/useRefundRequests'
 import { useRefundActions } from '../hooks/useRefundActions'
@@ -43,7 +46,7 @@ export function RefundManagePage() {
   const setSeg = (next: RefundSegment) =>
     setSearchParams(next === 'pending' ? {} : { seg: next }, { replace: true })
 
-  const { data: refunds, isPending: listLoading } = useRefundRequests(storeId)
+  const { data: refunds, isPending: listLoading, isError, refetch } = useRefundRequests(storeId)
   const actions = useRefundActions(storeId)
   const busy = actions.approve.isPending || actions.reject.isPending
 
@@ -112,15 +115,14 @@ export function RefundManagePage() {
       </div>
 
       <div className="flex flex-col gap-2.5 px-5 py-4">
-        {listLoading && (
-          <p className="py-16 text-center text-[14px] text-muted-foreground">불러오는 중…</p>
+        {listLoading && <ListRowSkeleton className="py-2" media={false} />}
+
+        {!listLoading && isError && (
+          <ErrorState onRetry={() => refetch()}>환불 요청을 불러오지 못했어요.</ErrorState>
         )}
 
-        {!listLoading && visible.length === 0 && (
-          <div className="px-8 py-16 text-center">
-            <p className="text-[40px]">💸</p>
-            <p className="mt-3 text-[14px] text-muted-foreground">{SEG_EMPTY[seg]}</p>
-          </div>
+        {!listLoading && !isError && visible.length === 0 && (
+          <EmptyState icon="💸">{SEG_EMPTY[seg]}</EmptyState>
         )}
 
         {visible.map((refund) => (

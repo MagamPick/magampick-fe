@@ -4,6 +4,9 @@ import { Search, X } from 'lucide-react'
 import { cn } from '@/shared/lib/utils'
 import { ROUTES } from '@/shared/lib/routes'
 import { ScreenContainer } from '@/shared/components/ScreenContainer'
+import { EmptyState } from '@/shared/components/EmptyState'
+import { ErrorState } from '@/shared/components/ErrorState'
+import { ListRowSkeleton } from '@/shared/components/Skeletons'
 import { ConfirmSheet } from '@/shared/components/ConfirmSheet'
 import { useCurrentStoreStore } from '@/features/store/stores/currentStoreStore'
 import { useOrders } from '../hooks/useOrders'
@@ -53,7 +56,7 @@ export function OrderListPage() {
   const setSeg = (next: OrderSegment) =>
     setSearchParams(next === 'new' ? {} : { seg: next }, { replace: true })
 
-  const { data: orders, isLoading } = useOrders(storeId)
+  const { data: orders, isPending, isError, refetch } = useOrders(storeId)
   const actions = useOrderActions(storeId)
 
   const [searchOpen, setSearchOpen] = useState(false)
@@ -197,18 +200,24 @@ export function OrderListPage() {
       </div>
 
       <div className="flex flex-col gap-2.5 px-5 py-4">
-        {isLoading && (
-          <p className="py-16 text-center text-[14px] text-muted-foreground">불러오는 중…</p>
+        {isPending && <ListRowSkeleton className="py-2" />}
+
+        {!isPending && isError && (
+          <ErrorState onRetry={() => refetch()}>주문 목록을 불러오지 못했어요.</ErrorState>
         )}
 
-        {!isLoading && visible.length === 0 && (
-          <div className="px-8 py-16 text-center">
-            <p className="text-[40px]">{searching ? '🔍' : '🧾'}</p>
-            <p className="mt-3 whitespace-pre-line text-[14px] leading-relaxed text-muted-foreground">
-              {searching ? '검색 결과가 없어요.\n다른 키워드로 검색해 보세요.' : SEG_EMPTY[seg]}
-            </p>
-          </div>
-        )}
+        {!isPending &&
+          !isError &&
+          visible.length === 0 &&
+          (searching ? (
+            <EmptyState icon="🔍">
+              검색 결과가 없어요.
+              <br />
+              다른 키워드로 검색해 보세요.
+            </EmptyState>
+          ) : (
+            <EmptyState icon="🧾">{SEG_EMPTY[seg]}</EmptyState>
+          ))}
 
         {visible.map((o) => (
           <OrderCard
