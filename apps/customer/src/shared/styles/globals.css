@@ -17,6 +17,7 @@
   --color-popover-foreground: var(--popover-foreground);
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
+  --color-primary-disabled: var(--primary-disabled);
   --color-secondary: var(--secondary);
   --color-secondary-foreground: var(--secondary-foreground);
   --color-muted: var(--muted);
@@ -74,6 +75,7 @@
 
   --primary: #ff6b35;
   --primary-foreground: #ffffff;
+  --primary-disabled: #f0d9ce; /* 비활성 primary 버튼 — 프로토타입 disabled 색 */
   --secondary: #fff0eb;
   --secondary-foreground: #e85427;
   --muted: #f1f1f1;

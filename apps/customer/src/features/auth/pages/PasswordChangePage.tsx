@@ -197,7 +197,7 @@ export function PasswordChangePage() {
               <button
                 type="submit"
                 disabled={!formValid || changePassword.isPending}
-                className="h-[54px] w-full rounded-xl bg-primary text-base font-bold tracking-[-0.3px] text-white transition active:scale-[0.98] disabled:bg-[#f0d9ce] disabled:active:scale-100"
+                className="h-[54px] w-full rounded-xl bg-primary text-base font-bold tracking-[-0.3px] text-white transition active:scale-[0.98] disabled:bg-primary-disabled disabled:active:scale-100"
               >
                 {changePassword.isPending ? '변경 중...' : '변경하기'}
               </button>
