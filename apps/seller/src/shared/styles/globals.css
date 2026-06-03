@@ -36,6 +36,14 @@
   --color-warning: var(--warning);
   --color-info: var(--info);
 
+  /* 상태 보조 토큰 (placeholder / subtle 배경 / warning foreground) */
+  --color-placeholder: var(--placeholder);
+  --color-success-subtle: var(--success-subtle);
+  --color-warning-subtle: var(--warning-subtle);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-destructive-subtle: var(--destructive-subtle);
+  --color-info-subtle: var(--info-subtle);
+
   /* radius 스케일 (base 0.75rem = 12px) */
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
@@ -94,6 +102,14 @@
   --success: #28a745;
   --warning: #ffc107;
   --info: #0d6efd;
+
+  /* 상태 보조 — 프로토타입 하드코딩 색 토큰화 (subtle 배경 / placeholder / warning foreground) */
+  --placeholder: #bdbdbd; /* 입력 placeholder·비활성 텍스트 (muted-foreground 보다 옅은 회색) */
+  --success-subtle: #eaf7ee; /* 성공 안내 배경 */
+  --warning-subtle: #fff6e5; /* 경고 안내 배경 */
+  --warning-foreground: #b07a00; /* 경고/긴급 텍스트 (warning 위 가독 amber) */
+  --destructive-subtle: #fcebec; /* 에러 안내 배경 */
+  --info-subtle: #e6f0fe; /* 정보 안내 배경 */
 }
 
 @layer base {

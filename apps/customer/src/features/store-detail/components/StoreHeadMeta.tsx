@@ -24,4 +24,4 @@ export function StoreHeadMeta({ store }: { store: StoreDetail }) {
   )
 }
 
-const Dot = () => <span className="size-[3px] rounded-full bg-[#bdbdbd]" aria-hidden />
+const Dot = () => <span className="size-[3px] rounded-full bg-placeholder" aria-hidden />

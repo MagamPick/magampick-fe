@@ -10,7 +10,7 @@ function Input({ className, type, ...props }: React.ComponentProps<"input">) {
       data-slot="input"
       className={cn(
         "h-[50px] w-full min-w-0 rounded-[10px] border-[1.5px] border-input bg-card px-3.5 text-[15px] text-foreground outline-none transition-[color,box-shadow]",
-        "selection:bg-primary selection:text-primary-foreground placeholder:text-[#bdbdbd]",
+        "selection:bg-primary selection:text-primary-foreground placeholder:text-placeholder",
         "focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-secondary",
         "read-only:cursor-default read-only:bg-background",
         "disabled:cursor-not-allowed disabled:opacity-50",

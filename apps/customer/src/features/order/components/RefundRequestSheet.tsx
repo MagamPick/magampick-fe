@@ -70,7 +70,7 @@ export function RefundRequestSheet({
             placeholder="환불 사유를 입력해 주세요 (사장님에게 전달돼요)"
             className="min-h-[96px] rounded-[12px] text-sm leading-relaxed"
           />
-          <div className="mt-1.5 text-right text-[11.5px] font-semibold text-[#bdbdbd]">
+          <div className="mt-1.5 text-right text-[11.5px] font-semibold text-placeholder">
             <b className="text-primary">{reason.length}</b> / {REFUND_REASON_MAX}자
           </div>
         </div>

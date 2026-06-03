@@ -8,7 +8,7 @@ import type { OrderSegment, OrderStatus } from '../types'
  */
 const SEGMENT_BADGE_CLASS: Record<OrderSegment, string> = {
   new: 'bg-destructive/10 text-destructive',
-  prep: 'bg-warning/10 text-[#b07a00]',
+  prep: 'bg-warning/10 text-warning-foreground',
   ready: 'bg-info/10 text-info',
   done: 'bg-success/10 text-success',
   cancel: 'bg-muted text-muted-foreground',

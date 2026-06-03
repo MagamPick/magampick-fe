@@ -31,7 +31,7 @@ export function ReviewableOrderCard({ order, onWrite, onView }: Props) {
             {itemsSummary(order.items)}
           </p>
         </div>
-        <span className="self-start text-[11.5px] text-[#bdbdbd]">
+        <span className="self-start text-[11.5px] text-placeholder">
           {formatDate(order.pickedUpAt)} 픽업
         </span>
       </div>

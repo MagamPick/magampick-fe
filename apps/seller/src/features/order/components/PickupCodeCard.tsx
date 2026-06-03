@@ -28,7 +28,7 @@ export function PickupCodeCard({ code, status }: { code: string; status: OrderSt
       <div
         className={cn(
           'my-1 pl-2 text-[38px] font-extrabold tracking-[8px]',
-          active ? 'text-primary' : 'text-[#bdbdbd]',
+          active ? 'text-primary' : 'text-placeholder',
         )}
       >
         {code}

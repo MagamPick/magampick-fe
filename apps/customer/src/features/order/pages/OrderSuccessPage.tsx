@@ -67,8 +67,8 @@ export function OrderSuccessPage() {
           <InfoRow label="결제 수단" value="토스페이" />
         </div>
 
-        <div className="mt-[18px] rounded-[11px] bg-[#fff6e5] px-[14px] py-[13px] text-left text-[12.5px] leading-[1.6] text-[#8b5a00]">
-          <b className="font-extrabold text-[#b07a00]">⚠️ 매장 마감 전까지 픽업해 주세요.</b>
+        <div className="mt-[18px] rounded-[11px] bg-warning-subtle px-[14px] py-[13px] text-left text-[12.5px] leading-[1.6] text-[#8b5a00]">
+          <b className="font-extrabold text-warning-foreground">⚠️ 매장 마감 전까지 픽업해 주세요.</b>
           <br />
           픽업 시간이 지나도 주문은 유지되지만, 끝내 찾아가지 못하면 환불이 제한될 수 있어요.
         </div>

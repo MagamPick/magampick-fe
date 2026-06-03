@@ -34,7 +34,7 @@ export function FavoriteListCard({ store }: { store: FavoriteStore }) {
           <span className="mt-1 block text-xs text-muted-foreground">오늘 진행 중 마감 할인 없음</span>
         )}
       </span>
-      <ChevronRight className="size-[18px] flex-shrink-0 text-[#bdbdbd]" aria-hidden />
+      <ChevronRight className="size-[18px] flex-shrink-0 text-placeholder" aria-hidden />
     </button>
   )
 }

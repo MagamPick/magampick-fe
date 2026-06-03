@@ -91,7 +91,7 @@ export function StoreEditForm({ detail }: { detail: StoreDetail }) {
             className={cn(
               'mb-5 flex h-[168px] w-full flex-col items-center justify-center gap-2 rounded-[14px] border-[1.5px] transition',
               photoAdded
-                ? 'border-solid border-primary bg-gradient-to-br from-[#fff0eb] to-[#ffd9c7] text-secondary-foreground'
+                ? 'border-solid border-primary bg-gradient-to-br from-secondary to-[#ffd9c7] text-secondary-foreground'
                 : 'border-dashed border-border bg-background text-muted-foreground',
             )}
           >
@@ -102,7 +102,7 @@ export function StoreEditForm({ detail }: { detail: StoreDetail }) {
             <span
               className={cn(
                 'text-[11.5px]',
-                photoAdded ? 'text-secondary-foreground' : 'text-[#bdbdbd]',
+                photoAdded ? 'text-secondary-foreground' : 'text-placeholder',
               )}
             >
               {photoAdded

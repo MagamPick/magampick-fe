@@ -42,7 +42,7 @@ export function AddressSearchSheet({ open, onOpenChange, onSelect }: AddressSear
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="도로명·동/리·우편번호 검색"
-            className="min-w-0 flex-1 bg-transparent text-sm text-foreground outline-none placeholder:text-[#bdbdbd]"
+            className="min-w-0 flex-1 bg-transparent text-sm text-foreground outline-none placeholder:text-placeholder"
             aria-label="주소 검색어"
           />
         </div>

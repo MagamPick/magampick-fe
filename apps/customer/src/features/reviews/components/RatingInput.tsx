@@ -35,7 +35,7 @@ export function RatingInput({ value, onChange, disabled }: Props) {
               <Star
                 className={cn(
                   'size-8',
-                  filled ? 'fill-[#FFC107] text-[#FFC107]' : 'fill-[#E5E5E5] text-[#E5E5E5]',
+                  filled ? 'fill-warning text-warning' : 'fill-border text-border',
                 )}
               />
             </button>

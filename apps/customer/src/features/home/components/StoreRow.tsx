@@ -29,7 +29,7 @@ export function StoreRow({ store }: { store: NeighborhoodStore }) {
           </span>
         )}
       </span>
-      <ChevronRight className="size-[18px] flex-shrink-0 text-[#bdbdbd]" aria-hidden />
+      <ChevronRight className="size-[18px] flex-shrink-0 text-placeholder" aria-hidden />
     </button>
   )
 }

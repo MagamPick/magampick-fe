@@ -12,7 +12,7 @@ export function SearchBarButton() {
     <button
       type="button"
       onClick={() => navigate(ROUTES.SEARCH)}
-      className="mx-5 mt-4 flex h-[46px] w-[calc(100%_-_40px)] items-center gap-2 rounded-[12px] bg-background px-[14px] text-sm font-medium text-[#bdbdbd]"
+      className="mx-5 mt-4 flex h-[46px] w-[calc(100%_-_40px)] items-center gap-2 rounded-[12px] bg-background px-[14px] text-sm font-medium text-placeholder"
     >
       <Search className="size-[18px] flex-shrink-0 text-muted-foreground" aria-hidden />
       가게·메뉴를 검색해 보세요

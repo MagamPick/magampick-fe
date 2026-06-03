@@ -41,7 +41,7 @@ export function CouponCard({ coupon }: { coupon: Coupon }) {
             </span>
           )}
           {coupon.status === 'expired' && (
-            <span className="rounded-sm bg-[#FCEBEC] px-2 py-0.5 text-[10.5px] font-bold text-destructive">
+            <span className="rounded-sm bg-destructive-subtle px-2 py-0.5 text-[10.5px] font-bold text-destructive">
               만료
             </span>
           )}

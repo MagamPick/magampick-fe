@@ -20,7 +20,7 @@ export function WelcomePage() {
   return (
     <main className="mx-auto flex min-h-screen max-w-md flex-col bg-card px-5 pb-6">
       <div className="flex flex-1 flex-col items-center justify-center text-center">
-        <div className="mb-[22px] flex size-24 items-center justify-center rounded-full bg-gradient-to-b from-[#FF8A5C] to-[#FF6B35] text-5xl shadow-[0_14px_30px_rgba(255,107,53,0.32)]">
+        <div className="mb-[22px] flex size-24 items-center justify-center rounded-full bg-gradient-to-b from-[#FF8A5C] to-primary text-5xl shadow-[0_14px_30px_rgba(255,107,53,0.32)]">
           🎉
         </div>
         <h1 className="text-[23px] font-extrabold leading-snug tracking-tight text-foreground">
@@ -32,7 +32,7 @@ export function WelcomePage() {
           이제 내 주변 마감 세일을 픽할 수 있어요.
           <br />첫 주문에 쓸 수 있는 쿠폰을 드렸어요.
         </p>
-        <div className="mt-8 flex w-full items-center gap-3.5 rounded-2xl bg-gradient-to-b from-[#FFF0EB] to-[#FFD9C7] p-[18px] text-left">
+        <div className="mt-8 flex w-full items-center gap-3.5 rounded-2xl bg-gradient-to-b from-secondary to-[#FFD9C7] p-[18px] text-left">
           <span className="text-4xl">🎁</span>
           <span className="flex min-w-0 flex-col">
             <span className="text-xs font-bold text-secondary-foreground">신규 가입 축하 쿠폰</span>

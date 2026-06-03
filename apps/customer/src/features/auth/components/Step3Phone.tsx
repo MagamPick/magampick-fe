@@ -170,7 +170,7 @@ export function Step3Phone({ form }: { form: UseFormReturn<SignupInput> }) {
       )}
 
       {verified && (
-        <div className="mt-2 flex items-center gap-2 rounded-xl bg-[#eaf7ee] p-3.5 text-success">
+        <div className="mt-2 flex items-center gap-2 rounded-xl bg-success-subtle p-3.5 text-success">
           <Check className="size-4" strokeWidth={3} />
           <span className="text-[13.5px] font-bold">휴대폰 인증이 완료되었습니다</span>
         </div>

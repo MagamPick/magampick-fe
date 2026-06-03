@@ -33,7 +33,7 @@ export function CartItemRow({ item }: { item: CartItem }) {
             type="button"
             aria-label="삭제"
             onClick={() => removeItem(item.id)}
-            className="flex size-7 flex-shrink-0 items-center justify-center text-[#bdbdbd]"
+            className="flex size-7 flex-shrink-0 items-center justify-center text-placeholder"
           >
             <X className="size-[18px]" aria-hidden />
           </button>
@@ -43,7 +43,7 @@ export function CartItemRow({ item }: { item: CartItem }) {
           {isDeal && (
             <>
               <span className="text-[12.5px] font-extrabold text-destructive">{discountRate}%</span>
-              <span className="text-[11px] text-[#bdbdbd] line-through">{won(item.originalPrice)}</span>
+              <span className="text-[11px] text-placeholder line-through">{won(item.originalPrice)}</span>
             </>
           )}
           <span className="text-[15px] font-extrabold text-foreground">{won(item.salePrice)}</span>
@@ -56,7 +56,7 @@ export function CartItemRow({ item }: { item: CartItem }) {
               aria-label="수량 감소"
               disabled={item.qty <= CART_QTY_MIN}
               onClick={() => updateQty(item.id, item.qty - 1)}
-              className="flex h-11 w-8 items-center justify-center text-foreground disabled:text-[#bdbdbd]"
+              className="flex h-11 w-8 items-center justify-center text-foreground disabled:text-placeholder"
             >
               <Minus className="size-4" aria-hidden />
             </button>
@@ -72,7 +72,7 @@ export function CartItemRow({ item }: { item: CartItem }) {
               aria-label="수량 증가"
               disabled={item.qty >= CART_QTY_MAX}
               onClick={() => updateQty(item.id, item.qty + 1)}
-              className="flex h-11 w-8 items-center justify-center text-foreground disabled:text-[#bdbdbd]"
+              className="flex h-11 w-8 items-center justify-center text-foreground disabled:text-placeholder"
             >
               <Plus className="size-4" aria-hidden />
             </button>

@@ -18,7 +18,7 @@ export function DealUrgency({
 }) {
   const { label, isExpired } = useCountdown(pickupDeadline)
   return (
-    <div className="mt-3.5 flex items-center gap-2.5 rounded-[12px] bg-[#FCEBEC] px-[15px] py-[13px]">
+    <div className="mt-3.5 flex items-center gap-2.5 rounded-[12px] bg-destructive-subtle px-[15px] py-[13px]">
       <Clock className="size-4 flex-shrink-0 text-destructive" aria-hidden />
       <span className="text-sm font-extrabold text-destructive">
         {isExpired ? '픽업 마감 종료' : `${hhmm(pickupDeadline)} 마감 · ${label} 남음`}

@@ -42,7 +42,7 @@ export function PickupMemo({
         </div>
         <span
           data-slot="memo-count"
-          className="flex-shrink-0 text-[11px] font-semibold text-[#bdbdbd] tabular-nums"
+          className="flex-shrink-0 text-[11px] font-semibold text-placeholder tabular-nums"
         >
           <b className="font-bold text-muted-foreground">{value.length}</b>/{MEMO_MAX}
         </span>

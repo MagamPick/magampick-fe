@@ -60,7 +60,7 @@ export function AddressListPage() {
           className="mt-4 flex w-full items-center gap-2 rounded-xl border-[1.5px] border-border bg-background px-3.5 py-3 text-left"
         >
           <Search className="h-4 w-4 shrink-0 text-muted-foreground" />
-          <span className="text-sm text-[#bdbdbd]">도로명, 건물명, 지번으로 검색</span>
+          <span className="text-sm text-placeholder">도로명, 건물명, 지번으로 검색</span>
         </button>
 
         {/* 현재 위치로 찾기 */}

@@ -115,7 +115,7 @@ export function StoreLocationPage() {
             aria-label="확대"
             disabled={zoom >= ZOOM_LEVELS.length - 1}
             onClick={() => setZoom((v) => Math.min(ZOOM_LEVELS.length - 1, v + 1))}
-            className="flex size-[38px] items-center justify-center border-b border-border text-foreground disabled:text-[#bdbdbd]"
+            className="flex size-[38px] items-center justify-center border-b border-border text-foreground disabled:text-placeholder"
           >
             <Plus className="size-[18px]" aria-hidden />
           </button>
@@ -124,7 +124,7 @@ export function StoreLocationPage() {
             aria-label="축소"
             disabled={zoom <= 0}
             onClick={() => setZoom((v) => Math.max(0, v - 1))}
-            className="flex size-[38px] items-center justify-center text-foreground disabled:text-[#bdbdbd]"
+            className="flex size-[38px] items-center justify-center text-foreground disabled:text-placeholder"
           >
             <Minus className="size-[18px]" aria-hidden />
           </button>

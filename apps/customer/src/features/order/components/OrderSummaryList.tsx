@@ -9,7 +9,7 @@ export function OrderSummaryList({ items }: { items: CartItem[] }) {
       {items.map((item) => (
         <div key={item.id} className="flex justify-between gap-3 py-[7px] text-muted-foreground">
           <span className="min-w-0 flex-1 truncate">
-            {item.name} <span className="text-[#bdbdbd]">×{item.qty}</span>
+            {item.name} <span className="text-placeholder">×{item.qty}</span>
           </span>
           <b className="font-bold text-foreground">{won(item.salePrice * item.qty)}</b>
         </div>

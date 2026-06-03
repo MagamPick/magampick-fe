@@ -39,7 +39,7 @@ export function BottomNav() {
               cn(
                 'flex flex-1 flex-col items-center gap-[3px] pt-[9px] pb-1.5',
                 'transition-transform duration-100 active:scale-[0.94]',
-                isActive ? 'text-primary' : 'text-[#bdbdbd]',
+                isActive ? 'text-primary' : 'text-placeholder',
               )
             }
           >

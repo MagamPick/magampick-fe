@@ -38,7 +38,7 @@ export function RecentSearches({ items, onSelect, onRemove, onClear }: RecentSea
               type="button"
               aria-label={`${q} 삭제`}
               onClick={() => onRemove(q)}
-              className="flex size-4 flex-shrink-0 items-center justify-center rounded-full bg-[#bdbdbd] text-white"
+              className="flex size-4 flex-shrink-0 items-center justify-center rounded-full bg-placeholder text-white"
             >
               <X className="size-2.5" aria-hidden />
             </button>

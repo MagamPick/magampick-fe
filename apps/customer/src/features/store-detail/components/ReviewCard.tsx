@@ -21,7 +21,7 @@ export function ReviewCard({ review }: { review: StoreReview }) {
         <span className="text-[12px] font-semibold text-muted-foreground">
           {review.authorNickname}
         </span>
-        <span className="ml-auto text-[11px] text-[#bdbdbd]">{formatDate(review.createdAt)}</span>
+        <span className="ml-auto text-[11px] text-placeholder">{formatDate(review.createdAt)}</span>
       </div>
 
       {review.products.length > 0 && (

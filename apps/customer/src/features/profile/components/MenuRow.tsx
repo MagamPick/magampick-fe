@@ -42,7 +42,7 @@ export function MenuRow({ icon, label, value, to, onClick, danger }: MenuRowProp
         {label}
       </span>
       {value && <span className="text-[13px] font-semibold text-muted-foreground">{value}</span>}
-      {showChevron && <ChevronRight className="size-[18px] shrink-0 text-[#bdbdbd]" aria-hidden />}
+      {showChevron && <ChevronRight className="size-[18px] shrink-0 text-placeholder" aria-hidden />}
     </>
   )
 

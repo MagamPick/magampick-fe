@@ -32,13 +32,13 @@ export function DealItem({ deal, orderable }: { deal: StoreDeal; orderable: bool
         <span className="block text-sm font-bold">{deal.name}</span>
         <span className="mt-[5px] flex items-baseline gap-[5px]">
           <span className="text-[15px] font-extrabold text-destructive">{deal.discountRate}%</span>
-          <span className="text-[12px] text-[#bdbdbd] line-through">{won(deal.originalPrice)}</span>
+          <span className="text-[12px] text-placeholder line-through">{won(deal.originalPrice)}</span>
           <span className="text-[17px] font-extrabold text-foreground">{won(deal.salePrice)}</span>
         </span>
         <span
           className={cn(
             'mt-[5px] flex items-center gap-1 text-[11.5px] font-bold',
-            urgent ? 'text-destructive' : 'text-[#b07a00]',
+            urgent ? 'text-destructive' : 'text-warning-foreground',
           )}
         >
           <Clock className="size-3" aria-hidden />

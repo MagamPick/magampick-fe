@@ -125,7 +125,7 @@ export function ReviewForm({
                       className="min-h-[120px] rounded-[12px] text-sm leading-relaxed"
                     />
                   </FormControl>
-                  <div className="mt-1.5 text-right text-[11.5px] font-semibold text-[#bdbdbd]">
+                  <div className="mt-1.5 text-right text-[11.5px] font-semibold text-placeholder">
                     <b className="text-primary">{contentLength}</b> / {REVIEW_CONTENT_MAX}자
                   </div>
                   <FormMessage />
