@@ -2,6 +2,8 @@ import { useNavigate } from 'react-router'
 import { ChevronLeft } from 'lucide-react'
 import { ScreenContainer } from '@/shared/components/ScreenContainer'
 import { EmptyState } from '@/shared/components/EmptyState'
+import { ErrorState } from '@/shared/components/ErrorState'
+import { ListRowSkeleton } from '@/shared/components/Skeletons'
 import { useNotices } from '../hooks/useNotices'
 import { NoticeAccordion } from '../components/NoticeAccordion'
 
@@ -11,7 +13,7 @@ import { NoticeAccordion } from '../components/NoticeAccordion'
  */
 export function NoticeListPage() {
   const navigate = useNavigate()
-  const { data: notices, isLoading } = useNotices()
+  const { data: notices, isPending, isError, refetch } = useNotices()
 
   return (
     <ScreenContainer variant="page">
@@ -28,8 +30,10 @@ export function NoticeListPage() {
       </header>
 
       <main className="flex-1">
-        {isLoading ? (
-          <p className="py-16 text-center text-sm text-muted-foreground">불러오는 중…</p>
+        {isPending ? (
+          <ListRowSkeleton className="px-5 pt-4" media={false} />
+        ) : isError ? (
+          <ErrorState onRetry={() => refetch()}>공지사항을 불러오지 못했어요.</ErrorState>
         ) : notices && notices.length > 0 ? (
           <NoticeAccordion notices={notices} />
         ) : (

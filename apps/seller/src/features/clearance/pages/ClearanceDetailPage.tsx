@@ -15,6 +15,7 @@ import {
 import { Input } from '@/shared/components/ui/input'
 import { TimePicker } from '@/features/store/components/TimePicker'
 import { ConfirmSheet } from '@/shared/components/ConfirmSheet'
+import { ErrorState } from '@/shared/components/ErrorState'
 import { cn } from '@/shared/lib/utils'
 import { ApiError } from '@/shared/lib/apiError'
 import { ROUTES } from '@/shared/lib/routes'
@@ -52,7 +53,7 @@ export function ClearanceDetailPage() {
   const id = parsed.success ? parsed.data.id : ''
   const storeId = useCurrentStoreStore((s) => s.selectedStoreId)
 
-  const { data: clearance, isLoading, isError } = useClearance(id)
+  const { data: clearance, isLoading, isError, refetch } = useClearance(id)
   const { data: status } = useStoreStatus(storeId)
   const update = useUpdateClearance(id, storeId)
   const close = useCloseClearance(id, storeId)
@@ -130,10 +131,9 @@ export function ClearanceDetailPage() {
       )}
 
       {!isLoading && (isError || !clearance) && (
-        <div className="px-8 py-16 text-center">
-          <p className="text-[40px]">🔥</p>
-          <p className="mt-3 text-[14px] text-muted-foreground">마감 할인을 찾을 수 없어요.</p>
-        </div>
+        <ErrorState icon="🔥" onRetry={() => refetch()}>
+          마감 할인을 찾을 수 없어요.
+        </ErrorState>
       )}
 
       {clearance && (

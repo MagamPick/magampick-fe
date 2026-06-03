@@ -4,6 +4,7 @@ import { ChevronLeft, Phone } from 'lucide-react'
 import { cn } from '@/shared/lib/utils'
 import { ROUTES } from '@/shared/lib/routes'
 import { ConfirmSheet } from '@/shared/components/ConfirmSheet'
+import { ErrorState } from '@/shared/components/ErrorState'
 import { useCurrentStoreStore } from '@/features/store/stores/currentStoreStore'
 import { useOrder } from '../hooks/useOrder'
 import { useOrderActions } from '../hooks/useOrderActions'
@@ -46,7 +47,7 @@ export function OrderDetailPage() {
   const id = parsed.success ? parsed.data.id : ''
   const storeId = useCurrentStoreStore((s) => s.selectedStoreId)
 
-  const { data: order, isLoading, isError } = useOrder(id)
+  const { data: order, isLoading, isError, refetch } = useOrder(id)
   const actions = useOrderActions(storeId)
 
   const [sheet, setSheet] = useState<null | 'reject' | 'noShow'>(null)
@@ -75,10 +76,9 @@ export function OrderDetailPage() {
       )}
 
       {!isLoading && (isError || !order) && (
-        <div className="px-8 py-16 text-center">
-          <p className="text-[40px]">🧾</p>
-          <p className="mt-3 text-[14px] text-muted-foreground">주문을 찾을 수 없어요.</p>
-        </div>
+        <ErrorState icon="🧾" onRetry={() => refetch()}>
+          주문을 찾을 수 없어요.
+        </ErrorState>
       )}
 
       {order && (

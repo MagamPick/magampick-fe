@@ -1,6 +1,7 @@
 import { ChevronLeft } from 'lucide-react'
 import { useNavigate } from 'react-router'
 import { ROUTES } from '@/shared/lib/routes'
+import { ErrorState } from '@/shared/components/ErrorState'
 import { useCurrentStoreStore } from '../stores/currentStoreStore'
 import { useStore } from '../hooks/useStore'
 import { StoreEditForm } from '../components/StoreEditForm'
@@ -12,7 +13,7 @@ import { StoreEditForm } from '../components/StoreEditForm'
 export function StoreEditPage() {
   const navigate = useNavigate()
   const storeId = useCurrentStoreStore((s) => s.selectedStoreId)
-  const { data: detail, isLoading } = useStore(storeId)
+  const { data: detail, isLoading, refetch } = useStore(storeId)
 
   return (
     <div className="mx-auto flex min-h-screen max-w-md flex-col bg-card">
@@ -30,10 +31,12 @@ export function StoreEditPage() {
 
       {detail ? (
         <StoreEditForm detail={detail} />
-      ) : (
+      ) : isLoading ? (
         <div className="flex flex-1 items-center justify-center py-20 text-sm text-muted-foreground">
-          {isLoading ? '불러오는 중…' : '매장 정보를 불러오지 못했어요.'}
+          불러오는 중…
         </div>
+      ) : (
+        <ErrorState onRetry={() => refetch()}>매장 정보를 불러오지 못했어요.</ErrorState>
       )}
     </div>
   )

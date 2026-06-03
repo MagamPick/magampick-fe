@@ -3,6 +3,8 @@ import { ChevronLeft } from 'lucide-react'
 import { ScreenContainer } from '@/shared/components/ScreenContainer'
 import { SegTabs, type SegTabItem } from '@/shared/components/SegTabs'
 import { EmptyState } from '@/shared/components/EmptyState'
+import { ErrorState } from '@/shared/components/ErrorState'
+import { ListRowSkeleton } from '@/shared/components/Skeletons'
 import { ROUTES } from '@/shared/lib/routes'
 import { useFaqs } from '../hooks/useFaqs'
 import { useInquiries } from '../hooks/useInquiries'
@@ -22,8 +24,13 @@ export function SupportPage() {
   const setTab = (value: SupportTab) =>
     setParams(value === 'faq' ? {} : { tab: value }, { replace: true })
 
-  const { data: faqs, isLoading: faqsLoading } = useFaqs()
-  const { data: inquiries, isLoading: inquiriesLoading } = useInquiries()
+  const { data: faqs, isPending: faqsPending, isError: faqsError, refetch: refetchFaqs } = useFaqs()
+  const {
+    data: inquiries,
+    isPending: inquiriesPending,
+    isError: inquiriesError,
+    refetch: refetchInquiries,
+  } = useInquiries()
 
   const tabs: SegTabItem<SupportTab>[] = [
     { value: 'faq', label: 'FAQ' },
@@ -48,8 +55,10 @@ export function SupportPage() {
 
       <main className="flex-1">
         {tab === 'faq' ? (
-          faqsLoading ? (
-            <p className="py-16 text-center text-sm text-muted-foreground">불러오는 중…</p>
+          faqsPending ? (
+            <ListRowSkeleton className="px-5 pt-4" media={false} />
+          ) : faqsError ? (
+            <ErrorState onRetry={() => refetchFaqs()}>FAQ를 불러오지 못했어요.</ErrorState>
           ) : faqs && faqs.length > 0 ? (
             <FaqList faqs={faqs} />
           ) : (
@@ -66,8 +75,12 @@ export function SupportPage() {
                 문의하기
               </button>
             </div>
-            {inquiriesLoading ? (
-              <p className="py-16 text-center text-sm text-muted-foreground">불러오는 중…</p>
+            {inquiriesPending ? (
+              <ListRowSkeleton className="px-5 pt-4" media={false} />
+            ) : inquiriesError ? (
+              <ErrorState onRetry={() => refetchInquiries()}>
+                문의 내역을 불러오지 못했어요.
+              </ErrorState>
             ) : inquiries && inquiries.length > 0 ? (
               <div className="flex flex-col pt-2">
                 {inquiries.map((inquiry) => (

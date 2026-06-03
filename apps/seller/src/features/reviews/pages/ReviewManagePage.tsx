@@ -2,6 +2,9 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router'
 import { ChevronLeft } from 'lucide-react'
 import { ScreenContainer } from '@/shared/components/ScreenContainer'
+import { EmptyState } from '@/shared/components/EmptyState'
+import { ErrorState } from '@/shared/components/ErrorState'
+import { CardSkeleton } from '@/shared/components/Skeletons'
 import { useCurrentStoreStore } from '@/features/store/stores/currentStoreStore'
 import { useStoreReviews } from '../hooks/useStoreReviews'
 import { useReviewSummary } from '../hooks/useReviewSummary'
@@ -18,7 +21,7 @@ export function ReviewManagePage() {
   const navigate = useNavigate()
   const storeId = useCurrentStoreStore((s) => s.selectedStoreId)
   const { data: summary } = useReviewSummary(storeId)
-  const { data: reviews, isPending } = useStoreReviews(storeId)
+  const { data: reviews, isPending, isError, refetch } = useStoreReviews(storeId)
   const [replyTarget, setReplyTarget] = useState<SellerReview | null>(null)
 
   return (
@@ -39,13 +42,12 @@ export function ReviewManagePage() {
 
       <section className="px-5 pt-4">
         <h2 className="mb-3 text-[15px] font-bold">전체 리뷰</h2>
-        {isPending || !reviews ? (
-          <div className="h-[120px] animate-pulse rounded-[12px] bg-muted" />
-        ) : reviews.length === 0 ? (
-          <div className="flex flex-col items-center justify-center gap-2 py-16 text-center">
-            <span className="text-[40px]">💬</span>
-            <p className="text-sm text-muted-foreground">아직 리뷰가 없어요.</p>
-          </div>
+        {isPending ? (
+          <CardSkeleton count={3} />
+        ) : isError ? (
+          <ErrorState onRetry={() => refetch()}>리뷰를 불러오지 못했어요.</ErrorState>
+        ) : !reviews || reviews.length === 0 ? (
+          <EmptyState icon="💬">아직 리뷰가 없어요.</EmptyState>
         ) : (
           reviews.map((review) => (
             <SellerReviewCard key={review.id} review={review} onReply={setReplyTarget} />

@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { Link, Navigate, useNavigate, useParams } from 'react-router'
 import { ChevronLeft, Pencil, Trash2, Zap } from 'lucide-react'
 import { ConfirmSheet } from '@/shared/components/ConfirmSheet'
+import { ErrorState } from '@/shared/components/ErrorState'
 import { cn } from '@/shared/lib/utils'
 import { ROUTES } from '@/shared/lib/routes'
 import { useCurrentStoreStore } from '@/features/store/stores/currentStoreStore'
@@ -27,7 +28,7 @@ export function ProductDetailPage() {
   const id = parsed.success ? parsed.data.id : ''
   const storeId = useCurrentStoreStore((s) => s.selectedStoreId)
 
-  const { data: product, isLoading, isError } = useProduct(id)
+  const { data: product, isLoading, isError, refetch } = useProduct(id)
   const { data: clearances } = useClearances(storeId)
   const { data: status } = useStoreStatus(storeId)
   const del = useDeleteProduct(id, storeId)
@@ -73,10 +74,9 @@ export function ProductDetailPage() {
       )}
 
       {!isLoading && (isError || !product) && (
-        <div className="px-8 py-16 text-center">
-          <p className="text-[40px]">🍞</p>
-          <p className="mt-3 text-[14px] text-muted-foreground">상품을 찾을 수 없어요.</p>
-        </div>
+        <ErrorState icon="🍞" onRetry={() => refetch()}>
+          상품을 찾을 수 없어요.
+        </ErrorState>
       )}
 
       {product && (
