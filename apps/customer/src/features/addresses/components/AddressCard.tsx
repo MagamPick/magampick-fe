@@ -28,7 +28,7 @@ export function AddressCard({ address, onSelect, onEdit, disabled }: AddressCard
         <span className="flex items-center gap-1.5">
           <span className="truncate text-[15px] font-extrabold text-foreground">{label}</span>
           {isDefault && (
-            <span className="shrink-0 rounded-lg bg-[#e6f0fe] px-2 py-0.5 text-[10.5px] font-bold text-info">
+            <span className="shrink-0 rounded-lg bg-info-subtle px-2 py-0.5 text-[10.5px] font-bold text-info">
               기본 주소
             </span>
           )}

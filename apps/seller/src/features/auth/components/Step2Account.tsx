@@ -33,7 +33,7 @@ export function Step2Account({ form }: { form: UseFormReturn<SignupInput> }) {
       : strength === 1
         ? 'text-destructive'
         : strength === 2
-          ? 'text-[#b07a00]'
+          ? 'text-warning-foreground'
           : 'text-success'
   const segColor = (i: number) => {
     if (i >= strength) return 'bg-border'

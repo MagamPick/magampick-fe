@@ -110,7 +110,7 @@ export function Step5Store({ form }: { form: UseFormReturn<SignupInput> }) {
         className={cn(
           'mb-5 flex h-[168px] w-full flex-col items-center justify-center gap-2 rounded-[14px] border-[1.5px] transition',
           photoAdded
-            ? 'border-solid border-primary bg-gradient-to-br from-[#fff0eb] to-[#ffd9c7] text-secondary-foreground'
+            ? 'border-solid border-primary bg-gradient-to-br from-secondary to-[#ffd9c7] text-secondary-foreground'
             : 'border-dashed border-border bg-background text-muted-foreground',
         )}
       >
@@ -118,7 +118,7 @@ export function Step5Store({ form }: { form: UseFormReturn<SignupInput> }) {
         <span className="text-[13.5px] font-semibold">
           {photoAdded ? '대표 사진 등록 완료' : '대표 사진 등록'}
         </span>
-        <span className={cn('text-[11.5px]', photoAdded ? 'text-secondary-foreground' : 'text-[#bdbdbd]')}>
+        <span className={cn('text-[11.5px]', photoAdded ? 'text-secondary-foreground' : 'text-placeholder')}>
           {photoAdded ? '탭하면 사진을 제거합니다 (데모)' : '매장 외관이 잘 보이는 사진을 권장해요'}
         </span>
       </button>
@@ -201,7 +201,7 @@ export function Step5Store({ form }: { form: UseFormReturn<SignupInput> }) {
               onClick={() => setDateOpen(true)}
               className="flex h-[50px] w-full items-center justify-between rounded-[10px] border-[1.5px] border-input bg-card px-3.5 text-[15px] text-foreground outline-none transition focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-secondary"
             >
-              <span className={cn(!field.value && 'text-[#bdbdbd]')}>
+              <span className={cn(!field.value && 'text-placeholder')}>
                 {field.value ? field.value.replace(/-/g, '. ') + '.' : '날짜를 선택하세요'}
               </span>
               <CalendarIcon className="size-[18px] text-muted-foreground" />
@@ -237,13 +237,13 @@ export function Step5Store({ form }: { form: UseFormReturn<SignupInput> }) {
       />
 
       {biz.isSuccess && (
-        <div className="mb-4 flex items-start gap-2.5 rounded-xl bg-[#eaf7ee] px-4 py-3.5 text-[13.5px] font-semibold leading-normal text-success">
+        <div className="mb-4 flex items-start gap-2.5 rounded-xl bg-success-subtle px-4 py-3.5 text-[13.5px] font-semibold leading-normal text-success">
           <span className="text-base leading-none">✅</span>
           <span>정상 등록된 사업자입니다.</span>
         </div>
       )}
       {biz.isError && (
-        <div className="mb-4 flex items-start gap-2.5 rounded-xl bg-[#fcebec] px-4 py-3.5 text-[13.5px] font-semibold leading-normal text-destructive">
+        <div className="mb-4 flex items-start gap-2.5 rounded-xl bg-destructive-subtle px-4 py-3.5 text-[13.5px] font-semibold leading-normal text-destructive">
           <span className="text-base leading-none">⚠️</span>
           <span>
             조회되지 않는 사업자등록번호입니다.

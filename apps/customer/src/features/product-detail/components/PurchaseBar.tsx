@@ -69,7 +69,7 @@ export function PurchaseBar({ product }: { product: ProductDetail }) {
             aria-label="수량 감소"
             disabled={!purchasable || qty <= 1}
             onClick={() => setQty((v) => Math.max(1, v - 1))}
-            className="flex h-12 w-11 items-center justify-center text-foreground disabled:text-[#bdbdbd]"
+            className="flex h-12 w-11 items-center justify-center text-foreground disabled:text-placeholder"
           >
             <Minus className="size-[18px]" aria-hidden />
           </button>
@@ -85,7 +85,7 @@ export function PurchaseBar({ product }: { product: ProductDetail }) {
             aria-label="수량 증가"
             disabled={!purchasable || qty >= max}
             onClick={() => setQty((v) => Math.min(max, v + 1))}
-            className="flex h-12 w-11 items-center justify-center text-foreground disabled:text-[#bdbdbd]"
+            className="flex h-12 w-11 items-center justify-center text-foreground disabled:text-placeholder"
           >
             <Plus className="size-[18px]" aria-hidden />
           </button>

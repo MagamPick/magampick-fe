@@ -82,7 +82,7 @@ export function Step1Terms({ form, onOpenTerms }: Props) {
               <button
                 type="button"
                 onClick={() => onOpenTerms(term.id)}
-                className="px-1 text-xs font-semibold text-[#bdbdbd] underline"
+                className="px-1 text-xs font-semibold text-placeholder underline"
               >
                 보기
               </button>

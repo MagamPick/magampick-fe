@@ -186,7 +186,7 @@ export function PasswordResetPage() {
             {step === 3 && <PasswordResetNewPwStep form={form} />}
             {step === 4 && (
               <div className="flex flex-1 flex-col items-center justify-center text-center">
-                <div className="mb-6 flex size-20 items-center justify-center rounded-full bg-[#eaf7ee] text-success">
+                <div className="mb-6 flex size-20 items-center justify-center rounded-full bg-success-subtle text-success">
                   <Check className="size-10" strokeWidth={3} />
                 </div>
                 <h2 className="text-[23px] font-extrabold leading-snug tracking-tight text-foreground">

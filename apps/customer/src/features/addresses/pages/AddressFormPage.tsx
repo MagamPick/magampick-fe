@@ -159,7 +159,7 @@ export function AddressFormPage() {
                 <span
                   className={cn(
                     'text-sm leading-[1.4]',
-                    displayRoad ? 'font-bold text-foreground' : 'font-normal text-[#bdbdbd]',
+                    displayRoad ? 'font-bold text-foreground' : 'font-normal text-placeholder',
                   )}
                 >
                   {displayRoad ?? '주소를 선택해주세요'}

@@ -15,7 +15,7 @@ export function BusinessHoursSummary({ hours }: Props) {
       {rows.map((r) => (
         <div key={r.day} className="flex gap-3 py-1.5 text-[14px]">
           <span className="w-16 shrink-0 font-semibold text-muted-foreground">{r.label}</span>
-          <span className={cn('font-semibold', r.closed ? 'text-[#bdbdbd]' : 'text-foreground')}>
+          <span className={cn('font-semibold', r.closed ? 'text-placeholder' : 'text-foreground')}>
             {r.text}
           </span>
         </div>

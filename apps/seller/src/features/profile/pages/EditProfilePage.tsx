@@ -15,7 +15,7 @@ const EDIT_ROW =
   'flex min-h-[56px] w-full items-center gap-[11px] border-b border-border px-4 py-4 text-left last:border-b-0'
 const ROW_LABEL = 'shrink-0 text-[14.5px] font-semibold text-foreground'
 const ROW_VALUE = 'ml-auto max-w-[56%] truncate text-[13.5px] text-muted-foreground'
-const ROW_CHEVRON = 'size-[18px] shrink-0 text-[#bdbdbd]'
+const ROW_CHEVRON = 'size-[18px] shrink-0 text-placeholder'
 
 /**
  * 내 정보 수정 (프로토타입 53-profile-edit). 노션 "사장 프로필 관리".

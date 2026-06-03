@@ -24,7 +24,7 @@ const won = (n: number) => `${n.toLocaleString('ko-KR')}원`
 /** 상태 배너 색 — 세그먼트별(프로토타입 detail-banner). */
 const BANNER_CLASS: Record<OrderSegment, string> = {
   new: 'bg-destructive/10 text-destructive',
-  prep: 'bg-warning/10 text-[#b07a00]',
+  prep: 'bg-warning/10 text-warning-foreground',
   ready: 'bg-info/10 text-info',
   done: 'bg-success/10 text-success',
   cancel: 'bg-muted text-muted-foreground',

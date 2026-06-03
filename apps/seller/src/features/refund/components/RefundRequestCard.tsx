@@ -56,7 +56,7 @@ export function RefundRequestCard({ refund, actions }: Props) {
       </p>
 
       {isPending && (
-        <p className="mt-2 text-[12px] font-semibold text-[#b07a00]">
+        <p className="mt-2 text-[12px] font-semibold text-warning-foreground">
           {daysLeft > 0
             ? `${daysLeft}일 내 미처리 시 자동 승인돼요`
             : '오늘 안에 처리하지 않으면 자동 승인돼요'}

@@ -36,7 +36,7 @@ export function MyReviewCard({ review, onEdit, onDelete }: Props) {
         <span className="min-w-0 flex-1 truncate text-[13px] font-extrabold">
           {review.storeName}
         </span>
-        <span className="text-[11px] text-[#bdbdbd]">{formatDate(review.createdAt)}</span>
+        <span className="text-[11px] text-placeholder">{formatDate(review.createdAt)}</span>
       </div>
 
       {/* 구매 상품 — 좌우 배지(공간 부족 시 줄바꿈), 누르면 상품 상세 */}

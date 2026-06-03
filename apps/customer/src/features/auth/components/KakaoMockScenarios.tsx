@@ -21,7 +21,7 @@ export function KakaoMockScenarios() {
   return (
     <div className="mt-4 rounded-xl border border-dashed border-border p-3">
       <p className="mb-2 text-[11px] font-bold text-muted-foreground">
-        데모 시나리오 <span className="font-medium text-[#bdbdbd]">(mock 전용 · 연동 시 삭제)</span>
+        데모 시나리오 <span className="font-medium text-placeholder">(mock 전용 · 연동 시 삭제)</span>
       </p>
       <div className="grid grid-cols-2 gap-2">
         {SCENARIOS.map(({ scenario, label }) => (

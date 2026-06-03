@@ -31,7 +31,7 @@ export function ProductReviewSummary({
                 key={i}
                 className={cn(
                   'size-3.5',
-                  i < filled ? 'fill-[#FFC107] text-[#FFC107]' : 'fill-[#E5E5E5] text-[#E5E5E5]',
+                  i < filled ? 'fill-warning text-warning' : 'fill-border text-border',
                 )}
               />
             ))}

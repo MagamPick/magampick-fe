@@ -35,14 +35,14 @@ export function SearchHeader({ value, onChange, onSubmit, onClear, onBack }: Sea
           }}
           placeholder="가게·메뉴를 검색해 보세요"
           aria-label="검색어 입력"
-          className="min-w-0 flex-1 bg-transparent text-sm text-foreground outline-none placeholder:text-[#bdbdbd]"
+          className="min-w-0 flex-1 bg-transparent text-sm text-foreground outline-none placeholder:text-placeholder"
         />
         {value.length > 0 && (
           <button
             type="button"
             aria-label="입력 지우기"
             onClick={onClear}
-            className="flex size-[22px] flex-shrink-0 items-center justify-center rounded-full bg-[#bdbdbd] text-white"
+            className="flex size-[22px] flex-shrink-0 items-center justify-center rounded-full bg-placeholder text-white"
           >
             <X className="size-3.5" aria-hidden />
           </button>

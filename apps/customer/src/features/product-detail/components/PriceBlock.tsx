@@ -10,7 +10,7 @@ export function PriceBlock({ product }: { product: ProductDetail }) {
   return (
     <div className="mt-3 flex items-baseline gap-[7px]">
       <span className="text-xl font-extrabold text-destructive">{product.discountRate}%</span>
-      <span className="text-sm text-[#bdbdbd] line-through">{won(product.originalPrice)}</span>
+      <span className="text-sm text-placeholder line-through">{won(product.originalPrice)}</span>
       <span className="text-2xl font-extrabold text-foreground">{won(product.salePrice)}</span>
     </div>
   )

@@ -28,7 +28,7 @@ export function DealCard({ deal }: { deal: ClosingDeal }) {
         </span>
         <span className="mt-1.5 flex flex-wrap items-baseline gap-1">
           <span className="text-[12.5px] font-extrabold text-destructive">{deal.discountRate}%</span>
-          <span className="text-[11px] text-[#bdbdbd] line-through">{won(deal.originalPrice)}</span>
+          <span className="text-[11px] text-placeholder line-through">{won(deal.originalPrice)}</span>
           <span className="text-sm font-extrabold text-foreground">{won(deal.salePrice)}</span>
         </span>
       </span>

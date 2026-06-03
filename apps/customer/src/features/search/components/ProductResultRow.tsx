@@ -31,7 +31,7 @@ export function ProductResultRow({ product }: { product: SearchProductItem }) {
         <span className="block truncate text-sm font-bold">{product.name}</span>
         <span className="mt-[3px] block truncate text-xs text-muted-foreground">{meta}</span>
       </span>
-      <ChevronRight className="size-[18px] flex-shrink-0 text-[#bdbdbd]" aria-hidden />
+      <ChevronRight className="size-[18px] flex-shrink-0 text-placeholder" aria-hidden />
     </button>
   )
 }

@@ -41,7 +41,7 @@ export function NoticeAccordion({ notices }: { notices: Notice[] }) {
                 <ChevronDown
                   aria-hidden
                   className={cn(
-                    'mt-0.5 size-[18px] shrink-0 text-[#bdbdbd] transition-transform',
+                    'mt-0.5 size-[18px] shrink-0 text-placeholder transition-transform',
                     open && 'rotate-180 text-primary',
                   )}
                 />

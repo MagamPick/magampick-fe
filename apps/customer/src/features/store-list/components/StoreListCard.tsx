@@ -40,7 +40,7 @@ export function StoreListCard({ store }: { store: StoreListItem }) {
           </span>
         )}
       </span>
-      <ChevronRight className="size-[18px] flex-shrink-0 text-[#bdbdbd]" aria-hidden />
+      <ChevronRight className="size-[18px] flex-shrink-0 text-placeholder" aria-hidden />
     </button>
   )
 }

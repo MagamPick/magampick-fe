@@ -144,7 +144,7 @@ export function LoginForm() {
 
         <div className="mb-[14px] mt-[22px] flex items-center gap-3">
           <span className="h-px flex-1 bg-border" />
-          <span className="text-xs font-semibold text-[#bdbdbd]">또는</span>
+          <span className="text-xs font-semibold text-placeholder">또는</span>
           <span className="h-px flex-1 bg-border" />
         </div>
 

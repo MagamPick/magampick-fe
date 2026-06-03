@@ -30,6 +30,6 @@ describe('BottomNav (사장 바텀네비)', () => {
   it('현재_경로의_탭만_active_색상_적용', () => {
     renderNav('/products')
     expect(screen.getByText('상품').closest('a')).toHaveClass('text-primary')
-    expect(screen.getByText('홈').closest('a')).toHaveClass('text-[#bdbdbd]')
+    expect(screen.getByText('홈').closest('a')).toHaveClass('text-placeholder')
   })
 })

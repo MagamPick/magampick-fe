@@ -65,7 +65,7 @@ export function BusinessHoursList({
             <span
               className={cn(
                 'flex-1 text-[14px] font-semibold',
-                d.closed ? 'text-[#bdbdbd]' : 'text-foreground',
+                d.closed ? 'text-placeholder' : 'text-foreground',
               )}
             >
               {timeText}

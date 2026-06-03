@@ -30,7 +30,7 @@ export function SellerReviewCard({ review, onReply }: Props) {
         <span className="min-w-0 truncate text-[12px] font-semibold text-muted-foreground">
           {review.authorNickname}
         </span>
-        <span className="ml-auto shrink-0 text-[11px] text-[#bdbdbd]">
+        <span className="ml-auto shrink-0 text-[11px] text-placeholder">
           {formatDate(review.createdAt)}
         </span>
       </div>

@@ -26,7 +26,7 @@ export function FaqList({ faqs }: { faqs: Faq[] }) {
               <ChevronDown
                 aria-hidden
                 className={cn(
-                  'size-[18px] shrink-0 text-[#bdbdbd] transition-transform',
+                  'size-[18px] shrink-0 text-placeholder transition-transform',
                   open && 'rotate-180 text-primary',
                 )}
               />
