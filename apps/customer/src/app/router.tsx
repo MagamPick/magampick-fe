@@ -14,7 +14,7 @@ import { HomePage } from '@/features/home/pages/HomePage'
 import { StoreDetailPage } from '@/features/store-detail/pages/StoreDetailPage'
 import { StoreLocationPage } from '@/features/store-detail/pages/StoreLocationPage'
 import { ProductDetailPage } from '@/features/product-detail/pages/ProductDetailPage'
-import { MapTab } from '@/shared/components/tabs/MapTab'
+import { MapPage } from '@/features/map/pages/MapPage'
 import { StoreListPage } from '@/features/store-list/pages/StoreListPage'
 import { SearchPage } from '@/features/search/pages/SearchPage'
 import { FavoritesPage } from '@/features/favorites/pages/FavoritesPage'
@@ -52,7 +52,7 @@ export const router = createBrowserRouter([
     ),
     children: [
       { index: true, element: <HomePage /> },
-      { path: ROUTES.MAP, element: <MapTab /> },
+      { path: ROUTES.MAP, element: <MapPage /> },
       { path: ROUTES.ALL, element: <StoreListPage /> },
       { path: ROUTES.FAVS, element: <FavoritesPage /> },
       { path: ROUTES.ORDERS, element: <OrderListPage /> },
