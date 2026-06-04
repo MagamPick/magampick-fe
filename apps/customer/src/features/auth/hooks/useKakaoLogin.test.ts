@@ -13,20 +13,23 @@ vi.mock('react-router', async (importOriginal) => {
 })
 vi.mock('../api/authApi')
 
+const exchangeInput = { authorizationCode: 'code-1', redirectUri: 'http://x/login/kakao/callback' }
+
 describe('useKakaoLogin', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     useAuthStore.getState().clear()
   })
 
-  it('기존회원_시_토큰저장_홈이동', async () => {
-    vi.mocked(authApi.kakaoAuthorize).mockResolvedValue({
-      status: 'existing',
+  it('기존회원(EXISTING)_시_토큰저장_홈이동', async () => {
+    vi.mocked(authApi.exchangeKakaoCode).mockResolvedValue({
+      status: 'EXISTING',
       accessToken: 'access-k',
+      accessExpiresIn: 1800,
     })
     const { result } = renderHook(() => useKakaoLogin(), { wrapper: createQueryWrapper() })
 
-    result.current.mutate('existing')
+    result.current.mutate(exchangeInput)
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true))
     expect(useAuthStore.getState().accessToken).toBe('access-k')
@@ -34,26 +37,32 @@ describe('useKakaoLogin', () => {
     expect(mockNavigate).toHaveBeenCalledWith('/')
   })
 
-  it('신규회원_시_프로필들고_소셜가입이동', async () => {
-    const profile = { kakaoId: 'k1', email: 'k@kakao.com', nickname: '카카오사용자' }
-    vi.mocked(authApi.kakaoAuthorize).mockResolvedValue({ status: 'new', profile })
+  it('신규회원(NEW)_시_socialToken들고_소셜가입이동', async () => {
+    vi.mocked(authApi.exchangeKakaoCode).mockResolvedValue({
+      status: 'NEW',
+      socialToken: 'st-uuid',
+      email: 'k@kakao.com',
+      nickname: '카카오사용자',
+    })
     const { result } = renderHook(() => useKakaoLogin(), { wrapper: createQueryWrapper() })
 
-    result.current.mutate('new_email')
+    result.current.mutate(exchangeInput)
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true))
     // 신규는 토큰 미발급 (추가정보 입력 후 발급) — PublicOnlyRoute 가로채기 회피
     expect(useAuthStore.getState().isAuthenticated).toBe(false)
-    expect(mockNavigate).toHaveBeenCalledWith('/signup/social', { state: { profile } })
+    expect(mockNavigate).toHaveBeenCalledWith('/signup/social', {
+      state: { socialToken: 'st-uuid', email: 'k@kakao.com', nickname: '카카오사용자' },
+    })
   })
 
-  it('이메일거부_시_KAKAO_EMAIL_REQUIRED_토큰미저장_네비없음', async () => {
-    vi.mocked(authApi.kakaoAuthorize).mockRejectedValue(
+  it('이메일거부(KAKAO_EMAIL_REQUIRED)_시_토큰미저장_네비없음', async () => {
+    vi.mocked(authApi.exchangeKakaoCode).mockRejectedValue(
       new ApiError(400, 'KAKAO_EMAIL_REQUIRED', '카카오 이메일 제공에 동의해야 가입할 수 있어요'),
     )
     const { result } = renderHook(() => useKakaoLogin(), { wrapper: createQueryWrapper() })
 
-    result.current.mutate('new_no_email')
+    result.current.mutate(exchangeInput)
 
     await waitFor(() => expect(result.current.isError).toBe(true))
     expect((result.current.error as ApiError).code).toBe('KAKAO_EMAIL_REQUIRED')
@@ -61,13 +70,13 @@ describe('useKakaoLogin', () => {
     expect(mockNavigate).not.toHaveBeenCalled()
   })
 
-  it('이메일충돌_시_EMAIL_ALREADY_REGISTERED', async () => {
-    vi.mocked(authApi.kakaoAuthorize).mockRejectedValue(
+  it('이메일충돌(EMAIL_ALREADY_REGISTERED)_시_네비없음', async () => {
+    vi.mocked(authApi.exchangeKakaoCode).mockRejectedValue(
       new ApiError(409, 'EMAIL_ALREADY_REGISTERED', '이미 가입된 이메일입니다. 일반 로그인을 이용해주세요'),
     )
     const { result } = renderHook(() => useKakaoLogin(), { wrapper: createQueryWrapper() })
 
-    result.current.mutate('email_conflict')
+    result.current.mutate(exchangeInput)
 
     await waitFor(() => expect(result.current.isError).toBe(true))
     expect((result.current.error as ApiError).code).toBe('EMAIL_ALREADY_REGISTERED')

@@ -15,5 +15,9 @@ export default defineConfig({
     globals: true,
     environment: 'jsdom',
     setupFiles: ['./src/test/setup.ts'],
+    env: {
+      // 실 연동(apiClient) 도입 — 테스트에서도 env(VITE_API_BASE_URL) 파싱이 통과하도록 주입
+      VITE_API_BASE_URL: 'http://localhost:8080',
+    },
   },
 })

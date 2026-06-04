@@ -3,9 +3,9 @@ import { MemoryRouter, Routes, Route } from 'react-router'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { describe, it, expect } from 'vitest'
 import { SocialSignupPage } from './SocialSignupPage'
-import type { KakaoProfile } from '../types'
+import type { SocialSignupContext } from '../types'
 
-function renderWizard(state?: { profile: KakaoProfile }) {
+function renderWizard(state?: SocialSignupContext) {
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
   })
@@ -21,16 +21,16 @@ function renderWizard(state?: { profile: KakaoProfile }) {
   )
 }
 
-const profile: KakaoProfile = { kakaoId: 'k1', email: 'k@kakao.com', nickname: '카카오사용자' }
+const ctx: SocialSignupContext = { socialToken: 'st-uuid', email: 'k@kakao.com', nickname: '카카오사용자' }
 
 describe('SocialSignupPage', () => {
-  it('카카오_프로필_없이_진입_시_로그인_리다이렉트', () => {
+  it('카카오_컨텍스트_없이_진입_시_로그인_리다이렉트', () => {
     renderWizard(undefined)
     expect(screen.getByText('로그인 화면')).toBeInTheDocument()
   })
 
   it('약관_미동의_시_다음_비활성', () => {
-    renderWizard({ profile })
+    renderWizard(ctx)
     expect(screen.getByText('카카오로 회원가입')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: '다음' })).toBeDisabled()
   })
