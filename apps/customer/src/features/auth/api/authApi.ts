@@ -1,10 +1,15 @@
 import { ApiError } from '@/shared/lib/apiError'
-import { passwordSchema, PASSWORD_RESET_ERROR, PASSWORD_CHANGE_ERROR } from '../types'
+import { apiClient } from '@/shared/lib/axios'
+import {
+  passwordSchema,
+  PASSWORD_RESET_ERROR,
+  PASSWORD_CHANGE_ERROR,
+  kakaoExchangeResultSchema,
+} from '../types'
 import type {
   SignupInput,
   LoginInput,
-  KakaoScenario,
-  KakaoAuthorizeResult,
+  KakaoExchangeResult,
   SocialSignupInput,
 } from '../types'
 
@@ -22,12 +27,6 @@ const MOCK_OTP = '000000'
 const WRONG_CREDENTIAL_EMAIL = 'wrong@magampick.com'
 /** Mock: 로그인 사용자의 현재 비밀번호 (실연동 시 BE 가 세션 사용자 해시로 검증) */
 const MOCK_CURRENT_PASSWORD = 'Magampick1!'
-/** Mock: 카카오 사용자 정보 (실연동 시 카카오 user-info 조회 결과로 교체) */
-const MOCK_KAKAO_PROFILE = {
-  kakaoId: 'kakao_1029384756',
-  email: 'kakao.user@kakao.com',
-  nickname: '카카오사용자',
-}
 
 /**
  * Mock: 비밀번호 재설정 매칭용 등록 계정 (이메일+휴대폰 쌍). 휴대폰 unique X 라 쌍으로만 식별.
@@ -89,31 +88,19 @@ export const authApi = {
   },
 
   /**
-   * Mock: "카카오 OAuth 왕복 + BE 콜백" 시뮬. 실연동 시 콜백의 ?code 를 BE 로 보내 교환하는 호출로 교체.
-   * (실제 카카오 로그인·동의 화면은 카카오 호스팅 — FE 가 그리지 않음. 소셜 로그인 명세 참조.)
+   * 카카오 인가코드 교환 (실 BE 호출 — 소셜 로그인 계약 step1).
+   * 콜백이 받은 ?code 와 ①인가요청에 쓴 redirectUri 를 보내 access(EXISTING) 또는 socialToken(NEW)을 받는다.
+   * HTTP 에러는 apiClient 인터셉터가 ApiError 로 정규화해 reject, 응답 형상은 Zod 로 검증.
    */
-  async kakaoAuthorize(scenario: KakaoScenario): Promise<KakaoAuthorizeResult> {
-    await delay(700)
-    switch (scenario) {
-      case 'existing':
-        // 기존 매핑된 카카오 ID → 바로 access 발급 (refresh 는 서버가 HttpOnly cookie)
-        return { status: 'existing', accessToken: `mock-access-token:${MOCK_KAKAO_PROFILE.email}` }
-      case 'new_email':
-        // 신규 + 이메일 동의 O → 추가정보용 프로필 (닉네임 받았으면 prefill)
-        return { status: 'new', profile: { ...MOCK_KAKAO_PROFILE } }
-      case 'new_no_email':
-        // 이메일 동의 거부 → 우리 시스템 필수라 가입 차단 (클라이언트가 재동의 유도)
-        throw new ApiError(400, 'KAKAO_EMAIL_REQUIRED', '카카오 이메일 제공에 동의해야 가입할 수 있어요')
-      case 'email_conflict':
-        // 카카오 이메일이 일반 가입 이메일과 충돌 → 자동 연결 X (도용 방지)
-        throw new ApiError(
-          409,
-          'EMAIL_ALREADY_REGISTERED',
-          '이미 가입된 이메일입니다. 일반 로그인을 이용해주세요',
-        )
-      default:
-        throw new ApiError(400, 'SOCIAL_AUTH_FAILED', '카카오 로그인에 실패했어요')
-    }
+  async exchangeKakaoCode(input: {
+    authorizationCode: string
+    redirectUri: string
+  }): Promise<KakaoExchangeResult> {
+    const res = await apiClient.post('/auth/kakao', {
+      authorizationCode: input.authorizationCode,
+      redirectUri: input.redirectUri,
+    })
+    return kakaoExchangeResultSchema.parse(res.data)
   },
 
   async socialSignup(input: SocialSignupInput): Promise<{ accessToken: string }> {

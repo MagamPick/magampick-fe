@@ -15,7 +15,7 @@ import { ApiError } from '@/shared/lib/apiError'
 import { ROUTES } from '@/shared/lib/routes'
 import { useLogin } from '../hooks/useLogin'
 import { loginInputSchema, type LoginInput } from '../types'
-import { KakaoMockScenarios } from './KakaoMockScenarios'
+import { startKakaoLogin } from '../lib/kakao'
 
 export function LoginForm() {
   const navigate = useNavigate()
@@ -148,11 +148,10 @@ export function LoginForm() {
           <span className="h-px flex-1 bg-border" />
         </div>
 
-        {/* 카카오로 시작하기 — mock 에선 콜백 화면으로 (신규·이메일 동의 happy path).
-            실연동 시: window.location 으로 카카오 호스팅 OAuth 페이지로 리다이렉트. */}
+        {/* 카카오로 시작하기 — REST 키 있으면 카카오 인가 페이지로 리다이렉트, 없으면(로컬) dev 우회로 콜백 직행 */}
         <button
           type="button"
-          onClick={() => navigate(ROUTES.KAKAO_CALLBACK, { state: { scenario: 'new_email' } })}
+          onClick={() => startKakaoLogin(navigate)}
           className="flex h-[52px] w-full items-center justify-center gap-2 rounded-xl bg-[#FEE500] text-[15px] font-bold text-[#191600] transition active:scale-[0.98]"
         >
           <span className="text-[17px]" aria-hidden="true">
@@ -160,8 +159,6 @@ export function LoginForm() {
           </span>
           카카오로 시작하기
         </button>
-
-        <KakaoMockScenarios />
       </form>
     </Form>
   )

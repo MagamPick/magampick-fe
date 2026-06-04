@@ -1,5 +1,5 @@
-import { useEffect } from 'react'
-import { useLocation, useNavigate } from 'react-router'
+import { useEffect, useRef } from 'react'
+import { useNavigate, useSearchParams } from 'react-router'
 import { Loader2 } from 'lucide-react'
 import {
   Dialog,
@@ -12,37 +12,42 @@ import {
 import { ApiError } from '@/shared/lib/apiError'
 import { ROUTES } from '@/shared/lib/routes'
 import { useKakaoLogin } from '../hooks/useKakaoLogin'
-import type { KakaoScenario } from '../types'
+import { getKakaoRedirectUri, startKakaoLogin } from '../lib/kakao'
 
 /**
- * 카카오 로그인 콜백 — 카카오 redirect_uri (실연동 후에도 유지되는 우리 화면).
- * mock: 로그인 화면에서 고른 시나리오(location.state)로 분기.
- * 실연동: location.search 의 `?code` 를 BE 로 보내 교환 (mutationFn 만 교체).
+ * 카카오 로그인 콜백 — 카카오 Redirect URI 로 등록되는 우리 화면.
+ * 카카오가 `?code` 로 돌려보내면(키 없는 로컬에선 dev 우회가 더미 code 를 넘김) 그 code 를 ①에서 쓴
+ * redirectUri 와 함께 BE 로 보내 교환한다(useKakaoLogin). 성공 분기(EXISTING→홈 / NEW→소셜 가입)는
+ * useKakaoLogin 이 네비게이션하고, 여기선 진행 스피너 + 에러 분기 UI 만 담당한다.
  *
- * 성공 분기(기존→홈 / 신규→소셜 가입)는 useKakaoLogin 이 네비게이션.
- * 여기선 진행 중 스피너 + 에러 분기 UI(이메일 재동의 모달 / 이메일 충돌·실패 안내)만 담당.
+ * 인가코드는 1회용 — StrictMode 2회 실행/새로고침 재교환을 막으려고 ref 가드 + 교환 직전 쿼리 제거.
  */
 export function KakaoCallbackPage() {
   const navigate = useNavigate()
-  const location = useLocation()
+  const [searchParams] = useSearchParams()
   const kakao = useKakaoLogin()
-  const scenario = (location.state as { scenario?: KakaoScenario } | null)?.scenario
+  const didStart = useRef(false)
 
   useEffect(() => {
-    if (!scenario) {
+    if (didStart.current) return
+    didStart.current = true
+    const code = searchParams.get('code')
+    const kakaoError = searchParams.get('error') // 카카오 동의 취소 등 (access_denied)
+    if (kakaoError || !code) {
       navigate(ROUTES.LOGIN, { replace: true })
       return
     }
-    kakao.mutate(scenario)
-    // StrictMode(dev)에선 effect 가 2번 실행돼 mutate 도 2번 호출되지만, 결과는 살아있는 observer
-    // 한 곳에서만 관찰된다(프로덕션 빌드는 1회). ref 가드를 쓰면 StrictMode 에서 첫 mutation 의
-    // observer 가 버려져 스피너에 멈추므로 가드하지 않는다.
+    // 1회용 code 재사용 방지 — 쿼리를 지운 뒤 교환
+    navigate(ROUTES.KAKAO_CALLBACK, { replace: true })
+    kakao.mutate({ authorizationCode: code, redirectUri: getKakaoRedirectUri() })
+    // 최초 1회만 실행 (StrictMode 2회는 ref 가드). searchParams/kakao 는 effect 내부에서만 사용.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const error = kakao.error instanceof ApiError ? kakao.error : null
   const emailRequired = error?.code === 'KAKAO_EMAIL_REQUIRED'
   const conflict = error?.code === 'EMAIL_ALREADY_REGISTERED'
+  // SOCIAL_AUTH_FAILED / SOCIAL_TOKEN_INVALID / FORBIDDEN / 네트워크 등은 공통 실패 안내로 (로그인부터 다시)
   const otherError = kakao.isError && !emailRequired && !conflict
 
   const backToLogin = () => navigate(ROUTES.LOGIN, { replace: true })
@@ -62,7 +67,7 @@ export function KakaoCallbackPage() {
             {conflict ? '⚠️' : '😢'}
           </span>
           <p className="text-[15px] font-bold leading-relaxed text-foreground">
-            {conflict ? error?.message : '카카오 로그인에 실패했어요'}
+            {conflict ? error?.message : '카카오 로그인에 실패했어요. 잠시 후 다시 시도해 주세요.'}
           </p>
           <button
             type="button"
@@ -74,7 +79,7 @@ export function KakaoCallbackPage() {
         </div>
       )}
 
-      {/* 이메일 동의 거부 → 재동의 유도 모달 (다시 동의하기 / 취소) */}
+      {/* 이메일 동의 거부(KAKAO_EMAIL_REQUIRED) → 재동의 유도 모달. 다시 동의하기 = prompt=consent 로 카카오 재요청 */}
       <Dialog
         open={emailRequired}
         onOpenChange={(open) => {
@@ -99,7 +104,7 @@ export function KakaoCallbackPage() {
             </button>
             <button
               type="button"
-              onClick={() => kakao.mutate('new_email')}
+              onClick={() => startKakaoLogin(navigate, 'consent')}
               className="h-[50px] flex-1 rounded-xl bg-primary text-[15px] font-bold text-white transition active:scale-[0.98]"
             >
               다시 동의하기

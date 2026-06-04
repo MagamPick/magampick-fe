@@ -66,22 +66,31 @@ export type LoginInput = z.infer<typeof loginInputSchema>
 
 // ── 소셜 로그인 (카카오) ──────────────────────────────────────────────
 /**
- * mock 전용 시나리오 — "카카오 왕복 + BE 콜백"이 돌려줄 결과를 고른다. 실연동 시 제거.
- * (실제 카카오 로그인·동의 화면은 카카오가 호스팅하므로 FE 가 그리지 않는다.)
+ * 카카오 인가코드 교환(POST /auth/kakao) 응답 — BE 계약. status 로 분기.
+ * - EXISTING: 기존 매핑 회원 → access 발급(+refresh 쿠키). accessExpiresIn(초).
+ * - NEW: 신규 → socialToken(15분) + 카카오 프로필(email 필수, nickname 은 미동의 시 생략 가능). 추가정보 위저드로.
  */
-export type KakaoScenario = 'new_email' | 'new_no_email' | 'existing' | 'email_conflict'
+export const kakaoExchangeResultSchema = z.discriminatedUnion('status', [
+  z.object({
+    status: z.literal('EXISTING'),
+    accessToken: z.string(),
+    accessExpiresIn: z.number(),
+  }),
+  z.object({
+    status: z.literal('NEW'),
+    socialToken: z.string(),
+    email: z.string(),
+    nickname: z.string().optional(),
+  }),
+])
+export type KakaoExchangeResult = z.infer<typeof kakaoExchangeResultSchema>
 
-/** 카카오 + BE 콜백이 신규 회원에 대해 돌려주는 프로필. 이메일은 우리 시스템 필수, 닉네임은 받으면 prefill */
-export interface KakaoProfile {
-  kakaoId: string
+/** 카카오 NEW → 추가정보 위저드로 넘기는 컨텍스트 (소셜 가입 제출 전 보관). socialToken 15분 유효. */
+export interface SocialSignupContext {
+  socialToken: string
   email: string
   nickname?: string
 }
-
-/** kakaoAuthorize 결과 — 기존 매핑이면 바로 토큰, 신규면 추가정보용 프로필 */
-export type KakaoAuthorizeResult =
-  | { status: 'existing'; accessToken: string }
-  | { status: 'new'; profile: KakaoProfile }
 
 /**
  * 소셜 가입 폼 스키마 — 신규 추가정보 4스텝(약관·본인인증·주소·닉네임)을 회원가입 스텝 컴포넌트와
@@ -105,9 +114,9 @@ export const socialSignupFormSchema = z
     path: ['agreedTermIds'],
   })
 
-/** 소셜 가입 제출 payload — 비밀번호 없음(소셜 전용 계정 = password_hash NULL). kakaoId 포함. */
+/** 소셜 가입 제출 payload — 비밀번호 없음(소셜 전용 계정 = password_hash NULL). socialToken 으로 카카오 신원 식별. */
 export interface SocialSignupInput {
-  kakaoId: string
+  socialToken: string
   email: string
   agreedTermIds: TermId[]
   name: string

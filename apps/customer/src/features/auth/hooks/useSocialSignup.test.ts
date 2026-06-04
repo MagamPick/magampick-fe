@@ -13,7 +13,7 @@ vi.mock('react-router', async (importOriginal) => {
 vi.mock('../api/authApi')
 
 const input: SocialSignupInput = {
-  kakaoId: 'k1',
+  socialToken: 'st-uuid',
   email: 'k@kakao.com',
   agreedTermIds: ['AGE_14', 'TERMS_OF_SERVICE', 'PRIVACY', 'LOCATION'],
   name: '홍길동',
