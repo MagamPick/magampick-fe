@@ -11,9 +11,11 @@ interface AuthState {
   accessToken: string | null
   user: User | null
   isAuthenticated: boolean
+  isInitialized: boolean
 
   setAccessToken: (token: string) => void
   setUser: (user: User) => void
+  markInitialized: () => void
   clear: () => void
 }
 
@@ -25,8 +27,11 @@ export const useAuthStore = create<AuthState>((set) => ({
   accessToken: null,
   user: null,
   isAuthenticated: false,
+  isInitialized: false,
 
-  setAccessToken: (token) => set({ accessToken: token, isAuthenticated: true }),
+  setAccessToken: (token) =>
+    set({ accessToken: token, isAuthenticated: true, isInitialized: true }),
   setUser: (user) => set({ user }),
-  clear: () => set({ accessToken: null, user: null, isAuthenticated: false }),
+  markInitialized: () => set({ isInitialized: true }),
+  clear: () => set({ accessToken: null, user: null, isAuthenticated: false, isInitialized: true }),
 }))

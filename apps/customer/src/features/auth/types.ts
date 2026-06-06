@@ -11,12 +11,49 @@ export const passwordSchema = z
 /** 약관 type (노션 결정 2026-05-29: 5종 통일 term type) */
 export const TERM_IDS = ['AGE_14', 'TERMS_OF_SERVICE', 'PRIVACY', 'LOCATION', 'MARKETING'] as const
 export type TermId = (typeof TERM_IDS)[number]
-export const REQUIRED_TERM_IDS: TermId[] = ['AGE_14', 'TERMS_OF_SERVICE', 'PRIVACY', 'LOCATION']
+
+export const termSchema = z.object({
+  id: z.number(),
+  type: z.enum(TERM_IDS),
+  version: z.number(),
+  title: z.string(),
+  body: z.string(),
+  required: z.boolean(),
+})
+
+export const termsSchema = z.array(termSchema)
+
+export type SignupTerm = z.infer<typeof termSchema>
+
+export const signupAddressSchema = z.object({
+  label: z.string().min(1, '주소 라벨이 필요합니다'),
+  roadAddress: z.string().min(1, '도로명 주소를 선택해주세요'),
+  jibunAddress: z.string().optional(),
+  detailAddress: z.string().optional(),
+  zonecode: z.string().optional(),
+  sigunguCode: z.string().regex(/^\d{5}$/, '시군구코드를 확인해주세요'),
+  roadnameCode: z.string().regex(/^\d{1,7}$/, '도로명번호를 확인해주세요'),
+})
+
+export type SignupAddress = z.infer<typeof signupAddressSchema>
+
+export const tokenResponseSchema = z.object({
+  accessToken: z.string(),
+  accessExpiresIn: z.number().optional(),
+})
+
+export const phoneVerificationTokenResponseSchema = z.object({
+  verificationToken: z.string(),
+})
+
+export const emailAvailabilityResponseSchema = z.object({
+  available: z.boolean(),
+})
 
 export const signupInputSchema = z
   .object({
     // Step 1 — 약관
-    agreedTermIds: z.array(z.enum(TERM_IDS)),
+    agreedTermIds: z.array(z.number()),
     // Step 2 — 계정
     email: z.string().email('이메일 형식이 아닙니다'),
     password: passwordSchema,
@@ -26,17 +63,13 @@ export const signupInputSchema = z
     phone: z.string().regex(/^010-\d{4}-\d{4}$/, '휴대폰 번호를 확인해주세요'),
     verificationToken: z.string().min(1, '휴대폰 본인인증이 필요합니다'),
     // Step 4 — 주소
-    address: z.string().min(1, '기본 주소를 등록해주세요'),
+    address: signupAddressSchema.nullable(),
     // Step 5 — 프로필
     nickname: z.string().min(2, '2자 이상이어야 합니다').max(12, '12자 이하여야 합니다'),
   })
   .refine((d) => d.password === d.passwordConfirm, {
     message: '비밀번호가 일치하지 않습니다',
     path: ['passwordConfirm'],
-  })
-  .refine((d) => REQUIRED_TERM_IDS.every((t) => d.agreedTermIds.includes(t)), {
-    message: '필수 약관에 모두 동의해주세요',
-    path: ['agreedTermIds'],
   })
 
 export type SignupInput = z.infer<typeof signupInputSchema>
@@ -99,30 +132,26 @@ export interface SocialSignupContext {
  */
 export const socialSignupFormSchema = z
   .object({
-    agreedTermIds: z.array(z.enum(TERM_IDS)),
+    agreedTermIds: z.array(z.number()),
     email: z.string().email('이메일 형식이 아닙니다'),
     password: z.string(),
     passwordConfirm: z.string(),
     name: z.string().min(1, '이름을 입력해주세요'),
     phone: z.string().regex(/^010-\d{4}-\d{4}$/, '휴대폰 번호를 확인해주세요'),
     verificationToken: z.string().min(1, '휴대폰 본인인증이 필요합니다'),
-    address: z.string().min(1, '기본 주소를 등록해주세요'),
+    address: signupAddressSchema.nullable(),
     nickname: z.string().min(2, '2자 이상이어야 합니다').max(12, '12자 이하여야 합니다'),
-  })
-  .refine((d) => REQUIRED_TERM_IDS.every((t) => d.agreedTermIds.includes(t)), {
-    message: '필수 약관에 모두 동의해주세요',
-    path: ['agreedTermIds'],
   })
 
 /** 소셜 가입 제출 payload — 비밀번호 없음(소셜 전용 계정 = password_hash NULL). socialToken 으로 카카오 신원 식별. */
 export interface SocialSignupInput {
   socialToken: string
   email: string
-  agreedTermIds: TermId[]
+  agreedTermIds: number[]
   name: string
   phone: string
   verificationToken: string
-  address: string
+  address: SignupAddress
   nickname: string
 }
 
