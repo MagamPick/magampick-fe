@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useForm } from 'react-hook-form'
+import { useForm, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Navigate, useLocation, useNavigate } from 'react-router'
 import { ChevronLeft } from 'lucide-react'
@@ -7,13 +7,12 @@ import { Form } from '@/shared/components/ui/form'
 import { ROUTES } from '@/shared/lib/routes'
 import {
   socialSignupFormSchema,
-  REQUIRED_TERM_IDS,
   type SignupInput,
   type SocialSignupInput,
   type SocialSignupContext,
-  type TermId,
 } from '../types'
 import { useSocialSignup } from '../hooks/useSocialSignup'
+import { useTerms } from '../hooks/useTerms'
 import { SignupProgress } from '../components/SignupProgress'
 import { Step1Terms } from '../components/Step1Terms'
 import { Step3Phone } from '../components/Step3Phone'
@@ -36,8 +35,9 @@ export function SocialSignupPage() {
   const location = useLocation()
   const ctx = (location.state as SocialSignupContext | null) ?? null
   const socialSignup = useSocialSignup()
+  const terms = useTerms()
   const [step, setStep] = useState(1)
-  const [openTerm, setOpenTerm] = useState<TermId | null>(null)
+  const [openTerm, setOpenTerm] = useState<number | null>(null)
 
   const form = useForm<SignupInput>({
     resolver: zodResolver(socialSignupFormSchema),
@@ -50,40 +50,47 @@ export function SocialSignupPage() {
       name: '',
       phone: '',
       verificationToken: '',
-      address: '',
+      address: null,
       nickname: ctx?.nickname ?? '',
     },
   })
 
+  const v = useWatch({ control: form.control })
+  const agreedTermIds = v.agreedTermIds ?? []
+
   // 카카오 컨텍스트 없이 직접 진입(새로고침·딥링크) 차단 — 로그인부터 다시
   if (!ctx) return <Navigate to={ROUTES.LOGIN} replace />
 
-  const v = form.watch()
   const stepValid = ((): boolean => {
     switch (step) {
       case 1:
-        return REQUIRED_TERM_IDS.every((t) => v.agreedTermIds.includes(t))
+        return (
+          (terms.data?.length ?? 0) > 0 &&
+          terms.data!.filter((t) => t.required).every((t) => agreedTermIds.includes(t.id))
+        )
       case 2:
         return !!v.verificationToken
       case 3:
-        return v.address.trim().length > 0
+        return v.address !== null
       case 4:
-        return v.nickname.trim().length >= 2
+        return (v.nickname ?? '').trim().length >= 2
       default:
         return false
     }
   })()
 
   const submit = () => {
+    const values = form.getValues()
+    if (!values.address) return
     const payload: SocialSignupInput = {
       socialToken: ctx.socialToken,
       email: ctx.email,
-      agreedTermIds: v.agreedTermIds,
-      name: v.name,
-      phone: v.phone,
-      verificationToken: v.verificationToken,
-      address: v.address,
-      nickname: v.nickname,
+      agreedTermIds: values.agreedTermIds,
+      name: values.name,
+      phone: values.phone,
+      verificationToken: values.verificationToken,
+      address: values.address,
+      nickname: values.nickname,
     }
     socialSignup.mutate(payload)
   }
@@ -117,7 +124,15 @@ export function SocialSignupPage() {
       <Form {...form}>
         <form className="flex min-h-0 flex-1 flex-col" onSubmit={(e) => e.preventDefault()}>
           <div className="flex-1 px-5 pb-4 pt-6">
-            {step === 1 && <Step1Terms form={form} onOpenTerms={setOpenTerm} />}
+            {step === 1 && (
+              <Step1Terms
+                form={form}
+                terms={terms.data ?? []}
+                isLoading={terms.isPending}
+                errorMessage={terms.isError ? '약관을 불러오지 못했어요' : undefined}
+                onOpenTerms={setOpenTerm}
+              />
+            )}
             {step === 2 && <Step3Phone form={form} />}
             {step === 3 && <Step4Address form={form} />}
             {step === 4 && <Step5Profile form={form} />}
@@ -147,7 +162,7 @@ export function SocialSignupPage() {
         </form>
       </Form>
 
-      <TermsDialog termId={openTerm} onClose={() => setOpenTerm(null)} />
+      <TermsDialog terms={terms.data ?? []} termId={openTerm} onClose={() => setOpenTerm(null)} />
     </main>
   )
 }

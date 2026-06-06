@@ -5,26 +5,22 @@ import {
   PASSWORD_RESET_ERROR,
   PASSWORD_CHANGE_ERROR,
   kakaoExchangeResultSchema,
+  tokenResponseSchema,
+  termsSchema,
+  phoneVerificationTokenResponseSchema,
+  emailAvailabilityResponseSchema,
 } from '../types'
 import type {
   SignupInput,
   LoginInput,
   KakaoExchangeResult,
   SocialSignupInput,
+  SignupTerm,
 } from '../types'
 
-/**
- * ⚠️ Mock 스텁 — 백엔드 인증 API(BE 완료 NO)가 아직이라 가짜 응답.
- * BE 완료 후 `apiClient` 실제 호출 + Zod 응답 검증으로 교체 (api-client-convention).
- */
+/** Mock 잔여 API 는 후속 인증 연동 PR 에서 실제 호출로 교체. */
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
-/** Mock: 이 이메일만 중복으로 취급 */
-const TAKEN_EMAIL = 'taken@magampick.com'
-/** Mock: 본인인증 통과 코드 (auth.md §11) */
-const MOCK_OTP = '000000'
-/** Mock: 이 이메일만 로그인 실패로 취급 (그 외 임의 이메일 + 규칙 충족 PW 는 성공) */
-const WRONG_CREDENTIAL_EMAIL = 'wrong@magampick.com'
 /** Mock: 로그인 사용자의 현재 비밀번호 (실연동 시 BE 가 세션 사용자 해시로 검증) */
 const MOCK_CURRENT_PASSWORD = 'Magampick1!'
 
@@ -39,52 +35,62 @@ const RESET_ACCOUNTS: { email: string; phone: string; socialOnly: boolean }[] = 
 ]
 
 export const authApi = {
+  async listTerms(): Promise<SignupTerm[]> {
+    const res = await apiClient.get('/terms')
+    return termsSchema.parse(res.data)
+  },
+
   async checkEmail(email: string): Promise<{ available: boolean }> {
-    await delay(500)
-    if (email === TAKEN_EMAIL) {
-      throw new ApiError(409, 'EMAIL_ALREADY_EXISTS', '이미 사용 중인 이메일입니다')
-    }
-    return { available: true }
+    const res = await apiClient.get('/auth/email-availability', {
+      params: { role: 'CUSTOMER', email },
+    })
+    return emailAvailabilityResponseSchema.parse(res.data)
   },
 
   async requestPhoneVerification(phone: string): Promise<void> {
-    await delay(500)
-    if (!phone) {
-      throw new ApiError(400, 'INVALID_INPUT', '휴대폰 번호를 입력해주세요')
-    }
-    // Mock: 실제 SMS 발송 안 함 (코드 000000 으로 통과)
+    await apiClient.post('/auth/phone-verifications', { phone })
   },
 
   async verifyPhoneCode(input: {
     phone: string
     code: string
   }): Promise<{ verificationToken: string }> {
-    await delay(500)
-    if (input.code !== MOCK_OTP) {
-      throw new ApiError(400, 'PHONE_VERIFICATION_FAILED', '인증번호가 일치하지 않습니다')
-    }
-    return { verificationToken: 'mock-verification-token' }
+    const res = await apiClient.post('/auth/phone-verifications/confirm', input)
+    return phoneVerificationTokenResponseSchema.parse(res.data)
   },
 
   async signup(input: SignupInput): Promise<{ accessToken: string }> {
-    await delay(800)
-    // Mock: 실제로는 input 으로 customers row + 약관 동의 + 기본 주소 생성. 여기선 토큰만 발급.
-    return { accessToken: `mock-access-token:${input.email}` }
+    if (!input.address) {
+      throw new ApiError(400, 'DEFAULT_ADDRESS_REQUIRED', '기본 주소를 등록해주세요')
+    }
+    const res = await apiClient.post('/auth/signup', {
+      email: input.email,
+      password: input.password,
+      nickname: input.nickname,
+      phone: input.phone,
+      verificationToken: input.verificationToken,
+      agreedTermIds: input.agreedTermIds,
+      address: input.address,
+    })
+    return tokenResponseSchema.parse(res.data)
   },
 
   async login(input: LoginInput): Promise<{ accessToken: string }> {
-    await delay(700)
-    if (input.email === WRONG_CREDENTIAL_EMAIL) {
-      // 실패 메시지는 이메일 존재 여부와 무관하게 동일 (계정 존재 노출 차단 — auth.md §4)
-      throw new ApiError(401, 'LOGIN_FAILED', '이메일 또는 비밀번호가 일치하지 않습니다')
-    }
-    // Mock: 실제로는 서버가 bcrypt 검증 후 access(body) + refresh(HttpOnly cookie) 발급. 여기선 access 만.
-    return { accessToken: `mock-access-token:${input.email}` }
+    const res = await apiClient.post('/auth/login', {
+      email: input.email,
+      password: input.password,
+      keepSignedIn: input.keepSignedIn,
+    })
+    return tokenResponseSchema.parse(res.data)
   },
 
   async logout(): Promise<void> {
-    await delay(300)
-    // Mock: 실제로는 서버가 Redis refresh 키 삭제 + clear cookie (auth.md §7).
+    await apiClient.post('/auth/logout')
+  },
+
+  async refreshAccessToken(): Promise<{ accessToken: string }> {
+    const res = await apiClient.post('/auth/refresh')
+    return tokenResponseSchema.parse(res.data)
   },
 
   /**
@@ -104,9 +110,15 @@ export const authApi = {
   },
 
   async socialSignup(input: SocialSignupInput): Promise<{ accessToken: string }> {
-    await delay(800)
-    // Mock: 실제로는 customers(password_hash NULL) + customer_oauth_accounts + 약관 + 주소 한 트랜잭션.
-    return { accessToken: `mock-access-token:${input.email}` }
+    const res = await apiClient.post('/auth/signup/social', {
+      socialToken: input.socialToken,
+      nickname: input.nickname,
+      phone: input.phone,
+      verificationToken: input.verificationToken,
+      agreedTermIds: input.agreedTermIds,
+      address: input.address,
+    })
+    return tokenResponseSchema.parse(res.data)
   },
 
   /**

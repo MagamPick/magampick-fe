@@ -58,7 +58,7 @@ export interface paths {
         put?: never;
         /**
          * 주소지 등록
-         * @description 본인 주소지를 등록한다. 최대 3개까지 보유 가능. 첫 등록 시 자동으로 기본 주소지로 지정된다.
+         * @description 다음 우편번호 위젯 결과로 본인 주소지를 등록한다. 최대 3개까지 보유 가능. 첫 등록 시 자동으로 기본 주소지로 지정된다.
          */
         post: operations["create"];
         delete?: never;
@@ -81,6 +81,26 @@ export interface paths {
          * @description 지정한 주소를 기본 주소지로 설정한다. 기존 기본 주소지는 자동으로 해제된다. 이미 기본 주소지인 경우 멱등하게 처리된다.
          */
         post: operations["markAsDefault"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/customers/me/addresses/reverse-geocode": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 현재 위치 역지오코딩
+         * @description GPS 좌표에서 가장 가까운 도로명 주소 라벨을 조회한다.
+         */
+        post: operations["reverseGeocode"];
         delete?: never;
         options?: never;
         head?: never;
@@ -127,6 +147,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/auth/seller/stores/business-verification": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 사장 가입용 사업자 진위확인
+         * @description 사장 회원가입 첫 매장 등록 단계에서 사업자 번호·대표자명·개업일자의 일치 여부를 확인한다.
+         */
+        post: operations["verifyBusiness"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/auth/seller/signup": {
         parameters: {
             query?: never;
@@ -138,9 +178,29 @@ export interface paths {
         put?: never;
         /**
          * 사장 회원가입
-         * @description 사장 계정을 생성하고 자동 로그인한다. refresh 는 HttpOnly 쿠키로 발급.
+         * @description 사장 계정과 첫 매장을 한 트랜잭션으로 생성하고 자동 로그인한다. refresh 는 HttpOnly 쿠키로 발급.
          */
         post: operations["signupSeller"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/seller/password-resets/verify-identity": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 사장 비밀번호 재설정 본인확인
+         * @description 이메일과 휴대폰 본인인증 토큰으로 재설정 토큰을 발급한다.
+         */
+        post: operations["verifySellerPasswordResetIdentity"];
         delete?: never;
         options?: never;
         head?: never;
@@ -221,6 +281,46 @@ export interface paths {
          * @description 인증번호를 검증하고 성공 시 본인인증 토큰(15분)을 발급한다.
          */
         post: operations["confirm"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/password-resets/verify-identity": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 소비자 비밀번호 재설정 본인확인
+         * @description 이메일과 휴대폰 본인인증 토큰으로 재설정 토큰을 발급한다.
+         */
+        post: operations["verifyCustomerPasswordResetIdentity"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/password-resets/confirm": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 비밀번호 재설정 완료
+         * @description 재설정 토큰으로 새 비밀번호를 저장하고 모든 refresh 세션을 폐기한다.
+         */
+        post: operations["resetPassword"];
         delete?: never;
         options?: never;
         head?: never;
@@ -323,16 +423,36 @@ export interface paths {
         post?: never;
         /**
          * 주소지 삭제
-         * @description 본인 주소지를 삭제한다. 기본 주소지를 삭제한 경우, 남은 주소 중 가장 오래된 것이 자동으로 기본 주소지로 승계된다.
+         * @description 본인 주소지를 삭제한다. 기본 주소지와 마지막 주소지는 삭제할 수 없다.
          */
         delete: operations["delete"];
         options?: never;
         head?: never;
         /**
          * 주소지 수정
-         * @description 본인 주소지의 라벨/주소/좌표를 부분 수정한다. 기본 주소지 변경은 별도 endpoint 사용.
+         * @description 본인 주소지의 라벨/주소를 부분 수정한다. 주소 변경 시 다음 우편번호 위젯 결과를 함께 보낸다.
          */
         patch: operations["update"];
+        trace?: never;
+    };
+    "/api/v1/auth/me/password": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * 비밀번호 변경
+         * @description 현재 비밀번호 확인 후 새 비밀번호를 저장하고 현재 기기 외 refresh 세션을 폐기한다.
+         */
+        patch: operations["changePassword"];
         trace?: never;
     };
     "/api/v1/terms": {
@@ -347,6 +467,26 @@ export interface paths {
          * @description 회원가입 화면에 표시할 약관 목록(필수 + 선택)을 조회한다.
          */
         get: operations["getTerms"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/email-availability": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 이메일 사용 가능 여부 조회
+         * @description 역할별 회원가입 이메일 중복 여부를 확인한다.
+         */
+        get: operations["checkEmailAvailability"];
         put?: never;
         post?: never;
         delete?: never;
@@ -382,6 +522,11 @@ export interface components {
              * @example 01012345678
              */
             phone?: string;
+            /**
+             * @description 본인인증 토큰 (POST /api/v1/auth/phone-verifications/confirm 에서 발급)
+             * @example 550e8400-e29b-41d4-a716-446655440000
+             */
+            verificationToken?: string;
         };
         /** @description 소비자 프로필 응답 */
         CustomerProfileResponse: {
@@ -468,17 +613,15 @@ export interface components {
              */
             zonecode?: string;
             /**
-             * Format: double
-             * @description 위도
-             * @example 37.5066
+             * @description 시군구코드 (다음 위젯 sigunguCode, 5자리)
+             * @example 11680
              */
-            latitude: number;
+            sigunguCode?: string;
             /**
-             * Format: double
-             * @description 경도
-             * @example 127.0535
+             * @description 도로명번호 (다음 위젯 roadnameCode, 최대 7자리)
+             * @example 3179999
              */
-            longitude: number;
+            roadnameCode?: string;
         };
         /** @description 주소지 응답 */
         AddressResponse: {
@@ -540,6 +683,29 @@ export interface components {
              * @description 수정 시각 (KST)
              */
             updatedAt?: string;
+        };
+        /** @description 현재 위치 역지오코딩 요청 */
+        AddressReverseGeocodeRequest: {
+            /**
+             * Format: double
+             * @description 위도
+             * @example 37.5665
+             */
+            latitude: number;
+            /**
+             * Format: double
+             * @description 경도
+             * @example 126.978
+             */
+            longitude: number;
+        };
+        /** @description 현재 위치 역지오코딩 응답 */
+        AddressReverseGeocodeResponse: {
+            /**
+             * @description 가장 가까운 도로명 주소
+             * @example 서울특별시 중구 세종대로 110
+             */
+            roadAddress?: string;
         };
         /** @description 소비자 회원가입 요청 (약관·본인인증·주소·닉네임 통합) */
         CustomerSignupRequest: {
@@ -627,6 +793,25 @@ export interface components {
             /** @description 기본 주소 (좌표 포함) */
             address?: components["schemas"]["AddressCreateRequest"];
         };
+        /** @description 사업자 검증 요청 (등록 폼 [조회하기] 버튼) */
+        BusinessVerificationRequest: {
+            /**
+             * @description 사업자 번호 (숫자 10자리, 하이픈 허용)
+             * @example 123-45-67890
+             */
+            businessNumber?: string;
+            /**
+             * @description 대표자 실명 (사업자등록증 기재)
+             * @example 홍길동
+             */
+            representativeName?: string;
+            /**
+             * Format: date
+             * @description 개업일자 (사업자등록증 기재, ISO yyyy-MM-dd)
+             * @example 2024-03-15
+             */
+            openDate: string;
+        };
         /** @description 사장 회원가입 요청 */
         SellerSignupRequest: {
             /**
@@ -640,15 +825,122 @@ export interface components {
              */
             password?: string;
             /**
-             * @description 사장 이름
+             * @description 사장 실명
              * @example 홍길동
              */
             ownerName?: string;
             /**
-             * @description 사업자번호(숫자 10자리)
-             * @example 1234567890
+             * @description 휴대폰 번호
+             * @example 010-1234-5678
+             */
+            phone?: string;
+            /**
+             * @description 본인인증 토큰
+             * @example phone-verification-token
+             */
+            verificationToken?: string;
+            /**
+             * @description 동의한 약관 ID 목록
+             * @example [
+             *       1,
+             *       2,
+             *       3,
+             *       6
+             *     ]
+             */
+            agreedTermIds?: number[];
+            /** @description 첫 매장 등록 요청 */
+            store: components["schemas"]["StoreCreateRequest"];
+        };
+        /** @description 매장 등록 신청 요청 — 사업자 검증 정보 + 매장 정보 */
+        StoreCreateRequest: {
+            /**
+             * @description 사업자 번호 (숫자 10자리, 하이픈 허용)
+             * @example 123-45-67890
              */
             businessNumber?: string;
+            /**
+             * @description 대표자 실명 (사업자등록증 기재)
+             * @example 홍길동
+             */
+            representativeName?: string;
+            /**
+             * Format: date
+             * @description 개업일자 (사업자등록증 기재, ISO yyyy-MM-dd)
+             * @example 2024-03-15
+             */
+            openDate: string;
+            /**
+             * @description 매장명
+             * @example 동네빵집
+             */
+            name?: string;
+            /**
+             * @description 도로명 주소
+             * @example 서울특별시 강남구 테헤란로 427
+             */
+            roadAddress?: string;
+            /**
+             * @description 지번 주소 (선택)
+             * @example 서울특별시 강남구 삼성동 159-1
+             */
+            jibunAddress?: string;
+            /**
+             * @description 상세 주소 (선택)
+             * @example 1층
+             */
+            detailAddress?: string;
+            /**
+             * @description 우편번호
+             * @example 06158
+             */
+            zonecode?: string;
+            /**
+             * @description 매장 전화번호
+             * @example 0212345678
+             */
+            phone?: string;
+            /**
+             * @description 매장 소개 (선택)
+             * @example 매일 아침 직접 굽는 신선한 빵
+             */
+            description?: string;
+            /**
+             * @description 시군구코드 (다음 위젯 sigunguCode, 5자리)
+             * @example 11680
+             */
+            sigunguCode?: string;
+            /**
+             * @description 도로명번호 (다음 위젯 roadnameCode, 최대 7자리)
+             * @example 3179999
+             */
+            roadnameCode?: string;
+        };
+        /** @description 비밀번호 재설정 본인확인 요청 */
+        PasswordResetVerifyRequest: {
+            /**
+             * @description 가입 이메일
+             * @example customer@magampick.com
+             */
+            email?: string;
+            /**
+             * @description 휴대폰 번호
+             * @example 010-1234-5678
+             */
+            phone?: string;
+            /**
+             * @description 휴대폰 본인인증 검증 응답의 verificationToken
+             * @example a1b2c3d4-...
+             */
+            verificationToken?: string;
+        };
+        /** @description 비밀번호 재설정 본인확인 응답 */
+        PasswordResetVerifyResponse: {
+            /**
+             * @description 비밀번호 재설정 토큰
+             * @example a1b2c3d4-...
+             */
+            resetToken?: string;
         };
         /** @description 로그인 요청 */
         LoginRequest: {
@@ -696,6 +988,19 @@ export interface components {
              * @example a1b2c3d4-5e6f-7a8b-9c0d-1e2f3a4b5c6d
              */
             verificationToken?: string;
+        };
+        /** @description 비밀번호 재설정 완료 요청 */
+        PasswordResetConfirmRequest: {
+            /**
+             * @description 본인확인 후 발급받은 재설정 토큰
+             * @example a1b2c3d4-...
+             */
+            resetToken?: string;
+            /**
+             * @description 새 비밀번호
+             * @example Newpass123!
+             */
+            newPassword?: string;
         };
         /** @description 카카오 로그인 요청 (인가 코드) */
         KakaoLoginRequest: {
@@ -754,17 +1059,24 @@ export interface components {
             detailAddress?: string;
             /** @description 우편번호 5자리 */
             zonecode?: string;
+            /** @description 시군구코드 (주소 변경 시 roadnameCode 와 함께 필수) */
+            sigunguCode?: string;
+            /** @description 도로명번호 (주소 변경 시 sigunguCode 와 함께 필수) */
+            roadnameCode?: string;
+            geocodeKeyValid?: boolean;
+        };
+        /** @description 비밀번호 변경 요청 */
+        PasswordChangeRequest: {
             /**
-             * Format: double
-             * @description 위도. longitude 와 쌍으로 함께 전송
+             * @description 현재 비밀번호
+             * @example Oldpass123!
              */
-            latitude?: number;
+            currentPassword?: string;
             /**
-             * Format: double
-             * @description 경도. latitude 와 쌍으로 함께 전송
+             * @description 새 비밀번호
+             * @example Newpass123!
              */
-            longitude?: number;
-            coordinatePairValid?: boolean;
+            newPassword?: string;
         };
         /** @description 약관 응답 */
         TermResponse: {
@@ -779,7 +1091,7 @@ export interface components {
              * @example TERMS_OF_SERVICE
              * @enum {string}
              */
-            type?: "TERMS_OF_SERVICE" | "PRIVACY" | "LOCATION" | "AGE_14" | "MARKETING";
+            type?: "TERMS_OF_SERVICE" | "PRIVACY" | "LOCATION" | "AGE_14" | "AGE_19" | "MARKETING";
             /**
              * Format: int32
              * @description 약관 버전
@@ -844,6 +1156,14 @@ export interface components {
             totalPages?: number;
             hasNext?: boolean;
             hasPrevious?: boolean;
+        };
+        /** @description 이메일 사용 가능 여부 응답 */
+        EmailAvailabilityResponse: {
+            /**
+             * @description 사용 가능 여부
+             * @example true
+             */
+            available?: boolean;
         };
     };
     responses: never;
@@ -1047,7 +1367,7 @@ export interface operations {
                     "*/*": components["schemas"]["AddressResponse"];
                 };
             };
-            /** @description 검증 실패 또는 보유 한도 초과 */
+            /** @description 검증 실패 또는 지오코딩 실패 */
             400: {
                 headers: {
                     [name: string]: unknown;
@@ -1125,6 +1445,57 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["AddressResponse"];
+                };
+            };
+        };
+    };
+    reverseGeocode: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AddressReverseGeocodeRequest"];
+            };
+        };
+        responses: {
+            /** @description 조회 성공 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["AddressReverseGeocodeResponse"];
+                };
+            };
+            /** @description 검증 실패 또는 매칭 실패 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["AddressReverseGeocodeResponse"];
+                };
+            };
+            /** @description 미인증 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["AddressReverseGeocodeResponse"];
+                };
+            };
+            /** @description 권한 없음 (ROLE_CUSTOMER 아님) */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["AddressReverseGeocodeResponse"];
                 };
             };
         };
@@ -1231,7 +1602,7 @@ export interface operations {
             };
         };
     };
-    signupSeller: {
+    verifyBusiness: {
         parameters: {
             query?: never;
             header?: never;
@@ -1240,7 +1611,47 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["SellerSignupRequest"];
+                "application/json": components["schemas"]["BusinessVerificationRequest"];
+            };
+        };
+        responses: {
+            /** @description 진위확인 통과 */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description 입력 검증 실패 / 사업자 번호 형식 오류 / 진위확인 불일치 / 정상 영업 아님 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description 사업자 번호 검증 일시 실패 (재시도 안내) */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    signupSeller: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "multipart/form-data": {
+                    request: components["schemas"]["SellerSignupRequest"];
+                    /** Format: binary */
+                    image?: string;
+                };
             };
         };
         responses: {
@@ -1262,6 +1673,15 @@ export interface operations {
                     "*/*": components["schemas"]["TokenResponse"];
                 };
             };
+            /** @description 로그인 상태 진입 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["TokenResponse"];
+                };
+            };
             /** @description 이메일 중복 */
             409: {
                 headers: {
@@ -1269,6 +1689,39 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["TokenResponse"];
+                };
+            };
+        };
+    };
+    verifySellerPasswordResetIdentity: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PasswordResetVerifyRequest"];
+            };
+        };
+        responses: {
+            /** @description 본인확인 성공 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["PasswordResetVerifyResponse"];
+                };
+            };
+            /** @description 입력 검증 실패 또는 본인확인 실패 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["PasswordResetVerifyResponse"];
                 };
             };
         };
@@ -1426,6 +1879,77 @@ export interface operations {
                 content: {
                     "*/*": components["schemas"]["PhoneVerificationTokenResponse"];
                 };
+            };
+        };
+    };
+    verifyCustomerPasswordResetIdentity: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PasswordResetVerifyRequest"];
+            };
+        };
+        responses: {
+            /** @description 본인확인 성공 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["PasswordResetVerifyResponse"];
+                };
+            };
+            /** @description 입력 검증 실패 또는 본인확인 실패 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["PasswordResetVerifyResponse"];
+                };
+            };
+            /** @description 소셜 전용 계정 */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["PasswordResetVerifyResponse"];
+                };
+            };
+        };
+    };
+    resetPassword: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PasswordResetConfirmRequest"];
+            };
+        };
+        responses: {
+            /** @description 변경 성공 */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description 입력 검증 실패 또는 재설정 토큰 만료 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };
@@ -1722,9 +2246,51 @@ export interface operations {
             };
         };
     };
-    getTerms: {
+    changePassword: {
         parameters: {
             query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PasswordChangeRequest"];
+            };
+        };
+        responses: {
+            /** @description 변경 성공 */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description 입력 검증 실패 또는 현재 비밀번호 불일치 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description 미인증 또는 refresh 쿠키 없음 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getTerms: {
+        parameters: {
+            query?: {
+                /**
+                 * @description 가입 역할. SELLER면 사장 약관(AGE_19)을 조회
+                 * @example SELLER
+                 */
+                role?: string;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -1738,6 +2304,47 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["TermResponse"][];
+                };
+            };
+        };
+    };
+    checkEmailAvailability: {
+        parameters: {
+            query: {
+                role?: "CUSTOMER" | "SELLER" | "ADMIN";
+                email: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 사용 가능 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EmailAvailabilityResponse"];
+                };
+            };
+            /** @description 입력 검증 실패 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EmailAvailabilityResponse"];
+                };
+            };
+            /** @description 이메일 중복 */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EmailAvailabilityResponse"];
                 };
             };
         };
