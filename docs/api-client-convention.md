@@ -269,6 +269,20 @@ export const productApi = {
 
 검증 실패 → Zod 가 throw → TanStack Query 의 `error` 로 전달.
 
+### 7-1. 생성 타입 (`@magampick/api-types`) 참조
+
+API 요청/응답 타입은 백엔드 SpringDoc spec 에서 생성한 **`@magampick/api-types`** (group별 entry: `/customer`, `/seller`) 를 **우선 참조**한다. 손으로 타입을 옮겨 적지 않는다.
+
+- **역할 분리**: 생성 타입 = 백엔드 계약(컴파일 정합·드리프트 방지), **Zod 스키마 = 런타임 진실 게이트**. 생성 타입이 있어도 응답 검증은 그대로 Zod 가 담당 (§7).
+- **envelope**: 생성 타입은 unwrap 이후 `data` 형태 (SpringDoc 이 컨트롤러 반환 타입만 문서화) → interceptor 출력과 그대로 맞음.
+- **재생성 (백엔드 연동 작업 시작 시)**: 백엔드 spec 변경이 있었으면 먼저 재생성 → `git diff` 확인 후 커밋.
+  ```sh
+  pnpm --filter @magampick/api-types gen          # 기본 dev 백엔드
+  # base override: MAGAMPICK_API_DOCS_BASE=http://localhost:8080 pnpm --filter @magampick/api-types gen
+  ```
+- **Zod 를 생성 타입에 맞춤**: `components['schemas']['XResponse']` 를 정답지로 두고, `z.infer<typeof xSchema> satisfies components['schemas']['XResponse']` 로 정합을 컴파일 체크.
+- **점진 마이그레이션**: 기존 손작성 타입을 한 번에 갈아끼우지 않는다. 새/수정 feature 부터 생성 타입 참조. 상세·사용법 = [`packages/api-types/README.md`](../packages/api-types/README.md).
+
 ---
 
 ## 8. 페이지네이션 응답 (PageResponse / SliceResponse)

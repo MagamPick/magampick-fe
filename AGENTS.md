@@ -188,6 +188,7 @@ git worktree add ../magampick-fe-wt3 --detach origin/develop
 |---|---|
 | 의존성 설치 | `pnpm install` |
 | dev 서버 / 빌드 / 테스트 / 린트 / 포맷 | **결정 대기** (도구 결정 후 pnpm 스크립트 정의) |
+| API 타입 생성 (백엔드 spec→TS) | `pnpm --filter @magampick/api-types gen` — 백엔드 연동 작업 시작 시 spec 변경 있었으면 재생성 후 `git diff` 확인. 참조·역할 = [`docs/api-client-convention.md §7-1`](docs/api-client-convention.md) |
 
 ---
 
@@ -202,7 +203,7 @@ git worktree add ../magampick-fe-wt3 --detach origin/develop
 | [`docs/routing-convention.md`](docs/routing-convention.md) | createBrowserRouter / ROUTES 상수 / Zod params 검증 / Wrapper 가드 / lazy / Nested Layout / Loader 제한 사용 | ✅ 완료 |
 | [`docs/state-convention.md`](docs/state-convention.md) | 4영역 분리 (서버/전역/URL/로컬) / QueryClient 설정 / queryKey / 무효화 / Zustand 스토어 / persist 정책 | ✅ 완료 |
 | [`docs/styling-convention.md`](docs/styling-convention.md) | Tailwind + shadcn 셋업 / 공유 토큰 (root) / cn() / 토큰 외 값 금지 / mobile-first / Pretendard / lucide-react | ✅ 완료 |
-| [`docs/api-client-convention.md`](docs/api-client-convention.md) | axios 인스턴스 (`withCredentials`) / interceptor (Bearer access + cookie refresh) / 에러 정규화 / Zod 응답 검증 | ✅ 완료 |
+| [`docs/api-client-convention.md`](docs/api-client-convention.md) | axios 인스턴스 (`withCredentials`) / interceptor (Bearer access + cookie refresh) / 에러 정규화 / Zod 응답 검증 / 생성 타입 `@magampick/api-types` 참조 (§7-1) | ✅ 완료 |
 | [`docs/form-convention.md`](docs/form-convention.md) | 4부품 (Zod + useForm + shadcn `<Form>` + mutation) / 검증 모드 / useFieldArray / 의존 필드 / 파일 업로드 / 안티 패턴 | ✅ 완료 |
 | [`docs/auth.md`](docs/auth.md) | 듀얼 JWT (메모리 access + HttpOnly cookie refresh) / silent refresh / role 가드 / Mock 휴대폰 인증 | ✅ 완료 |
 | [`docs/test-convention.md`](docs/test-convention.md) | Vitest (jsdom) + RTL + Playwright + MSW / TDD red→green / 콜로케이션 / 한국어 표현 / 핵심 E2E 흐름 | ✅ 완료 |
