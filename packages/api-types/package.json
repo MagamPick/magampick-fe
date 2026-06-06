@@ -1,0 +1,18 @@
+{
+  "name": "@magampick/api-types",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./customer": "./src/customer.ts",
+    "./seller": "./src/seller.ts"
+  },
+  "scripts": {
+    "gen": "node scripts/generate.mjs",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "openapi-typescript": "^7.9.1",
+    "typescript": "~6.0.2"
+  }
+}
