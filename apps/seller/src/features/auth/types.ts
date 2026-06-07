@@ -64,6 +64,8 @@ export const signupInputSchema = z
     email: z.string().email('이메일 형식이 아닙니다'),
     password: passwordSchema,
     passwordConfirm: z.string(),
+    // 중복확인 통과한 이메일 (게이트용 — email 과 같아야 다음 진행, 수정 시 무효화)
+    checkedEmail: z.string().optional(),
     // Step 3 — 휴대폰 본인인증
     phone: z.string().regex(/^010-\d{4}-\d{4}$/, '휴대폰 번호를 확인해주세요'),
     verificationToken: z.string().min(1, '휴대폰 본인인증이 필요합니다'),
