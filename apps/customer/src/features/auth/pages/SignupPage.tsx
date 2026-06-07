@@ -37,6 +37,7 @@ export function SignupPage() {
       email: '',
       password: '',
       passwordConfirm: '',
+      checkedEmail: '',
       name: '',
       phone: '',
       verificationToken: '',
@@ -58,6 +59,7 @@ export function SignupPage() {
       case 2:
         return (
           EMAIL_RE.test(v.email ?? '') &&
+          v.checkedEmail === v.email &&
           passwordSchema.safeParse(v.password ?? '').success &&
           v.password === v.passwordConfirm
         )

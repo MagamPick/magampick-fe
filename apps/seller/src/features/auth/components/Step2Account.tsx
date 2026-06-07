@@ -25,6 +25,8 @@ function pwStrength(pw: string): 0 | 1 | 2 | 3 {
 export function Step2Account({ form }: { form: UseFormReturn<SignupInput> }) {
   const emailCheck = useEmailCheck()
   const email = form.watch('email')
+  const checkedEmail = form.watch('checkedEmail')
+  const emailVerified = email !== '' && checkedEmail === email
   const password = form.watch('password')
   const strength = pwStrength(password)
   const labelColor =
@@ -70,16 +72,20 @@ export function Step2Account({ form }: { form: UseFormReturn<SignupInput> }) {
               </FormControl>
               <button
                 type="button"
-                disabled={!email || emailCheck.isPending}
-                onClick={() => emailCheck.mutate(email)}
+                disabled={!email || emailCheck.isPending || emailVerified}
+                onClick={() =>
+                  emailCheck.mutate(email, {
+                    onSuccess: () => form.setValue('checkedEmail', email, { shouldValidate: true }),
+                  })
+                }
                 className="absolute right-1.5 top-1/2 h-11 -translate-y-1/2 rounded-lg bg-secondary px-3.5 text-[13px] font-bold text-secondary-foreground disabled:opacity-50"
               >
                 중복확인
               </button>
             </div>
-            {emailCheck.isSuccess ? (
+            {emailVerified ? (
               <p className="mt-1.5 text-xs font-medium text-success">사용 가능한 이메일이에요.</p>
-            ) : emailCheck.error ? (
+            ) : emailCheck.isError && emailCheck.variables === email ? (
               <p className="mt-1.5 text-xs text-destructive">
                 {(emailCheck.error as Error).message}
               </p>
