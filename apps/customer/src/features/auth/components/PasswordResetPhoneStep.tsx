@@ -108,6 +108,10 @@ export function PasswordResetPhoneStep({ form }: { form: UseFormReturn<PasswordR
         )}
       />
 
+      {request.error && (
+        <p className="mt-1.5 text-xs text-destructive">{(request.error as Error).message}</p>
+      )}
+
       {codeSent && !verified && (
         <div className="mt-4">
           <label
