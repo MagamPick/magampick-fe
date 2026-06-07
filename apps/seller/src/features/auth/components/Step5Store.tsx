@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useRef, useState, type ChangeEvent } from 'react'
 import type { UseFormReturn } from 'react-hook-form'
 import {
   FormField,
@@ -15,6 +15,9 @@ import { cn } from '@/shared/lib/utils'
 import { useBusinessCheck } from '../hooks/useBusinessCheck'
 import { searchStoreAddress } from '../lib/addressSearch'
 import type { SignupInput } from '../types'
+
+/** 대표 사진 최대 용량(MB) */
+const MAX_IMAGE_MB = 5
 
 // 프로토타입 bizNo input — 숫자 10자리 → 000-00-00000 자동 포맷
 function formatBizNo(value: string): string {
@@ -37,8 +40,10 @@ export function Step5Store({ form }: { form: UseFormReturn<SignupInput> }) {
   const [dateOpen, setDateOpen] = useState(false)
   const [addrPending, setAddrPending] = useState(false)
   const [addrError, setAddrError] = useState<string | null>(null)
+  const [photoError, setPhotoError] = useState<string | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const photoAdded = !!form.watch('photoAdded')
+  const storeImageFile = form.watch('storeImageFile')
   const representativeName = form.watch('representativeName')
   const businessNumber = form.watch('businessNumber')
   const openDate = form.watch('openDate')
@@ -51,8 +56,36 @@ export function Step5Store({ form }: { form: UseFormReturn<SignupInput> }) {
     }
   }, [form])
 
-  const togglePhoto = () =>
-    form.setValue('photoAdded', !photoAdded, { shouldValidate: true, shouldDirty: true })
+  // 대표 사진 미리보기 — File 에서 object URL 파생(리마운트에도 유지) + 정리
+  const previewUrl = useMemo(
+    () => (storeImageFile ? URL.createObjectURL(storeImageFile) : null),
+    [storeImageFile],
+  )
+  useEffect(() => {
+    if (!previewUrl) return
+    return () => URL.revokeObjectURL(previewUrl)
+  }, [previewUrl])
+
+  const onPickFile = (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    e.target.value = '' // 같은 파일 재선택 허용
+    if (!file) return
+    if (!file.type.startsWith('image/')) {
+      setPhotoError('이미지 파일만 등록할 수 있어요')
+      return
+    }
+    if (file.size > MAX_IMAGE_MB * 1024 * 1024) {
+      setPhotoError(`이미지는 ${MAX_IMAGE_MB}MB 이하만 등록할 수 있어요`)
+      return
+    }
+    setPhotoError(null)
+    form.setValue('storeImageFile', file, { shouldDirty: true })
+  }
+
+  const removePhoto = () => {
+    form.setValue('storeImageFile', undefined, { shouldDirty: true })
+    setPhotoError(null)
+  }
 
   // 진위확인 입력(대표자명·번호·개업일자) 변경 시 조회 결과·검증 플래그 리셋 (재조회 강제)
   const resetBiz = () => {
@@ -103,25 +136,49 @@ export function Step5Store({ form }: { form: UseFormReturn<SignupInput> }) {
         사업자등록번호와 매장 정보를 함께 등록합니다.
       </p>
 
-      {/* 대표 사진 — mock 토글 (실제 업로드는 매장 등록 신청 연동 PR) */}
-      <button
-        type="button"
-        onClick={togglePhoto}
-        className={cn(
-          'mb-5 flex h-[168px] w-full flex-col items-center justify-center gap-2 rounded-[14px] border-[1.5px] transition',
-          photoAdded
-            ? 'border-solid border-primary bg-gradient-to-br from-secondary to-[#ffd9c7] text-secondary-foreground'
-            : 'border-dashed border-border bg-background text-muted-foreground',
+      {/* 대표 사진 — 선택 업로드 (multipart image 파트). 없어도 가입 완료 */}
+      <div className="mb-5">
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          aria-label="매장 대표 사진"
+          onChange={onPickFile}
+        />
+        <button
+          type="button"
+          onClick={() => fileInputRef.current?.click()}
+          className={cn(
+            'flex h-[168px] w-full flex-col items-center justify-center gap-2 overflow-hidden rounded-[14px] border-[1.5px] transition',
+            storeImageFile
+              ? 'border-solid border-primary'
+              : 'border-dashed border-border bg-background text-muted-foreground',
+          )}
+        >
+          {previewUrl ? (
+            <img src={previewUrl} alt="매장 대표 사진 미리보기" className="size-full object-cover" />
+          ) : (
+            <>
+              <span className="text-[34px] leading-none">📷</span>
+              <span className="text-[13.5px] font-semibold">대표 사진 등록</span>
+              <span className="text-[11.5px] text-placeholder">
+                매장 외관이 잘 보이는 사진을 권장해요 (선택)
+              </span>
+            </>
+          )}
+        </button>
+        {storeImageFile && (
+          <button
+            type="button"
+            onClick={removePhoto}
+            className="mt-2 text-[12.5px] font-semibold text-muted-foreground underline"
+          >
+            사진 제거
+          </button>
         )}
-      >
-        <span className="text-[34px] leading-none">{photoAdded ? '🏪' : '📷'}</span>
-        <span className="text-[13.5px] font-semibold">
-          {photoAdded ? '대표 사진 등록 완료' : '대표 사진 등록'}
-        </span>
-        <span className={cn('text-[11.5px]', photoAdded ? 'text-secondary-foreground' : 'text-placeholder')}>
-          {photoAdded ? '탭하면 사진을 제거합니다 (데모)' : '매장 외관이 잘 보이는 사진을 권장해요'}
-        </span>
-      </button>
+        {photoError && <p className="mt-1.5 text-xs text-destructive">{photoError}</p>}
+      </div>
 
       <FormField
         control={form.control}

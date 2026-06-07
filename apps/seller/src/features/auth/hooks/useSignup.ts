@@ -10,7 +10,7 @@ import type { SignupInput, SellerSignupPayload } from '../types'
  * 사장 회원가입 제출 — SignupInput(폼) → SellerSignupPayload(BE 계약) 매핑 후 multipart 전송.
  * - 폼 name → ownerName, 매장 필드(주소 위젯 결과 + 디테일)는 nested store 로 묶는다.
  * - 성공 시 자동 로그인(access token 저장) 후 사장 메인 직행 — 환영 페이지 없음 (노션 명세).
- * - 대표 사진 업로드는 별도 PR(매장 등록 신청 연동) — 이번엔 image 파트 미전송.
+ * - 대표 사진(선택)은 storeImageFile 을 multipart image 파트로 함께 전송.
  */
 export function useSignup() {
   const navigate = useNavigate()
@@ -43,7 +43,7 @@ export function useSignup() {
           roadnameCode: input.storeAddress.roadnameCode,
         },
       }
-      return authApi.signup(payload)
+      return authApi.signup(payload, input.storeImageFile)
     },
     onSuccess: ({ accessToken }) => {
       setAccessToken(accessToken)

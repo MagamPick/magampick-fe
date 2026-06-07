@@ -22,7 +22,7 @@ const defaults: SignupInput = {
   storeAddress: null,
   storeAddressDetail: '',
   storePhone: '',
-  photoAdded: false,
+  storeImageFile: undefined,
 }
 
 const terms: SignupTerm[] = [
