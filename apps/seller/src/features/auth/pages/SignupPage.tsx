@@ -48,7 +48,7 @@ export function SignupPage() {
       storeAddress: null,
       storeAddressDetail: '',
       storePhone: '',
-      photoAdded: false,
+      storeImageFile: undefined,
     },
   })
 

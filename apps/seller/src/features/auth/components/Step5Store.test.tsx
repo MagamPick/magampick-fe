@@ -1,8 +1,8 @@
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen, waitFor, fireEvent } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, beforeAll } from 'vitest'
 import { Step5Store } from './Step5Store'
 import { authApi } from '../api/authApi'
 import { searchStoreAddress } from '../lib/addressSearch'
@@ -32,7 +32,7 @@ const defaults: SignupInput = {
   storeAddress: null,
   storeAddressDetail: '',
   storePhone: '',
-  photoAdded: false,
+  storeImageFile: undefined,
 }
 
 const selectedAddress: StoreAddress = {
@@ -64,15 +64,21 @@ function renderStep5(overrides: Partial<SignupInput> = {}) {
 }
 
 describe('Step5Store', () => {
+  beforeAll(() => {
+    // jsdom 에 createObjectURL 미구현 — 미리보기용 stub
+    URL.createObjectURL = vi.fn(() => 'blob:preview')
+    URL.revokeObjectURL = vi.fn()
+  })
   beforeEach(() => vi.clearAllMocks())
 
-  it('대표사진_영역_클릭_시_등록완료로_토글', async () => {
-    const user = userEvent.setup()
+  it('대표사진_파일_선택_시_미리보기_노출', async () => {
     renderStep5()
+    const input = screen.getByLabelText('매장 대표 사진')
+    const file = new File(['img'], 'store.png', { type: 'image/png' })
 
-    await user.click(screen.getByText('대표 사진 등록'))
+    fireEvent.change(input, { target: { files: [file] } })
 
-    expect(screen.getByText('대표 사진 등록 완료')).toBeInTheDocument()
+    expect(await screen.findByAltText('매장 대표 사진 미리보기')).toBeInTheDocument()
   })
 
   it('대표자명_Step4_사장님_성명으로_자동_채움', () => {

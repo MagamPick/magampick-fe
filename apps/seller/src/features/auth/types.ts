@@ -78,7 +78,8 @@ export const signupInputSchema = z
     storeAddress: storeAddressSchema.nullable(),
     storeAddressDetail: z.string().optional(),
     storePhone: z.string().min(1, '매장 전화번호를 입력해주세요'),
-    photoAdded: z.boolean().optional(),
+    // 대표 사진 (선택) — multipart image 파트로 전송. 없어도 가입 완료
+    storeImageFile: z.instanceof(File).optional(),
   })
   .refine((d) => d.password === d.passwordConfirm, {
     message: '비밀번호가 일치하지 않습니다',

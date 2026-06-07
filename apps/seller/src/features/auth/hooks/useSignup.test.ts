@@ -35,7 +35,7 @@ const validInput: SignupInput = {
   },
   storeAddressDetail: '1층',
   storePhone: '02-1234-5678',
-  photoAdded: false,
+  storeImageFile: undefined,
 }
 
 describe('useSignup', () => {
@@ -71,7 +71,21 @@ describe('useSignup', () => {
         sigunguCode: '11680',
         roadnameCode: '3179999',
       },
-    })
+    }, undefined)
+  })
+
+  it('대표_사진이_있으면_이미지_파일과_함께_전송한다', async () => {
+    vi.mocked(authApi.signup).mockResolvedValue({ accessToken: 'mock-access-token' })
+    const file = new File(['img'], 'store.png', { type: 'image/png' })
+    const { result } = renderHook(() => useSignup(), { wrapper: createQueryWrapper() })
+
+    result.current.mutate({ ...validInput, storeImageFile: file })
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true))
+    expect(authApi.signup).toHaveBeenCalledWith(
+      expect.objectContaining({ ownerName: '홍길동' }),
+      file,
+    )
   })
 
   it('가입_성공_시_토큰_저장하고_사장_메인으로_이동', async () => {
