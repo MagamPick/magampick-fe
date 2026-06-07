@@ -128,6 +128,10 @@ export function Step3Phone({ form }: { form: UseFormReturn<SignupInput> }) {
         )}
       />
 
+      {request.error && (
+        <p className="mt-1.5 text-xs text-destructive">{(request.error as Error).message}</p>
+      )}
+
       {codeSent && !verified && (
         <div className="mt-4">
           <label
