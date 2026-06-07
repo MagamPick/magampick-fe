@@ -4,7 +4,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { describe, it, expect, vi } from 'vitest'
 import { Step1Terms } from './Step1Terms'
-import { signupInputSchema, type SignupInput, type TermId } from '../types'
+import { signupInputSchema, type SignupInput, type SignupTerm } from '../types'
 
 const defaults: SignupInput = {
   agreedTermIds: [],
@@ -19,18 +19,26 @@ const defaults: SignupInput = {
   openDate: '',
   bizVerified: false,
   storeName: '',
-  storeAddress: '',
+  storeAddress: null,
   storeAddressDetail: '',
   storePhone: '',
   photoAdded: false,
 }
 
-function TestHost({ onOpenTerms = vi.fn() }: { onOpenTerms?: (id: TermId) => void }) {
+const terms: SignupTerm[] = [
+  { id: 1, type: 'AGE_19', version: 1, title: '만 19세 이상입니다', body: '만 19세 이상 확인', required: true },
+  { id: 2, type: 'TERMS_OF_SERVICE', version: 1, title: '서비스 이용약관', body: '서비스 본문', required: true },
+  { id: 3, type: 'PRIVACY', version: 1, title: '개인정보 수집·이용 동의', body: '개인정보 본문', required: true },
+  { id: 4, type: 'LOCATION', version: 1, title: '위치기반 서비스 이용약관', body: '위치 본문', required: true },
+  { id: 5, type: 'MARKETING', version: 1, title: '광고성 정보 수신', body: '마케팅 본문', required: false },
+]
+
+function TestHost({ onOpenTerms = vi.fn() }: { onOpenTerms?: (id: number) => void }) {
   const form = useForm<SignupInput>({
     resolver: zodResolver(signupInputSchema),
     defaultValues: defaults,
   })
-  return <Step1Terms form={form} onOpenTerms={onOpenTerms} />
+  return <Step1Terms form={form} terms={terms} onOpenTerms={onOpenTerms} />
 }
 
 describe('Step1Terms', () => {

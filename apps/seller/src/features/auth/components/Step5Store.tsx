@@ -13,19 +13,8 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/shared/component
 import { Calendar } from '@/shared/components/ui/calendar'
 import { cn } from '@/shared/lib/utils'
 import { useBusinessCheck } from '../hooks/useBusinessCheck'
+import { searchStoreAddress } from '../lib/addressSearch'
 import type { SignupInput } from '../types'
-
-// Mock 매장 주소 — 의도적 최소 구현. 실연동 시 카카오(Daum) 우편번호 위젯이 이 시트를 대체.
-const SAMPLE_ADDRESSES = [
-  '서울 강남구 테헤란로 152',
-  '서울 강남구 역삼로 180',
-  '서울 마포구 양화로 45',
-  '서울 마포구 월드컵북로 396',
-  '서울 송파구 올림픽로 300',
-  '서울 영등포구 여의대로 24',
-  '경기 성남시 분당구 판교역로 235',
-  '서울 용산구 이태원로 200',
-]
 
 // 프로토타입 bizNo input — 숫자 10자리 → 000-00-00000 자동 포맷
 function formatBizNo(value: string): string {
@@ -45,8 +34,9 @@ const parseYMD = (s: string) => {
 
 export function Step5Store({ form }: { form: UseFormReturn<SignupInput> }) {
   const biz = useBusinessCheck()
-  const [addrOpen, setAddrOpen] = useState(false)
   const [dateOpen, setDateOpen] = useState(false)
+  const [addrPending, setAddrPending] = useState(false)
+  const [addrError, setAddrError] = useState<string | null>(null)
 
   const photoAdded = !!form.watch('photoAdded')
   const representativeName = form.watch('representativeName')
@@ -87,9 +77,19 @@ export function Step5Store({ form }: { form: UseFormReturn<SignupInput> }) {
     openDate.trim().length > 0 &&
     !biz.isPending
 
-  const selectAddr = (addr: string) => {
-    form.setValue('storeAddress', addr, { shouldValidate: true })
-    setAddrOpen(false)
+  // 다음 우편번호 위젯 — 도로명 주소 + 지오코딩 키(sigunguCode·roadnameCode)를 받아 구조화 저장
+  const searchAddress = async () => {
+    setAddrPending(true)
+    setAddrError(null)
+    try {
+      const address = await searchStoreAddress()
+      form.setValue('storeAddress', address, { shouldValidate: true, shouldDirty: true })
+      form.clearErrors('storeAddress')
+    } catch (error) {
+      setAddrError(error instanceof Error ? error.message : '주소를 선택하지 못했어요')
+    } finally {
+      setAddrPending(false)
+    }
   }
 
   return (
@@ -279,16 +279,29 @@ export function Step5Store({ form }: { form: UseFormReturn<SignupInput> }) {
             </FormLabel>
             <div className="relative">
               <FormControl>
-                <Input placeholder="주소를 검색하세요" readOnly className="pr-[104px]" {...field} />
+                <Input
+                  placeholder="주소를 검색하세요"
+                  readOnly
+                  className="pr-[104px]"
+                  name={field.name}
+                  ref={field.ref}
+                  onBlur={field.onBlur}
+                  value={field.value?.roadAddress ?? ''}
+                />
               </FormControl>
               <button
                 type="button"
-                onClick={() => setAddrOpen(true)}
+                onClick={searchAddress}
+                disabled={addrPending}
                 className="absolute right-1.5 top-1/2 h-11 -translate-y-1/2 rounded-lg bg-secondary px-3.5 text-[13px] font-bold text-secondary-foreground"
               >
-                주소 검색
+                {addrPending ? '검색 중' : '주소 검색'}
               </button>
             </div>
+            <p className="mt-1.5 text-xs text-muted-foreground">
+              도로명·지번 모두 검색 가능해요. 위치는 등록한 주소를 기준으로 자동 설정됩니다.
+            </p>
+            {addrError && <p className="mt-1.5 text-xs text-destructive">{addrError}</p>}
             <FormMessage />
           </FormItem>
         )}
@@ -323,27 +336,6 @@ export function Step5Store({ form }: { form: UseFormReturn<SignupInput> }) {
           </FormItem>
         )}
       />
-
-      <Sheet open={addrOpen} onOpenChange={setAddrOpen}>
-        <SheetContent side="bottom" className="max-h-[70vh] rounded-t-[22px]">
-          <SheetHeader>
-            <SheetTitle>주소 검색</SheetTitle>
-          </SheetHeader>
-          <ul className="overflow-y-auto px-5 pb-6">
-            {SAMPLE_ADDRESSES.map((addr) => (
-              <li key={addr}>
-                <button
-                  type="button"
-                  onClick={() => selectAddr(addr)}
-                  className="w-full border-b border-border py-3.5 text-left text-sm font-bold text-foreground last:border-b-0"
-                >
-                  {addr}
-                </button>
-              </li>
-            ))}
-          </ul>
-        </SheetContent>
-      </Sheet>
     </div>
   )
 }

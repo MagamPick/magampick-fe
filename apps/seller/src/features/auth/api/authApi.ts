@@ -1,182 +1,108 @@
-import { ApiError } from '@/shared/lib/apiError'
-import { passwordSchema, PASSWORD_RESET_ERROR, PASSWORD_CHANGE_ERROR } from '../types'
-import type { SignupInput, LoginInput } from '../types'
+import { z } from 'zod'
+import { apiClient } from '@/shared/lib/axios'
+import {
+  termsSchema,
+  tokenResponseSchema,
+  phoneVerificationTokenResponseSchema,
+  emailAvailabilityResponseSchema,
+} from '../types'
+import type { LoginInput, SignupTerm, SellerSignupPayload } from '../types'
 
-/**
- * ⚠️ Mock 스텁 — 백엔드 사장 인증 API(BE 완료 NO)가 아직이라 가짜 응답.
- * BE 완료 후 `apiClient` 실제 호출 + Zod 응답 검증으로 교체 (api-client-convention).
- */
-const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
-
-/** Mock: 이 이메일만 중복으로 취급 */
-const TAKEN_EMAIL = 'taken@magampick.com'
-/** Mock: 본인인증 통과 코드 (auth.md §11) */
-const MOCK_OTP = '000000'
-/** Mock: 이 이메일만 로그인 실패로 취급 (그 외 임의 이메일 + 입력된 PW 는 성공) */
-const WRONG_CREDENTIAL_EMAIL = 'wrong@magampick.com'
-/** Mock: 로그인 사용자의 현재 비밀번호 (실연동 시 BE 가 세션 사용자 해시로 검증) */
-const MOCK_CURRENT_PASSWORD = 'Magampick1!'
-
-/**
- * Mock: 비밀번호 재설정 매칭용 등록 사장 계정 (이메일+휴대폰 쌍). 휴대폰 unique X 라 쌍으로만 식별.
- * 사장은 소셜 가입이 없어 socialOnly 계정 없음. 실연동 시 BE 가 sellers 조회로 대체.
- */
-const RESET_ACCOUNTS: { email: string; phone: string; socialOnly: boolean }[] = [
-  { email: 'demo@magampick.com', phone: '010-1234-5678', socialOnly: false },
-]
+/** 비밀번호 재설정 본인확인 응답 (resetToken 발급) */
+const resetTokenResponseSchema = z.object({ resetToken: z.string() })
 
 export const authApi = {
+  /** GET /terms?role=SELLER — 사장 약관 목록 (id 포함, 가입 Step 1) */
+  async listTerms(): Promise<SignupTerm[]> {
+    const res = await apiClient.get('/terms', { params: { role: 'SELLER' } })
+    return termsSchema.parse(res.data)
+  },
+
+  /** GET /auth/email-availability?role=SELLER — 이메일 중복 확인 (중복은 BE 409 → ApiError) */
   async checkEmail(email: string): Promise<{ available: boolean }> {
-    await delay(500)
-    if (email === TAKEN_EMAIL) {
-      throw new ApiError(409, 'EMAIL_ALREADY_EXISTS', '이미 사용 중인 이메일입니다')
-    }
-    return { available: true }
+    const res = await apiClient.get('/auth/email-availability', {
+      params: { role: 'SELLER', email },
+    })
+    return emailAvailabilityResponseSchema.parse(res.data)
   },
 
+  /** POST /auth/phone-verifications — 휴대폰 6자리 SMS 인증번호 발송 */
   async requestPhoneVerification(phone: string): Promise<void> {
-    await delay(500)
-    if (!phone) {
-      throw new ApiError(400, 'INVALID_INPUT', '휴대폰 번호를 입력해주세요')
-    }
-    // Mock: 실제 SMS 발송 안 함 (코드 000000 으로 통과) — ADR-001 SOLAPI 연동 PR 에서 교체
+    await apiClient.post('/auth/phone-verifications', { phone })
   },
 
+  /** POST /auth/phone-verifications/confirm — 인증번호 검증 → 본인인증 토큰(15분) */
   async verifyPhoneCode(input: {
     phone: string
     code: string
   }): Promise<{ verificationToken: string }> {
-    await delay(500)
-    if (input.code !== MOCK_OTP) {
-      throw new ApiError(400, 'PHONE_VERIFICATION_FAILED', '인증번호가 일치하지 않습니다')
-    }
-    return { verificationToken: 'mock-verification-token' }
+    const res = await apiClient.post('/auth/phone-verifications/confirm', input)
+    return phoneVerificationTokenResponseSchema.parse(res.data)
   },
 
   /**
-   * 사업자등록번호 조회 — Mock(프로토타입 owner-v3 규칙): 앞 3자리 '000' 이면 실패.
-   * 실연동 시 국세청 사업자등록 상태조회 API 로 교체 (디테일 → 매장 등록 신청).
+   * POST /auth/seller/stores/business-verification — 가입 흐름 사업자 진위확인 (204 No Content).
+   * 사업자번호·대표자명·개업일자 3요소를 국세청 조회. 통과 시 resolve, 불일치/형식오류는 ApiError.
    */
   async checkBusinessNumber(input: {
     businessNumber: string
     representativeName: string
     openDate: string
-  }): Promise<{ verified: true }> {
-    await delay(600)
-    const digits = input.businessNumber.replace(/\D/g, '')
-    // 국세청 사업자등록 진위확인은 (사업자번호 + 대표자명 + 개업일자) 3요소 필수
-    if (digits.length !== 10 || !input.representativeName.trim() || !input.openDate) {
-      throw new ApiError(400, 'INVALID_INPUT', '사업자번호·대표자명·개업일자를 모두 입력해주세요')
-    }
-    if (digits.slice(0, 3) === '000') {
-      throw new ApiError(404, 'BUSINESS_NUMBER_INVALID', '조회되지 않는 사업자등록번호입니다')
-    }
-    return { verified: true }
-  },
-
-  async signup(input: SignupInput): Promise<{ accessToken: string }> {
-    await delay(800)
-    // Mock: 실제로는 한 트랜잭션으로 sellers + 약관 동의 + stores 생성. 여기선 토큰만 발급.
-    return { accessToken: `mock-access-token:${input.email}` }
-  },
-
-  async login(input: LoginInput): Promise<{ accessToken: string }> {
-    await delay(700)
-    if (input.email === WRONG_CREDENTIAL_EMAIL) {
-      // 실패 메시지는 이메일 존재 여부와 무관하게 동일 (계정 존재 노출 차단 — auth.md §4)
-      throw new ApiError(401, 'LOGIN_FAILED', '이메일 또는 비밀번호가 일치하지 않습니다')
-    }
-    // Mock: 실제로는 서버가 bcrypt 검증 후 access(body) + refresh(HttpOnly cookie) 발급. 여기선 access 만.
-    // 사장 앱은 로그인 상태 유지 토글이 없어 항상 keepSignedIn:true (auth.md §4·§6) — 연동 PR 에서 body 에 추가.
-    return { accessToken: `mock-access-token:${input.email}` }
-  },
-
-  async logout(): Promise<void> {
-    await delay(300)
-    // Mock: 실제로는 서버가 Redis refresh 키 삭제 + clear cookie (auth.md §7).
+  }): Promise<void> {
+    await apiClient.post('/auth/seller/stores/business-verification', input)
   },
 
   /**
-   * 비밀번호 재설정 Step 2→3 게이트 — 이메일↔휴대폰 매칭 후 resetToken 발급.
-   * 존재 비노출: 이메일 미등록·휴대폰 불일치 모두 동일 RESET_VERIFICATION_FAILED (노션 AC).
-   * (사장은 소셜 가입이 없어 SOCIAL_ONLY_ACCOUNT 는 발생하지 않지만 방어용으로 분기 유지)
-   * Mock: 실연동 시 verificationToken 의 휴대폰 일치 검증 + 계정 조회로 교체.
+   * POST /auth/seller/signup — 사장 회원가입 (multipart/form-data).
+   * `request` JSON 파트 + 선택 `image` 파일 파트. 한 트랜잭션으로 sellers + 약관동의 + 첫 매장 생성 후 자동 로그인.
+   * Content-Type 을 multipart 로 명시해야 axios 가 FormData 를 JSON 으로 변환하지 않고 boundary 를 붙인다.
+   */
+  async signup(payload: SellerSignupPayload, imageFile?: File): Promise<{ accessToken: string }> {
+    const form = new FormData()
+    form.append('request', new Blob([JSON.stringify(payload)], { type: 'application/json' }))
+    if (imageFile) {
+      form.append('image', imageFile)
+    }
+    const res = await apiClient.post('/auth/seller/signup', form, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    })
+    return tokenResponseSchema.parse(res.data)
+  },
+
+  /**
+   * POST /auth/seller/login — 사장 로그인 (access 바디 + refresh HttpOnly 쿠키).
+   * 사장 앱은 로그인 상태 유지 토글이 없어 항상 keepSignedIn:true (auth.md §6).
+   */
+  async login(input: LoginInput): Promise<{ accessToken: string }> {
+    const res = await apiClient.post('/auth/seller/login', { ...input, keepSignedIn: true })
+    return tokenResponseSchema.parse(res.data)
+  },
+
+  /** POST /auth/logout — Redis refresh 삭제 + clear cookie */
+  async logout(): Promise<void> {
+    await apiClient.post('/auth/logout')
+  },
+
+  /**
+   * POST /auth/seller/password-resets/verify-identity — 이메일↔휴대폰 매칭 후 resetToken 발급.
+   * 존재 비노출·본인인증 등 정책 판정은 BE. 실패는 ApiError(코드는 PASSWORD_RESET_ERROR 와 매칭).
    */
   async verifyPasswordResetIdentity(input: {
     email: string
     phone: string
     verificationToken: string
   }): Promise<{ resetToken: string }> {
-    await delay(600)
-    if (!input.verificationToken) {
-      throw new ApiError(
-        400,
-        PASSWORD_RESET_ERROR.PHONE_VERIFICATION_REQUIRED,
-        '휴대폰 본인인증이 필요합니다',
-      )
-    }
-    const account = RESET_ACCOUNTS.find((a) => a.email === input.email && a.phone === input.phone)
-    if (!account) {
-      throw new ApiError(
-        404,
-        PASSWORD_RESET_ERROR.RESET_VERIFICATION_FAILED,
-        '입력하신 정보와 일치하는 계정을 찾을 수 없어요',
-      )
-    }
-    if (account.socialOnly) {
-      throw new ApiError(
-        409,
-        PASSWORD_RESET_ERROR.SOCIAL_ONLY_ACCOUNT,
-        '소셜 계정은 비밀번호 재설정을 사용할 수 없어요',
-      )
-    }
-    return { resetToken: `mock-reset-token:${input.email}` }
+    const res = await apiClient.post('/auth/seller/password-resets/verify-identity', input)
+    return resetTokenResponseSchema.parse(res.data)
   },
 
-  /**
-   * 새 비밀번호 저장 — Mock: 실연동 시 비번 해시 업데이트 + 해당 계정 Redis refresh 키 일괄 삭제
-   * (모든 기기 강제 로그아웃, 자동 로그인 X — 노션 명세). 여기선 정책 검증 후 resolve.
-   */
+  /** POST /auth/password-resets/confirm — resetToken 으로 새 비밀번호 저장 (전 기기 refresh 폐기) */
   async resetPassword(input: { resetToken: string; newPassword: string }): Promise<void> {
-    await delay(700)
-    if (!input.resetToken) {
-      throw new ApiError(
-        400,
-        PASSWORD_RESET_ERROR.PHONE_VERIFICATION_REQUIRED,
-        '본인인증이 필요합니다',
-      )
-    }
-    if (!passwordSchema.safeParse(input.newPassword).success) {
-      throw new ApiError(
-        400,
-        PASSWORD_RESET_ERROR.PASSWORD_POLICY_VIOLATION,
-        '비밀번호는 8자 이상, 영문·숫자·특수문자를 포함해야 합니다',
-      )
-    }
-    // Mock: 실제 갱신 없음
+    await apiClient.post('/auth/password-resets/confirm', input)
   },
 
-  /**
-   * 비밀번호 변경 (로그인 상태) — Mock: 현재 비번 검증 후 갱신.
-   * 실연동 시 세션 사용자의 비번 해시 검증 + 해시 업데이트 + 다른 기기 refresh 키 삭제(현재 기기 유지).
-   * 현재 기기 세션 유지 — 자동 로그아웃 X (노션 「비밀번호 변경」 명세).
-   */
+  /** PATCH /auth/me/password — 비밀번호 변경 (로그인 상태, 현재 기기 세션 유지) */
   async changePassword(input: { currentPassword: string; newPassword: string }): Promise<void> {
-    await delay(700)
-    if (input.currentPassword !== MOCK_CURRENT_PASSWORD) {
-      throw new ApiError(
-        400,
-        PASSWORD_CHANGE_ERROR.CURRENT_PASSWORD_MISMATCH,
-        '현재 비밀번호가 일치하지 않습니다',
-      )
-    }
-    if (!passwordSchema.safeParse(input.newPassword).success) {
-      throw new ApiError(
-        400,
-        PASSWORD_CHANGE_ERROR.PASSWORD_POLICY_VIOLATION,
-        '비밀번호는 8자 이상, 영문·숫자·특수문자를 포함해야 합니다',
-      )
-    }
-    // Mock: 실제 갱신 없음 (현재 기기 세션 유지)
+    await apiClient.patch('/auth/me/password', input)
   },
 }
