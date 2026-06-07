@@ -33,7 +33,7 @@ export function Step4Name({ form }: { form: UseFormReturn<SignupInput> }) {
               <Input maxLength={20} placeholder="실명을 입력하세요" {...field} />
             </FormControl>
             <p className="mt-1.5 text-xs text-muted-foreground">
-              정산·세금계산서와 매장 운영자 표시에 사용돼요.
+              정산·계정 식별에 사용돼요.
             </p>
             <FormMessage />
           </FormItem>
