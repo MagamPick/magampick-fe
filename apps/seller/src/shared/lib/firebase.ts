@@ -6,9 +6,9 @@ import { env } from './env'
  * FCM(웹 푸시) 초기화. config 값은 공개(클라 노출 정상). 환경변수 미설정 시 비활성 —
  * getFirebaseMessaging() 가 undefined 를 반환하고 호출 측(useFcmRegister)이 조용히 skip 한다.
  *
- * 소비자 앱과 같은 Firebase 프로젝트를 공유한다(토큰은 origin 별로 분리되고 BE 가 사용자/role 로 식별).
- * 사장용 별도 web app 으로 분리하려면 .env 의 VITE_FIREBASE_* 값과 public/firebase-messaging-sw.js
- * config 를 교체하면 된다.
+ * 소비자와 같은 Firebase 프로젝트의 사장 전용 web app 을 쓴다(appId 만 다르고 나머지는 프로젝트 공통).
+ * 토큰은 origin·appId 로 분리되고 BE 가 사용자/role 로 식별한다. config 값은 .env 의 VITE_FIREBASE_* 로 주입
+ * (public/firebase-messaging-sw.js 의 하드코딩 appId 와 같은 값 유지).
  */
 const config = {
   apiKey: env.VITE_FIREBASE_API_KEY,
