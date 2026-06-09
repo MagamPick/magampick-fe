@@ -16,11 +16,11 @@ import { cn } from '@/shared/lib/utils'
 import { ApiError } from '@/shared/lib/apiError'
 import { ROUTES } from '@/shared/lib/routes'
 import { ScreenContainer } from '@/shared/components/ScreenContainer'
-import { AddressSearchSheet } from '../components/AddressSearchSheet'
 import { useAddresses } from '../hooks/useAddresses'
 import { useCreateAddress } from '../hooks/useCreateAddress'
 import { useUpdateAddress } from '../hooks/useUpdateAddress'
 import { useDeleteAddress } from '../hooks/useDeleteAddress'
+import { searchAddressForAddresses } from '../lib/addressSearch'
 import { addressFormSchema, type AddressFormValues, type AddressSearchResult } from '../types'
 
 /** 별칭 빠른 선택 칩 (프로토타입 64-addr-edit) */
@@ -33,21 +33,23 @@ const LABEL_CHIPS = [
 
 /**
  * 주소 추가/수정 (프로토타입 64-addr-edit). add/edit 공용.
- * - 도로명·좌표는 검색/GPS 결과(roadResult). add 는 목록에서 넘어온 state, edit 는 기존 주소에서 시작.
- * - '다시 검색'으로 도로명 변경 가능(add·edit 둘 다 — 노션 2026-05-31 결정). 별칭·상세는 폼 입력.
+ * - 도로명은 다음 우편번호 위젯(명령형 팝업) 또는 GPS 역지오코딩 결과(roadResult). add 는 목록에서
+ *   넘어온 state, edit 는 기존 주소에서 시작.
+ * - '다시 검색'으로 도로명 변경 가능(add·edit 둘 다 — 노션 2026-05-31 결정).
+ * - 좌표는 클라이언트가 보내지 않음 — BE 가 sigunguCode+roadnameCode 또는 roadAddress 로 지오코딩.
  */
 export function AddressFormPage() {
   const { id } = useParams()
-  const isEdit = Boolean(id)
+  const numericId = id ? Number(id) : undefined
+  const isEdit = Boolean(numericId)
   const navigate = useNavigate()
   const location = useLocation()
   const navState = (location.state as { result?: AddressSearchResult } | null) ?? null
 
   const { data: addresses, isPending: addressesPending } = useAddresses()
-  const existing = isEdit ? addresses?.find((a) => a.id === id) : undefined
+  const existing = isEdit ? addresses?.find((a) => a.id === numericId) : undefined
 
   const [roadResult, setRoadResult] = useState<AddressSearchResult | null>(navState?.result ?? null)
-  const [sheetOpen, setSheetOpen] = useState(false)
   const [deleteError, setDeleteError] = useState<string | null>(null)
 
   const create = useCreateAddress()
@@ -57,65 +59,82 @@ export function AddressFormPage() {
   const form = useForm<AddressFormValues>({
     resolver: zodResolver(addressFormSchema),
     mode: 'onChange',
-    defaultValues: { label: '', detail: '' },
+    defaultValues: { label: '', detailAddress: '' },
   })
 
   // edit: 기존 주소가 로드되면 폼 채우기 (도로명은 effectiveRoad 로 파생 — setState-in-effect 회피)
   useEffect(() => {
-    if (existing) form.reset({ label: existing.label, detail: existing.detail })
+    if (existing)
+      form.reset({ label: existing.label, detailAddress: existing.detailAddress ?? '' })
   }, [existing, form])
 
-  // 도로명·좌표 = '다시 검색' override(roadResult) ?? (edit) 기존 주소 ?? (add) 진입 state 결과
+  /**
+   * 도로명 = '다시 검색' override(roadResult) ?? (edit) 기존 주소 ?? (add) 진입 state 결과.
+   * 기존 주소에서 파생할 때 sigunguCode/roadnameCode 는 AddressResponse 에 없으므로 undefined.
+   * BE 는 수정 시 roadAddress 만으로도 지오코딩 가능 (좌표 재계산).
+   */
   const effectiveRoad: AddressSearchResult | null =
     roadResult ??
     (existing
       ? {
           roadAddress: existing.roadAddress,
-          latitude: existing.latitude,
-          longitude: existing.longitude,
+          jibunAddress: existing.jibunAddress,
+          zonecode: existing.zonecode,
         }
       : null)
   const displayRoad = effectiveRoad?.roadAddress
   const labelValue = useWatch({ control: form.control, name: 'label' })
 
-  const mutation = isEdit ? update : create
-  const serverError =
-    mutation.error instanceof ApiError
-      ? mutation.error.message
-      : mutation.error
-        ? '저장 중 문제가 발생했어요. 잠시 후 다시 시도해주세요.'
-        : null
+  // mutation — isEdit ? update : create. 두 mutation 에서 error/isPending 만 공통 사용
+  const serverError = (() => {
+    const err = isEdit ? update.error : create.error
+    if (!err) return null
+    return err instanceof ApiError ? err.message : '저장 중 문제가 발생했어요. 잠시 후 다시 시도해주세요.'
+  })()
+  const isMutationPending = isEdit ? update.isPending : create.isPending
 
   const onSubmit = (values: AddressFormValues) => {
     if (!effectiveRoad) return
     const payload = {
+      label: values.label,
+      detailAddress: values.detailAddress || undefined,
       roadAddress: effectiveRoad.roadAddress,
-      latitude: effectiveRoad.latitude,
-      longitude: effectiveRoad.longitude,
-      ...values,
+      jibunAddress: effectiveRoad.jibunAddress,
+      zonecode: effectiveRoad.zonecode,
+      sigunguCode: effectiveRoad.sigunguCode,
+      roadnameCode: effectiveRoad.roadnameCode,
     }
-    if (isEdit && id) {
-      update.mutate({ id, input: payload }, { onSuccess: () => navigate(ROUTES.ADDRESSES) })
+    if (isEdit && numericId) {
+      update.mutate({ id: numericId, input: payload }, { onSuccess: () => navigate(ROUTES.ADDRESSES) })
     } else {
       create.mutate(payload, { onSuccess: () => navigate(ROUTES.ADDRESSES) })
     }
   }
 
   const handleDelete = () => {
-    if (!id || !window.confirm('이 주소를 삭제할까요?')) return
+    if (!numericId || !window.confirm('이 주소를 삭제할까요?')) return
     setDeleteError(null)
-    remove.mutate(id, {
+    remove.mutate(numericId, {
       onSuccess: () => navigate(ROUTES.ADDRESSES),
       onError: (e) =>
         setDeleteError(e instanceof ApiError ? e.message : '삭제 중 문제가 발생했어요.'),
     })
   }
 
+  async function handleReSearch() {
+    try {
+      const result = await searchAddressForAddresses()
+      setRoadResult(result)
+    } catch {
+      // 위젯 팝업 닫기(취소) — 에러 없이 무시
+    }
+  }
+
   // 가드: edit인데 없는 주소 / add인데 도로명 없음 → 목록으로
   if (isEdit && !addressesPending && !existing) return <Navigate to={ROUTES.ADDRESSES} replace />
   if (!isEdit && !effectiveRoad) return <Navigate to={ROUTES.ADDRESSES} replace />
 
-  const saveDisabled = !displayRoad || !form.formState.isValid || mutation.isPending
+  const saveDisabled = !displayRoad || !form.formState.isValid || isMutationPending
 
   return (
     <ScreenContainer variant="page">
@@ -167,7 +186,7 @@ export function AddressFormPage() {
               </div>
               <button
                 type="button"
-                onClick={() => setSheetOpen(true)}
+                onClick={handleReSearch}
                 className="mt-2 text-[12.5px] font-bold text-secondary-foreground"
               >
                 다시 검색
@@ -216,7 +235,7 @@ export function AddressFormPage() {
             <section className="mb-5">
               <FormField
                 control={form.control}
-                name="detail"
+                name="detailAddress"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel className="font-bold">상세 주소</FormLabel>
@@ -241,17 +260,11 @@ export function AddressFormPage() {
               disabled={saveDisabled}
               className="h-[54px] w-full rounded-xl bg-primary text-base font-bold tracking-[-0.3px] text-white transition active:scale-[0.98] disabled:bg-primary-disabled disabled:active:scale-100"
             >
-              {mutation.isPending ? '저장 중…' : isEdit ? '저장' : '추가하기'}
+              {isMutationPending ? '저장 중…' : isEdit ? '저장' : '추가하기'}
             </button>
           </div>
         </form>
       </Form>
-
-      <AddressSearchSheet
-        open={sheetOpen}
-        onOpenChange={setSheetOpen}
-        onSelect={(result) => setRoadResult(result)}
-      />
     </ScreenContainer>
   )
 }

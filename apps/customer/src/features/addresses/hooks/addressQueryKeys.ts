@@ -2,5 +2,4 @@
 export const addressKeys = {
   all: ['addresses'] as const,
   list: () => [...addressKeys.all, 'list'] as const,
-  search: (query: string) => [...addressKeys.all, 'search', query] as const,
 }
