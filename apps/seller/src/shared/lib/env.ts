@@ -6,6 +6,13 @@ import { z } from 'zod'
  */
 const envSchema = z.object({
   VITE_API_BASE_URL: z.string().url(),
+  // FCM(웹 푸시) — 미설정 시 FCM 비활성(앱은 정상 동작). 값은 공개(클라 노출 정상).
+  VITE_FIREBASE_API_KEY: z.string().optional(),
+  VITE_FIREBASE_AUTH_DOMAIN: z.string().optional(),
+  VITE_FIREBASE_PROJECT_ID: z.string().optional(),
+  VITE_FIREBASE_MESSAGING_SENDER_ID: z.string().optional(),
+  VITE_FIREBASE_APP_ID: z.string().optional(),
+  VITE_FIREBASE_VAPID_KEY: z.string().optional(),
 })
 
 export const env = envSchema.parse(import.meta.env)
