@@ -4,7 +4,20 @@ import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { EditProfilePage } from './EditProfilePage'
-import { __resetProfileStoreForTest } from '../api/profileApi'
+
+// profileApi mock — 실 BE 호출 없이 컴포넌트 렌더 검증
+vi.mock('../api/profileApi', () => ({
+  profileApi: {
+    getProfile: vi.fn().mockResolvedValue({
+      nickname: '마감픽사용자',
+      email: 'user@magampick.com',
+      phone: '010-1234-5678',
+      avatarEmoji: '🐶',
+    }),
+    getStats: vi.fn(),
+    updateNickname: vi.fn(),
+  },
+}))
 
 const mockNavigate = vi.fn()
 vi.mock('react-router', async (importOriginal) => {
@@ -27,7 +40,6 @@ function renderPage() {
 
 describe('EditProfilePage (내 정보 수정)', () => {
   beforeEach(() => {
-    __resetProfileStoreForTest()
     mockNavigate.mockClear()
   })
   afterEach(() => {
