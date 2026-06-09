@@ -5,7 +5,24 @@ import userEvent from '@testing-library/user-event'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { NameEditSheet } from './NameEditSheet'
 import { nameSchema } from '../types'
-import { profileApi, __resetProfileStoreForTest } from '../api/profileApi'
+import { profileApi } from '../api/profileApi'
+import { apiClient } from '@/shared/lib/axios'
+
+vi.mock('@/shared/lib/axios', () => ({
+  apiClient: {
+    get: vi.fn(),
+    post: vi.fn(),
+    patch: vi.fn(),
+  },
+}))
+
+/** 유효한 SellerProfileResponse shape — Zod parse 통과하게 */
+const beUpdatedProfile = {
+  id: 1,
+  email: 'minsoo@magampick.com',
+  name: '박상우',
+  phone: '01012345678',
+}
 
 function renderSheet() {
   const qc = new QueryClient({
@@ -20,7 +37,10 @@ function renderSheet() {
 }
 
 describe('NameEditSheet', () => {
-  beforeEach(() => __resetProfileStoreForTest())
+  beforeEach(() => {
+    vi.clearAllMocks()
+    vi.mocked(apiClient.patch).mockResolvedValue({ data: beUpdatedProfile })
+  })
   afterEach(() => {
     cleanup()
     vi.restoreAllMocks()

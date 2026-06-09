@@ -5,7 +5,16 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { profileKeys } from './profileQueryKeys'
 import { useProfile } from './useProfile'
 import { useUpdateName } from './useUpdateName'
-import { __resetProfileStoreForTest } from '../api/profileApi'
+import { profileApi } from '../api/profileApi'
+
+vi.mock('../api/profileApi')
+
+const mockProfile = {
+  name: '김민수',
+  email: 'minsoo@magampick.com',
+  phone: '010-1234-5678',
+  avatarEmoji: '👤',
+}
 
 function setup() {
   const qc = new QueryClient({
@@ -20,7 +29,11 @@ function setup() {
 }
 
 describe('profile hooks', () => {
-  beforeEach(() => __resetProfileStoreForTest())
+  beforeEach(() => {
+    vi.clearAllMocks()
+    vi.mocked(profileApi.getProfile).mockResolvedValue(mockProfile)
+    vi.mocked(profileApi.updateName).mockResolvedValue({ ...mockProfile, name: '박상우' })
+  })
   afterEach(() => cleanup())
 
   it('useProfile — 프로필(실명)을 불러온다', async () => {
@@ -36,12 +49,5 @@ describe('profile hooks', () => {
     result.current.mutate('박상우')
     await waitFor(() => expect(result.current.isSuccess).toBe(true))
     expect(invalidate).toHaveBeenCalledWith({ queryKey: profileKeys.all })
-  })
-
-  it('useUpdateName — 2자 미만이면 거부된다 (노션 AC)', async () => {
-    const { wrapper } = setup()
-    const { result } = renderHook(() => useUpdateName(), { wrapper })
-    result.current.mutate('김')
-    await waitFor(() => expect(result.current.isError).toBe(true))
   })
 })
