@@ -5,7 +5,23 @@ import userEvent from '@testing-library/user-event'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { NicknameEditSheet } from './NicknameEditSheet'
 import { nicknameSchema } from '../types'
-import { profileApi, __resetProfileStoreForTest } from '../api/profileApi'
+import { profileApi } from '../api/profileApi'
+
+// profileApi mock — updateNickname 이 실 BE 호출하지 않도록
+vi.mock('../api/profileApi', () => ({
+  profileApi: {
+    getProfile: vi.fn(),
+    getStats: vi.fn(),
+    updateNickname: vi.fn(),
+  },
+}))
+
+const MOCK_PROFILE = {
+  nickname: '새로운닉',
+  email: 'user@magampick.com',
+  phone: '010-1234-5678',
+  avatarEmoji: '🐶',
+}
 
 function renderSheet() {
   const qc = new QueryClient({
@@ -20,7 +36,9 @@ function renderSheet() {
 }
 
 describe('NicknameEditSheet', () => {
-  beforeEach(() => __resetProfileStoreForTest())
+  beforeEach(() => {
+    vi.mocked(profileApi.updateNickname).mockResolvedValue(MOCK_PROFILE)
+  })
   afterEach(() => {
     cleanup()
     vi.restoreAllMocks()
@@ -44,13 +62,12 @@ describe('NicknameEditSheet', () => {
 
   it('유효한 닉네임 저장 시 updateNickname 호출 + 시트 닫힘', async () => {
     const user = userEvent.setup()
-    const spy = vi.spyOn(profileApi, 'updateNickname')
     const { onOpenChange } = renderSheet()
     const input = screen.getByLabelText('닉네임')
     await user.clear(input)
     await user.type(input, '새로운닉')
     await user.click(screen.getByRole('button', { name: '저장' }))
-    await waitFor(() => expect(spy).toHaveBeenCalledWith('새로운닉'))
+    await waitFor(() => expect(profileApi.updateNickname).toHaveBeenCalledWith('새로운닉'))
     await waitFor(() => expect(onOpenChange).toHaveBeenCalledWith(false))
   })
 })
