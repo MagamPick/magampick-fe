@@ -18,6 +18,14 @@ describe('clearanceApi', () => {
     resetProductState()
     resetStoreState()
     resetClearanceState()
+    // getStoreStatus 는 실연동(apiClient) — 떨이 등록 검증 의존성을 영업중·마감 21:00 으로 stub.
+    // (개별 케이스 STORE_NOT_OPEN 은 자체 spyOn 으로 override)
+    vi.spyOn(storeApi, 'getStoreStatus').mockResolvedValue({
+      storeId: 1,
+      operationStatus: 'OPEN',
+      canOpenToday: true,
+      todayCloseTime: '21:00',
+    })
     // Date 만 고정(타이머는 실제 유지 → delay 동작). 10:00 → s1 영업중 09–21 안
     vi.useFakeTimers({ toFake: ['Date'] })
     vi.setSystemTime(new Date(2026, 0, 1, 10, 0, 0))
@@ -96,7 +104,7 @@ describe('clearanceApi', () => {
 
     it('매장이 영업중(OPEN)이 아니면 거부한다 (STORE_NOT_OPEN)', async () => {
       vi.spyOn(storeApi, 'getStoreStatus').mockResolvedValue({
-        storeId: 's1',
+        storeId: 1,
         operationStatus: 'BREAK',
         canOpenToday: true,
         todayCloseTime: '21:00',

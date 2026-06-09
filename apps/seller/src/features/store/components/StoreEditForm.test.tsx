@@ -16,7 +16,7 @@ vi.mock('react-router', async (importOriginal) => {
 })
 
 const detail: StoreDetail = {
-  id: 's1',
+  id: 1,
   storeName: '마감픽 베이커리 역삼점',
   storeAddress: '서울 강남구 역삼로 180',
   storeAddressDetail: '1층',
@@ -80,7 +80,7 @@ describe('StoreEditForm', () => {
     await waitFor(() => expect(storeApi.updateStore).toHaveBeenCalledTimes(1))
     expect(storeApi.updateStore).toHaveBeenCalledWith(
       expect.objectContaining({
-        storeId: 's1',
+        storeId: 1,
         storeName: '마감픽 베이커리 역삼본점',
         storeAddress: '서울 강남구 역삼로 180',
         storePhone: '02-501-1234',

@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react'
+import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { MemoryRouter } from 'react-router'
@@ -16,8 +16,8 @@ vi.mock('react-router', async (importOriginal) => {
 })
 
 const STORES = [
-  { id: 's1', name: '마감픽 베이커리 역삼점', operationStatus: 'OPEN' as const },
-  { id: 's2', name: '마감픽 베이커리 강남점', operationStatus: 'CLOSED_TODAY' as const },
+  { id: 1, name: '마감픽 베이커리 역삼점', operationStatus: 'OPEN' as const },
+  { id: 2, name: '마감픽 베이커리 강남점', operationStatus: 'CLOSED_TODAY' as const },
 ]
 
 function renderSwitcher() {
@@ -35,7 +35,7 @@ describe('StoreSwitcher — 매장 전환 모달 (보유 매장 목록 조회)',
   beforeEach(() => {
     vi.clearAllMocks()
     vi.mocked(storeApi.getStores).mockResolvedValue(STORES)
-    useCurrentStoreStore.setState({ selectedStoreId: 's1' })
+    useCurrentStoreStore.setState({ selectedStoreId: 1 })
   })
 
   it('각 매장의 영업 상태 라벨을 함께 보여준다', async () => {
@@ -53,7 +53,7 @@ describe('StoreSwitcher — 매장 전환 모달 (보유 매장 목록 조회)',
     await user.click(await screen.findByRole('button', { name: '매장 전환' }))
     await user.click(await screen.findByText('마감픽 베이커리 강남점'))
 
-    expect(useCurrentStoreStore.getState().selectedStoreId).toBe('s2')
+    expect(useCurrentStoreStore.getState().selectedStoreId).toBe(2)
   })
 
   it('[매장 추가] 누르면 매장 등록 화면(/store/new)으로 이동', async () => {
@@ -79,5 +79,12 @@ describe('StoreSwitcher — 매장 전환 모달 (보유 매장 목록 조회)',
     expect(await screen.findByText('마감픽 베이커리 역삼점')).toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: '매장 전환' }))
     expect(await screen.findByText('영업중')).toBeInTheDocument()
+  })
+
+  it('selectedStoreId 가 null 이면 첫 번째 매장을 자동 선택한다 (init-from-list)', async () => {
+    useCurrentStoreStore.setState({ selectedStoreId: null })
+    renderSwitcher()
+    // 목록(async) 로드 후 effect 가 selectStore(stores[0].id) 실행 → selectedStoreId = 1
+    await waitFor(() => expect(useCurrentStoreStore.getState().selectedStoreId).toBe(1))
   })
 })

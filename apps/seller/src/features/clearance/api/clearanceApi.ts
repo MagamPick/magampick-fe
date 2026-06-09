@@ -138,7 +138,8 @@ export const clearanceApi = {
       throw new ApiError(422, 'CLEARANCE_PRICE_TOO_HIGH', '할인가는 정상가보다 낮아야 해요')
     }
 
-    const status = await storeApi.getStoreStatus(payload.storeId)
+    // clearance 피처 mock storeId는 string — Step2 실연동 시 number로 이전. 임시 변환.
+    const status = await storeApi.getStoreStatus(Number(payload.storeId) || 1)
     if (status.operationStatus !== 'OPEN') {
       throw new ApiError(409, 'STORE_NOT_OPEN', '영업 중일 때만 마감 할인을 등록할 수 있어요')
     }
@@ -203,7 +204,8 @@ export const clearanceApi = {
 
     let nextCloseTime = c.closeTime
     if (payload.closeTime !== undefined) {
-      const status = await storeApi.getStoreStatus(c.storeId)
+      // clearance 피처 mock storeId는 string — Step2 실연동 시 number로 이전. 임시 변환.
+      const status = await storeApi.getStoreStatus(Number(c.storeId) || 1)
       const now = nowHHMM()
       if (!clearanceTimeSchema.safeParse(payload.closeTime).success || payload.closeTime <= now) {
         throw new ApiError(

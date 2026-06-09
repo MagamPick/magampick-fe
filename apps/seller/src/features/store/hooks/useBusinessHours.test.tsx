@@ -14,11 +14,19 @@ describe('useBusinessHours', () => {
     const hours: BusinessHour[] = [{ day: 'mon', openTime: '09:00', closeTime: '21:00' }]
     vi.mocked(storeApi.getBusinessHours).mockResolvedValue(hours)
 
-    const { result } = renderHook(() => useBusinessHours('s1'), {
+    const { result } = renderHook(() => useBusinessHours(1), {
       wrapper: createQueryWrapper(),
     })
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true))
     expect(result.current.data).toEqual(hours)
+  })
+
+  it('storeId 가 null 이면 쿼리를 실행하지 않는다', () => {
+    const { result } = renderHook(() => useBusinessHours(null), {
+      wrapper: createQueryWrapper(),
+    })
+    expect(result.current.fetchStatus).toBe('idle')
+    expect(storeApi.getBusinessHours).not.toHaveBeenCalled()
   })
 })

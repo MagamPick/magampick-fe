@@ -51,10 +51,12 @@ export function ClearanceDetailPage() {
   const params = useParams()
   const parsed = paramsSchema.safeParse(params)
   const id = parsed.success ? parsed.data.id : ''
-  const storeId = useCurrentStoreStore((s) => s.selectedStoreId)
+  const selectedStoreId = useCurrentStoreStore((s) => s.selectedStoreId)
+  // mock hook(string storeId) 전달용 변환 — Step 2 실연동 시 이전
+  const storeId = selectedStoreId != null ? String(selectedStoreId) : ''
 
   const { data: clearance, isLoading, isError, refetch } = useClearance(id)
-  const { data: status } = useStoreStatus(storeId)
+  const { data: status } = useStoreStatus(selectedStoreId)
   const update = useUpdateClearance(id, storeId)
   const close = useCloseClearance(id, storeId)
 

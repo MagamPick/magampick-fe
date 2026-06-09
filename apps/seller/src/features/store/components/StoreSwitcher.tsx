@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { ChevronDown, Plus } from 'lucide-react'
 import { useNavigate } from 'react-router'
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/shared/components/ui/sheet'
@@ -26,6 +26,15 @@ export function StoreSwitcher({ variant = 'hero' }: Props) {
   const { data: stores } = useStores()
   const selectedStoreId = useCurrentStoreStore((s) => s.selectedStoreId)
   const selectStore = useCurrentStoreStore((s) => s.selectStore)
+
+  // 로그인 직후 등록순 첫 매장 자동 선택 (보유목록 명세)
+  // useEffect + zustand action → React Compiler useEffect-setState 제약 없음
+  useEffect(() => {
+    if (stores && stores.length > 0 && selectedStoreId == null) {
+      selectStore(stores[0].id)
+    }
+  }, [stores, selectedStoreId, selectStore])
+
   const current = stores?.find((s) => s.id === selectedStoreId)
   const name = current?.name ?? '매장 선택'
 

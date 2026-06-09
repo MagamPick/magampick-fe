@@ -6,7 +6,6 @@ import { ScreenContainer } from '@/shared/components/ScreenContainer'
 import { EmptyState } from '@/shared/components/EmptyState'
 import { ErrorState } from '@/shared/components/ErrorState'
 import { ListRowSkeleton } from '@/shared/components/Skeletons'
-import { useCurrentStoreStore } from '@/features/store/stores/currentStoreStore'
 import { useRefundRequests } from '../hooks/useRefundRequests'
 import { useRefundActions } from '../hooks/useRefundActions'
 import { RefundRequestCard } from '../components/RefundRequestCard'
@@ -36,7 +35,8 @@ const primaryBtn =
  */
 export function RefundManagePage() {
   const navigate = useNavigate()
-  const storeId = useCurrentStoreStore((s) => s.selectedStoreId)
+  // 환불은 아직 mock 피처(단일 매장 가정) — currentStore(number) 연동은 환불 실연동 단위에서.
+  const storeId = 's1'
   const [searchParams, setSearchParams] = useSearchParams()
 
   const segParam = searchParams.get('seg')

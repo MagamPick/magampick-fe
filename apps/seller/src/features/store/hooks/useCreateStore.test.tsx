@@ -36,7 +36,7 @@ describe('useCreateStore', () => {
   beforeEach(() => vi.clearAllMocks())
 
   it('등록 성공 시 createStore 를 호출하고 보유 매장 목록을 무효화한다', async () => {
-    const created: StoreSummary = { id: 's3', name: input.storeName, operationStatus: 'CLOSED_TODAY' }
+    const created: StoreSummary = { id: 3, name: input.storeName, operationStatus: 'CLOSED_TODAY' }
     vi.mocked(storeApi.createStore).mockResolvedValue(created)
     const { queryClient, wrapper } = setup()
     const invalidate = vi.spyOn(queryClient, 'invalidateQueries')
