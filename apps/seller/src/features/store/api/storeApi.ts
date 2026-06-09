@@ -1,15 +1,14 @@
 /**
- * 매장 도메인 API — 연동 현황:
- *   실연동(Step 1): getStores / getStoreStatus / transitionStatus / getBusinessHours / saveBusinessHours
- *   Mock 유지(Step 2): createStore / checkBusinessNumber / getStore / updateStore
+ * 매장 도메인 API — 실연동 현황 (Step 2 완료):
+ *   getStores / getStoreStatus / transitionStatus / getBusinessHours / saveBusinessHours
+ *   checkBusinessNumber / createStore / getStore / updateStore
  *
  * 실연동 함수: apiClient + Zod 응답 검증 → FE 도메인 타입 매핑 (api-client-convention §3)
- * Step 2 mock: in-memory 상태 유지 (multipart 사진·Daum 주소 위젯 연동 미완)
+ * checkBusinessNumber: POST /seller/stores/business-verification → 204 No Content (void)
+ * createStore / updateStore: multipart/form-data (request JSON + 선택 image File)
  */
 import { z } from 'zod'
 import { apiClient } from '@/shared/lib/axios'
-import { ApiError } from '@/shared/lib/apiError'
-import { WEEKDAY_ORDER } from '../types'
 import { operationStatusSchema } from '../types'
 import { WEEKDAY_TO_BE, BE_TO_WEEKDAY } from '../lib/dayMapping'
 import type {
@@ -59,6 +58,34 @@ const businessHourPayloadSchema = z.object({
 })
 const businessHourPayloadsSchema = z.array(businessHourPayloadSchema)
 
+/**
+ * StoreRegisterResponse (L864) — 매장 등록 응답.
+ * storeId / operationStatus 가 SpringDoc optional 이나 FE 필수 → tighten.
+ */
+const storeRegisterResponseSchema = z.object({
+  storeId: z.number(),
+  operationStatus: operationStatusSchema,
+})
+
+/**
+ * StoreDetailResponse (L1488) — 사장 매장 상세 응답.
+ * id / name / roadAddress / zonecode / phone 을 FE 필수로 tighten.
+ * latitude / longitude / description / createdAt 은 폼 불필요 — passthrough 로 허용.
+ */
+const storeDetailResponseSchema = z
+  .object({
+    id: z.number(),
+    businessNumber: z.string().optional(),
+    name: z.string(),
+    roadAddress: z.string(),
+    jibunAddress: z.string().optional(),
+    detailAddress: z.string().optional(),
+    zonecode: z.string(),
+    phone: z.string(),
+    imageUrl: z.string().optional(),
+  })
+  .passthrough()
+
 // ─── BE 응답 → FE 도메인 매핑 헬퍼 ──────────────────────────────────────────
 
 function toStoreStatus(parsed: z.infer<typeof operationStatusResponseSchema>): StoreStatus {
@@ -79,68 +106,17 @@ function toBusinessHour(payload: z.infer<typeof businessHourPayloadSchema>): Bus
   }
 }
 
-// ─── Step 2 Mock (in-memory) ─────────────────────────────────────────────────
-
-const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
-
-interface StoreRecord {
-  id: number
-  name: string
-  operationStatus: OperationStatus
-  businessHours: BusinessHour[]
-  businessNumber?: string
-  address: string
-  addressDetail?: string
-  phone: string
-  photoAdded: boolean
-}
-
-function seed(): StoreRecord[] {
-  return [
-    {
-      id: 1,
-      name: '마감픽 베이커리 역삼점',
-      operationStatus: 'OPEN',
-      businessHours: WEEKDAY_ORDER.map((day) => ({ day, openTime: '09:00', closeTime: '21:00' })),
-      address: '서울 강남구 역삼로 180',
-      addressDetail: '1층',
-      phone: '02-501-1234',
-      photoAdded: true,
-    },
-    {
-      id: 2,
-      name: '마감픽 베이커리 강남점',
-      operationStatus: 'CLOSED_TODAY',
-      businessHours: [],
-      address: '서울 강남구 테헤란로 152',
-      addressDetail: '2층 201호',
-      phone: '02-555-6789',
-      photoAdded: true,
-    },
-  ]
-}
-
-let stores: StoreRecord[] = seed()
-
-/** 테스트 전용 — 모듈 in-memory 상태 초기화 */
-export function resetStoreState() {
-  stores = seed()
-}
-
-function findMock(storeId: number): StoreRecord {
-  const store = stores.find((s) => s.id === storeId)
-  if (!store) throw new ApiError(404, 'STORE_NOT_FOUND', '매장을 찾을 수 없습니다')
-  return store
-}
-
-function toDetail(store: StoreRecord): StoreDetail {
+function toStoreDetail(parsed: z.infer<typeof storeDetailResponseSchema>): StoreDetail {
   return {
-    id: store.id,
-    storeName: store.name,
-    storeAddress: store.address,
-    storeAddressDetail: store.addressDetail,
-    storePhone: store.phone,
-    photoAdded: store.photoAdded,
+    id: parsed.id,
+    businessNumber: parsed.businessNumber,
+    name: parsed.name,
+    roadAddress: parsed.roadAddress,
+    jibunAddress: parsed.jibunAddress,
+    detailAddress: parsed.detailAddress,
+    zonecode: parsed.zonecode,
+    phone: parsed.phone,
+    imageUrl: parsed.imageUrl,
   }
 }
 
@@ -211,77 +187,72 @@ export const storeApi = {
     return parsed.map(toBusinessHour)
   },
 
-  // ── D. Mock 유지 (Step 2) ──────────────────────────────────────────────────
-  // Daum 위젯·사진 multipart 미연동. storeId/id는 number로 갱신 완료.
+  // ── D. 매장 등록·상세·수정 (실연동 — Step 2) ──────────────────────────────
 
   /**
-   * 사업자 진위확인 — Mock(국세청 사업자등록 API 대체): 앞 3자리 000 이면 실패.
-   * 진위확인 3요소(사업자번호+대표자명+개업일자) 필수. 실연동 시 국세청 API 로 교체.
+   * POST /seller/stores/business-verification — 사업자 진위확인 (204 No Content → void).
+   * 3요소(사업자번호·대표자명·개업일자) → 국세청 조회. 통과 시 resolve, 불일치는 BE 가 4xx 로 거부.
+   * 에러코드: BUSINESS_INFO_MISMATCH / BUSINESS_NUMBER_NOT_ACTIVE / BUSINESS_NUMBER_VERIFICATION_FAILED
    */
   async checkBusinessNumber(input: {
     businessNumber: string
     representativeName: string
     openDate: string
-  }): Promise<{ verified: true }> {
-    await delay(600)
-    const digits = input.businessNumber.replace(/\D/g, '')
-    if (digits.length !== 10 || !input.representativeName.trim() || !input.openDate) {
-      throw new ApiError(400, 'INVALID_INPUT', '사업자번호·대표자명·개업일자를 모두 입력해주세요')
-    }
-    if (digits.slice(0, 3) === '000') {
-      throw new ApiError(404, 'BUSINESS_NUMBER_INVALID', '조회되지 않는 사업자등록번호입니다')
-    }
-    return { verified: true }
+  }): Promise<void> {
+    await apiClient.post('/seller/stores/business-verification', input)
   },
 
   /**
-   * 매장 등록 (경로 B) — Step 2 Mock. 외부 검증·지오코딩·사진 업로드는 Step 2 실연동 예정.
-   * 중복 사업자번호 허용(UNIQUE X). 초기값: operation_status CLOSED_TODAY, 영업시간 0개.
+   * POST /seller/stores — 매장 등록 신청 (multipart/form-data).
+   * `request` JSON 파트(StoreCreateRequest) + 선택 `image` File 파트.
+   * 응답: StoreRegisterResponse { storeId, operationStatus } → StoreSummary 매핑.
+   * name 은 응답에 없으므로 제출한 input.name 으로 구성.
+   * 에러코드: BUSINESS_NUMBER_FORMAT_INVALID / ADDRESS_GEOCODING_FAILED / IMAGE_UPLOAD_FAILED
    */
   async createStore(input: CreateStoreInput): Promise<StoreSummary> {
-    await delay(700)
-    const digits = input.businessNumber.replace(/\D/g, '')
-    if (digits.length !== 10) {
-      throw new ApiError(
-        422,
-        'BUSINESS_NUMBER_FORMAT_INVALID',
-        '사업자등록번호 형식이 올바르지 않습니다',
-      )
+    const { imageFile, ...req } = input
+    const form = new FormData()
+    form.append('request', new Blob([JSON.stringify(req)], { type: 'application/json' }))
+    if (imageFile) {
+      form.append('image', imageFile)
     }
-    const record: StoreRecord = {
-      id: stores.length + 1,
-      name: input.storeName,
-      operationStatus: 'CLOSED_TODAY',
-      businessHours: [],
-      businessNumber: digits,
-      address: input.storeAddress,
-      addressDetail: input.storeAddressDetail?.trim() || undefined,
-      phone: input.storePhone,
-      photoAdded: Boolean(input.photoAdded),
+    const res = await apiClient.post('/seller/stores', form, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    })
+    const parsed = storeRegisterResponseSchema.parse(res.data)
+    return {
+      id: parsed.storeId,
+      name: req.name ?? '',
+      operationStatus: parsed.operationStatus,
     }
-    stores.push(record)
-    return { id: record.id, name: record.name, operationStatus: record.operationStatus }
-  },
-
-  /** 매장 상세 — 수정 폼 미리채움 source. Step 2 Mock. */
-  async getStore(storeId: number): Promise<StoreDetail> {
-    await delay(300)
-    return toDetail(findMock(storeId))
   },
 
   /**
-   * 매장 정보 수정 — Step 2 Mock. 5필드(매장명·주소·상세·전화·사진) 즉시 반영.
-   * 주소→지오코딩 / 사진→OCI 실연동은 Step 2 소관.
+   * GET /seller/stores/{storeId} — 매장 상세 조회 (StoreDetailResponse → StoreDetail).
+   * 수정 폼 미리채움 source. 에러 시 BE 가 4xx 로 거부(STORE_NOT_OWNED 등).
+   */
+  async getStore(storeId: number): Promise<StoreDetail> {
+    const res = await apiClient.get(`/seller/stores/${storeId}`)
+    return toStoreDetail(storeDetailResponseSchema.parse(res.data))
+  },
+
+  /**
+   * PATCH /seller/stores/{storeId} — 매장 정보 수정 (multipart/form-data, 부분 수정).
+   * `request` JSON 파트(StoreUpdateRequest — 변경 필드만) + 선택 `image` File 파트.
+   * 주소 필드(road+코드들)는 호출 측이 변경 시에만 포함 → 미포함 시 지오코딩 재호출 없음.
+   * 에러코드: STORE_NOT_OWNED / ADDRESS_GEOCODING_FAILED / IMAGE_UPLOAD_FAILED
    */
   async updateStore(input: UpdateStoreInput): Promise<StoreDetail> {
-    await delay(500)
-    const store = findMock(input.storeId)
-    store.name = input.storeName
-    store.address = input.storeAddress
-    store.addressDetail = input.storeAddressDetail?.trim() || undefined
-    store.phone = input.storePhone
-    store.photoAdded = Boolean(input.photoAdded)
-    return toDetail(store)
+    const { storeId, imageFile, ...req } = input
+    const form = new FormData()
+    form.append('request', new Blob([JSON.stringify(req)], { type: 'application/json' }))
+    if (imageFile) {
+      form.append('image', imageFile)
+    }
+    const res = await apiClient.patch(`/seller/stores/${storeId}`, form, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    })
+    return toStoreDetail(storeDetailResponseSchema.parse(res.data))
   },
 }
 

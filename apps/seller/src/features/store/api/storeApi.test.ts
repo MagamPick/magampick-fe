@@ -1,15 +1,19 @@
 /**
  * storeApi 단위 테스트
  *
- * - 실연동 함수 (getStores / getStoreStatus / transitionStatus / getBusinessHours / saveBusinessHours):
- *   vi.mock('@/shared/lib/axios')로 apiClient를 목킹하고 응답 shape를 검증
- * - Mock 함수 (checkBusinessNumber / createStore / getStore / updateStore):
- *   in-memory 상태로 직접 호출 (resetStoreState 사용)
+ * 모든 함수 실연동 (Step 2 완료):
+ * vi.mock('@/shared/lib/axios')로 apiClient를 목킹하고 엔드포인트·Zod·매핑을 검증.
+ *
+ * checkBusinessNumber: 204 void
+ * createStore: multipart POST → StoreRegisterResponse → StoreSummary
+ * getStore: GET → StoreDetailResponse → StoreDetail
+ * updateStore: multipart PATCH → StoreDetailResponse → StoreDetail
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { apiClient } from '@/shared/lib/axios'
-import { storeApi, resetStoreState } from './storeApi'
+import { storeApi } from './storeApi'
 import { WEEKDAY_ORDER } from '../types'
+import type { CreateStoreInput, UpdateStoreInput } from '../types'
 
 vi.mock('@/shared/lib/axios', () => ({
   apiClient: {
@@ -92,7 +96,7 @@ describe('storeApi.transitionStatus — BE 실연동', () => {
     expect(status.operationStatus).toBe('BREAK')
   })
 
-  it('STORE_CLOSED_TODAY(409) BE 에러 — normalizeError가 surface (FE mock 제거)', async () => {
+  it('STORE_CLOSED_TODAY(409) BE 에러 — normalizeError가 surface', async () => {
     const err = { status: 409, code: 'STORE_CLOSED_TODAY', message: '오늘은 영업 요일이 아니에요' }
     vi.mocked(apiClient.patch).mockRejectedValue(err)
     await expect(storeApi.transitionStatus({ storeId: 2, to: 'OPEN' })).rejects.toBeTruthy()
@@ -168,147 +172,198 @@ describe('storeApi.saveBusinessHours — BE 실연동', () => {
   })
 })
 
-// ── Mock 함수 테스트 (Step 2 유지) ────────────────────────────────────────────
+// ── Step 2 실연동 함수 테스트 ──────────────────────────────────────────────────
 
-const validStoreInput = {
-  representativeName: '김사장',
+const baseStoreDetailData = {
+  id: 1,
+  name: '마감픽 베이커리 역삼점',
+  roadAddress: '서울 강남구 역삼로 180',
+  zonecode: '06242',
+  phone: '02-501-1234',
   businessNumber: '123-45-67890',
-  openDate: '2020-03-02',
-  storeName: '마감픽 베이커리 신촌점',
-  storeAddress: '서울 마포구 신촌로 123',
-  storeAddressDetail: '1층',
-  storePhone: '02-1234-5678',
-  photoAdded: true,
 }
 
-describe('storeApi.checkBusinessNumber — 사업자 진위확인 (mock)', () => {
-  beforeEach(() => {
-    vi.clearAllMocks()
-    resetStoreState()
-  })
+describe('storeApi.checkBusinessNumber — BE 실연동 (204 void)', () => {
+  beforeEach(() => vi.clearAllMocks())
 
-  it('정상 사업자번호(000 시작 아님) + 대표자명 + 개업일자 → verified', async () => {
-    const res = await storeApi.checkBusinessNumber({
+  it('POST /seller/stores/business-verification 호출 → 204 void 반환', async () => {
+    vi.mocked(apiClient.post).mockResolvedValue({ data: null, status: 204 })
+    await expect(
+      storeApi.checkBusinessNumber({
+        businessNumber: '123-45-67890',
+        representativeName: '김사장',
+        openDate: '2020-03-02',
+      }),
+    ).resolves.toBeUndefined()
+    expect(apiClient.post).toHaveBeenCalledWith('/seller/stores/business-verification', {
       businessNumber: '123-45-67890',
       representativeName: '김사장',
       openDate: '2020-03-02',
     })
-    expect(res.verified).toBe(true)
   })
 
-  it('앞 3자리 000 이면 조회 실패 (BUSINESS_NUMBER_INVALID)', async () => {
+  it('BUSINESS_INFO_MISMATCH(400) 시 BE 에러가 surface 됨', async () => {
+    vi.mocked(apiClient.post).mockRejectedValue({ status: 400, code: 'BUSINESS_INFO_MISMATCH' })
     await expect(
       storeApi.checkBusinessNumber({
-        businessNumber: '000-45-67890',
-        representativeName: '김사장',
-        openDate: '2020-03-02',
+        businessNumber: '000-00-00000',
+        representativeName: '잘못된사장',
+        openDate: '2020-01-01',
       }),
-    ).rejects.toMatchObject({ code: 'BUSINESS_NUMBER_INVALID' })
-  })
-
-  it('대표자명·개업일자 누락 시 거부 (INVALID_INPUT)', async () => {
-    await expect(
-      storeApi.checkBusinessNumber({
-        businessNumber: '123-45-67890',
-        representativeName: '',
-        openDate: '',
-      }),
-    ).rejects.toMatchObject({ code: 'INVALID_INPUT' })
+    ).rejects.toBeTruthy()
   })
 })
 
-describe('storeApi.createStore — 매장 등록 (mock, Step 2)', () => {
-  beforeEach(() => {
-    vi.clearAllMocks()
-    resetStoreState()
-  })
+describe('storeApi.createStore — BE 실연동 (multipart POST)', () => {
+  beforeEach(() => vi.clearAllMocks())
 
-  it('등록 성공 시 CLOSED_TODAY 새 매장을 반환 (id는 number)', async () => {
-    const created = await storeApi.createStore(validStoreInput)
-    expect(typeof created.id).toBe('number')
-    expect(created.operationStatus).toBe('CLOSED_TODAY')
-    expect(created.name).toBe(validStoreInput.storeName)
-  })
+  const input: CreateStoreInput = {
+    businessNumber: '123-45-67890',
+    representativeName: '김사장',
+    openDate: '2020-03-02',
+    name: '마감픽 베이커리 신촌점',
+    roadAddress: '서울 마포구 신촌로 123',
+    zonecode: '04101',
+    phone: '02-1234-5678',
+    sigunguCode: '11440',
+    roadnameCode: '1234567',
+  }
 
-  it('동일 사업자번호로 매장이 이미 있어도 등록 허용 (UNIQUE 없음)', async () => {
-    await storeApi.createStore(validStoreInput)
-    await storeApi.createStore(validStoreInput)
-    // 시드 2개 + 등록 2개 = 4개는 getStores가 BE 실연동이므로 검증 불가 — 직접 createStore 결과만 확인
-    const created = await storeApi.createStore(validStoreInput)
-    expect(typeof created.id).toBe('number')
-  })
-
-  it('사업자번호가 10자리가 아니면 거부 (BUSINESS_NUMBER_FORMAT_INVALID)', async () => {
-    await expect(
-      storeApi.createStore({ ...validStoreInput, businessNumber: '123-45' }),
-    ).rejects.toMatchObject({ code: 'BUSINESS_NUMBER_FORMAT_INVALID' })
-  })
-})
-
-describe('storeApi.getStore — 매장 상세 (mock, Step 2)', () => {
-  beforeEach(() => {
-    vi.clearAllMocks()
-    resetStoreState()
-  })
-
-  it('역삼점(1) 상세 — 매장명·주소·전화·사진 반환 (id는 number)', async () => {
-    const d = await storeApi.getStore(1)
-    expect(d).toMatchObject({ id: 1, storeName: '마감픽 베이커리 역삼점', photoAdded: true })
-    expect(d.storeAddress).toBeTruthy()
-    expect(d.storePhone).toBeTruthy()
-  })
-
-  it('없는 매장 id 는 STORE_NOT_FOUND 거부', async () => {
-    await expect(storeApi.getStore(999)).rejects.toMatchObject({ code: 'STORE_NOT_FOUND' })
-  })
-})
-
-describe('storeApi.updateStore — 매장 정보 수정 (mock, Step 2)', () => {
-  beforeEach(() => {
-    vi.clearAllMocks()
-    resetStoreState()
-  })
-
-  it('수정 후 getStore 가 새 값을 반환 (즉시 반영)', async () => {
-    const updated = await storeApi.updateStore({
-      storeId: 1,
-      storeName: '마감픽 베이커리 역삼본점',
-      storeAddress: '서울 강남구 테헤란로 152',
-      storeAddressDetail: '2층',
-      storePhone: '02-9999-0000',
-      photoAdded: true,
+  it('POST /seller/stores multipart 호출 → StoreRegisterResponse → StoreSummary 매핑', async () => {
+    vi.mocked(apiClient.post).mockResolvedValue({
+      data: { storeId: 3, operationStatus: 'CLOSED_TODAY' },
     })
-    expect(updated.storeName).toBe('마감픽 베이커리 역삼본점')
+    const result = await storeApi.createStore(input)
 
-    const reread = await storeApi.getStore(1)
-    expect(reread.storeName).toBe('마감픽 베이커리 역삼본점')
-    expect(reread.storeAddress).toBe('서울 강남구 테헤란로 152')
-    expect(reread.storePhone).toBe('02-9999-0000')
+    // 엔드포인트·multipart 검증
+    const [path, formData, config] = vi.mocked(apiClient.post).mock.calls[0]!
+    expect(path).toBe('/seller/stores')
+    expect(formData).toBeInstanceOf(FormData)
+    expect((config as { headers: Record<string, string> })?.headers?.['Content-Type']).toBe(
+      'multipart/form-data',
+    )
+    expect((formData as FormData).has('request')).toBe(true)
+    expect((formData as FormData).has('image')).toBe(false) // imageFile 없음
+
+    // 응답 매핑: name은 제출한 input.name 으로 구성 (응답에 name 없음)
+    expect(result).toEqual({
+      id: 3,
+      name: input.name,
+      operationStatus: 'CLOSED_TODAY',
+    })
   })
 
-  it('없는 매장 id 는 STORE_NOT_FOUND 거부', async () => {
-    await expect(
-      storeApi.updateStore({
-        storeId: 999,
-        storeName: 'x',
-        storeAddress: 'y',
-        storePhone: 'z',
-      }),
-    ).rejects.toMatchObject({ code: 'STORE_NOT_FOUND' })
+  it('imageFile 있을 때 FormData에 image 파트 포함', async () => {
+    vi.mocked(apiClient.post).mockResolvedValue({
+      data: { storeId: 4, operationStatus: 'CLOSED_TODAY' },
+    })
+    const imageFile = new File(['img'], 'store.png', { type: 'image/png' })
+    await storeApi.createStore({ ...input, imageFile })
+
+    const [, formData] = vi.mocked(apiClient.post).mock.calls[0]!
+    expect((formData as FormData).has('image')).toBe(true)
+  })
+
+  it('BE 응답 storeId 누락 시 Zod parse 실패 (runtime 게이트)', async () => {
+    vi.mocked(apiClient.post).mockResolvedValue({ data: { operationStatus: 'CLOSED_TODAY' } })
+    await expect(storeApi.createStore(input)).rejects.toBeTruthy()
   })
 })
 
-describe('storeApi.createStore → getStore 정보 영속화 (mock)', () => {
-  beforeEach(() => {
-    vi.clearAllMocks()
-    resetStoreState()
+describe('storeApi.getStore — BE 실연동', () => {
+  beforeEach(() => vi.clearAllMocks())
+
+  it('GET /seller/stores/1 호출 → StoreDetailResponse → StoreDetail 매핑', async () => {
+    vi.mocked(apiClient.get).mockResolvedValue({ data: baseStoreDetailData })
+    const detail = await storeApi.getStore(1)
+    expect(apiClient.get).toHaveBeenCalledWith('/seller/stores/1')
+    expect(detail).toMatchObject({
+      id: 1,
+      name: '마감픽 베이커리 역삼점',
+      roadAddress: '서울 강남구 역삼로 180',
+      zonecode: '06242',
+      phone: '02-501-1234',
+    })
   })
 
-  it('등록한 매장도 getStore 로 주소·전화가 조회된다 (미리채움 가능)', async () => {
-    const created = await storeApi.createStore(validStoreInput)
-    const d = await storeApi.getStore(created.id)
-    expect(d.storeName).toBe(validStoreInput.storeName)
-    expect(d.storeAddress).toBe(validStoreInput.storeAddress)
-    expect(d.storePhone).toBe(validStoreInput.storePhone)
+  it('선택 필드(jibunAddress/detailAddress/imageUrl) 없으면 undefined', async () => {
+    vi.mocked(apiClient.get).mockResolvedValue({ data: baseStoreDetailData })
+    const detail = await storeApi.getStore(1)
+    expect(detail.jibunAddress).toBeUndefined()
+    expect(detail.detailAddress).toBeUndefined()
+    expect(detail.imageUrl).toBeUndefined()
+  })
+
+  it('선택 필드 있을 때 StoreDetail 에 포함', async () => {
+    vi.mocked(apiClient.get).mockResolvedValue({
+      data: {
+        ...baseStoreDetailData,
+        jibunAddress: '서울 강남구 역삼동 123',
+        detailAddress: '1층',
+        imageUrl: 'https://example.com/store.jpg',
+      },
+    })
+    const detail = await storeApi.getStore(1)
+    expect(detail.jibunAddress).toBe('서울 강남구 역삼동 123')
+    expect(detail.detailAddress).toBe('1층')
+    expect(detail.imageUrl).toBe('https://example.com/store.jpg')
+  })
+
+  it('BE 응답 name 누락 시 Zod parse 실패 (runtime 게이트)', async () => {
+    vi.mocked(apiClient.get).mockResolvedValue({
+      data: { id: 1, roadAddress: '서울 강남구 역삼로 180', zonecode: '06242', phone: '02-501-1234' },
+    })
+    await expect(storeApi.getStore(1)).rejects.toBeTruthy()
+  })
+})
+
+describe('storeApi.updateStore — BE 실연동 (multipart PATCH)', () => {
+  beforeEach(() => vi.clearAllMocks())
+
+  const input: UpdateStoreInput = { storeId: 1, name: '역삼본점', phone: '02-9999-0000' }
+
+  it('PATCH /seller/stores/1 multipart 호출 → StoreDetailResponse → StoreDetail 매핑', async () => {
+    vi.mocked(apiClient.patch).mockResolvedValue({
+      data: { ...baseStoreDetailData, name: '역삼본점', phone: '02-9999-0000' },
+    })
+    const result = await storeApi.updateStore(input)
+
+    const [path, formData, config] = vi.mocked(apiClient.patch).mock.calls[0]!
+    expect(path).toBe('/seller/stores/1')
+    expect(formData).toBeInstanceOf(FormData)
+    expect((config as { headers: Record<string, string> })?.headers?.['Content-Type']).toBe(
+      'multipart/form-data',
+    )
+    expect((formData as FormData).has('request')).toBe(true)
+    expect(result.name).toBe('역삼본점')
+    expect(result.phone).toBe('02-9999-0000')
+  })
+
+  it('imageFile 있을 때 FormData에 image 파트 포함', async () => {
+    vi.mocked(apiClient.patch).mockResolvedValue({ data: baseStoreDetailData })
+    const imageFile = new File(['img'], 'store.png', { type: 'image/png' })
+    await storeApi.updateStore({ ...input, imageFile })
+
+    const [, formData] = vi.mocked(apiClient.patch).mock.calls[0]!
+    expect((formData as FormData).has('image')).toBe(true)
+  })
+
+  it('주소 변경 포함 시 roadAddress 등 코드들이 request JSON에 담김', async () => {
+    vi.mocked(apiClient.patch).mockResolvedValue({ data: baseStoreDetailData })
+    await storeApi.updateStore({
+      storeId: 1,
+      roadAddress: '서울 강남구 테헤란로 152',
+      zonecode: '06235',
+      sigunguCode: '11680',
+      roadnameCode: '3179999',
+    })
+
+    const [, formData] = vi.mocked(apiClient.patch).mock.calls[0]!
+    // request Blob 에 roadAddress 가 담겼는지 확인
+    const requestBlob = (formData as FormData).get('request') as Blob
+    const requestText = await requestBlob.text()
+    const requestJson = JSON.parse(requestText) as Record<string, unknown>
+    expect(requestJson.roadAddress).toBe('서울 강남구 테헤란로 152')
+    expect(requestJson.sigunguCode).toBe('11680')
   })
 })

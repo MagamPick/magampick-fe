@@ -22,21 +22,23 @@ function setup() {
 }
 
 const input: CreateStoreInput = {
-  representativeName: '김사장',
   businessNumber: '123-45-67890',
+  representativeName: '김사장',
   openDate: '2020-03-02',
-  storeName: '마감픽 베이커리 신촌점',
-  storeAddress: '서울 마포구 신촌로 123',
-  storeAddressDetail: '1층',
-  storePhone: '02-1234-5678',
-  photoAdded: true,
+  name: '마감픽 베이커리 신촌점',
+  roadAddress: '서울 마포구 신촌로 123',
+  detailAddress: '1층',
+  zonecode: '04101',
+  phone: '02-1234-5678',
+  sigunguCode: '11440',
+  roadnameCode: '1234567',
 }
 
 describe('useCreateStore', () => {
   beforeEach(() => vi.clearAllMocks())
 
   it('등록 성공 시 createStore 를 호출하고 보유 매장 목록을 무효화한다', async () => {
-    const created: StoreSummary = { id: 3, name: input.storeName, operationStatus: 'CLOSED_TODAY' }
+    const created: StoreSummary = { id: 3, name: input.name, operationStatus: 'CLOSED_TODAY' }
     vi.mocked(storeApi.createStore).mockResolvedValue(created)
     const { queryClient, wrapper } = setup()
     const invalidate = vi.spyOn(queryClient, 'invalidateQueries')
@@ -52,12 +54,24 @@ describe('useCreateStore', () => {
 
   it('거부(BUSINESS_NUMBER_FORMAT_INVALID) 시 에러를 노출한다', async () => {
     vi.mocked(storeApi.createStore).mockRejectedValue(
-      new ApiError(422, 'BUSINESS_NUMBER_FORMAT_INVALID', '사업자등록번호 형식이 올바르지 않습니다'),
+      new ApiError(400, 'BUSINESS_NUMBER_FORMAT_INVALID', '사업자등록번호 형식이 올바르지 않습니다'),
     )
     const { wrapper } = setup()
     const { result } = renderHook(() => useCreateStore(), { wrapper })
 
     result.current.mutate({ ...input, businessNumber: '123' })
+
+    await waitFor(() => expect(result.current.isError).toBe(true))
+  })
+
+  it('ADDRESS_GEOCODING_FAILED 에러 시 isError 가 true', async () => {
+    vi.mocked(storeApi.createStore).mockRejectedValue(
+      new ApiError(400, 'ADDRESS_GEOCODING_FAILED', '주소 지오코딩에 실패했습니다'),
+    )
+    const { wrapper } = setup()
+    const { result } = renderHook(() => useCreateStore(), { wrapper })
+
+    result.current.mutate(input)
 
     await waitFor(() => expect(result.current.isError).toBe(true))
   })

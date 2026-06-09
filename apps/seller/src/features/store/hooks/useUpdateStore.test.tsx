@@ -22,20 +22,18 @@ function setup() {
 
 const input: UpdateStoreInput = {
   storeId: 1,
-  storeName: '마감픽 베이커리 역삼본점',
-  storeAddress: '서울 강남구 테헤란로 152',
-  storeAddressDetail: '2층',
-  storePhone: '02-9999-0000',
-  photoAdded: true,
+  name: '마감픽 베이커리 역삼본점',
+  phone: '02-9999-0000',
+  detailAddress: '2층',
 }
 
 const updated: StoreDetail = {
   id: 1,
-  storeName: input.storeName,
-  storeAddress: input.storeAddress,
-  storeAddressDetail: input.storeAddressDetail,
-  storePhone: input.storePhone,
-  photoAdded: true,
+  name: '마감픽 베이커리 역삼본점',
+  roadAddress: '서울 강남구 역삼로 180',
+  zonecode: '06242',
+  phone: '02-9999-0000',
+  detailAddress: '2층',
 }
 
 describe('useUpdateStore', () => {

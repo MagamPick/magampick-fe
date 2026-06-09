@@ -11,11 +11,11 @@ vi.mock('../api/storeApi')
 
 const detail: StoreDetail = {
   id: 1,
-  storeName: '마감픽 베이커리 역삼점',
-  storeAddress: '서울 강남구 역삼로 180',
-  storeAddressDetail: '1층',
-  storePhone: '02-501-1234',
-  photoAdded: true,
+  name: '마감픽 베이커리 역삼점',
+  roadAddress: '서울 강남구 역삼로 180',
+  detailAddress: '1층',
+  zonecode: '06242',
+  phone: '02-501-1234',
 }
 
 function renderPage() {

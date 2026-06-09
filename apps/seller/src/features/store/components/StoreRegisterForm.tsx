@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useMemo, useRef, useState, type ChangeEvent } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useNavigate } from 'react-router'
@@ -17,12 +17,15 @@ import { Calendar } from '@/shared/components/ui/calendar'
 import { cn } from '@/shared/lib/utils'
 import { ApiError } from '@/shared/lib/apiError'
 import { ROUTES } from '@/shared/lib/routes'
+import { searchStoreAddress } from '@/features/auth/lib/addressSearch'
 import { useCurrentStoreStore } from '../stores/currentStoreStore'
 import { useCreateStore } from '../hooks/useCreateStore'
 import { useVerifyBusiness } from '../hooks/useVerifyBusiness'
-import { SAMPLE_ADDRESSES } from '../lib/sampleAddresses'
 import { storeRegistrationSchema } from '../types'
 import type { StoreRegistrationInput } from '../types'
+
+/** 대표 사진 최대 용량(MB) */
+const MAX_IMAGE_MB = 5
 
 // 프로토타입 bizNo input — 숫자 10자리 → 000-00-00000 자동 포맷
 function formatBizNo(value: string): string {
@@ -43,15 +46,19 @@ const parseYMD = (s: string) => {
 /**
  * 매장 등록 신청 폼 (경로 B — 로그인 사장 추가 등록). 회원가입 Step5 매장 폼과 동일 골격.
  * 자동 승인: 사업자 진위확인([조회하기]) 통과 후 등록 → 새 매장을 현재 매장으로 선택하고 홈으로.
- * 사진은 선택(mock 토글). 디테일·정책 → 노션 「매장 등록 신청」.
+ * 대표 사진: hidden input + button + useMemo objectURL 미리보기 + cleanup (Step5Store 패턴).
+ * 주소: Daum 우편번호 위젯(searchStoreAddress) → StoreAddress 구조체 저장.
  */
 export function StoreRegisterForm() {
   const navigate = useNavigate()
   const selectStore = useCurrentStoreStore((s) => s.selectStore)
   const create = useCreateStore()
   const biz = useVerifyBusiness()
-  const [addrOpen, setAddrOpen] = useState(false)
   const [dateOpen, setDateOpen] = useState(false)
+  const [addrPending, setAddrPending] = useState(false)
+  const [addrError, setAddrError] = useState<string | null>(null)
+  const [photoError, setPhotoError] = useState<string | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   const form = useForm<StoreRegistrationInput>({
     resolver: zodResolver(storeRegistrationSchema),
@@ -62,21 +69,49 @@ export function StoreRegisterForm() {
       openDate: '',
       bizVerified: false,
       storeName: '',
-      storeAddress: '',
+      storeAddress: null,
       storeAddressDetail: '',
       storePhone: '',
-      photoAdded: false,
+      storeImageFile: undefined,
     },
   })
 
-  const photoAdded = !!form.watch('photoAdded')
+  const storeImageFile = form.watch('storeImageFile')
   const representativeName = form.watch('representativeName')
   const businessNumber = form.watch('businessNumber')
   const openDate = form.watch('openDate')
   const bizDigits = (businessNumber ?? '').replace(/\D/g, '')
 
-  const togglePhoto = () =>
-    form.setValue('photoAdded', !photoAdded, { shouldValidate: true, shouldDirty: true })
+  // 대표 사진 미리보기 — File 에서 object URL 파생(리마운트에도 유지) + 정리
+  const previewUrl = useMemo(
+    () => (storeImageFile ? URL.createObjectURL(storeImageFile) : null),
+    [storeImageFile],
+  )
+  useEffect(() => {
+    if (!previewUrl) return
+    return () => URL.revokeObjectURL(previewUrl)
+  }, [previewUrl])
+
+  const onPickFile = (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    e.target.value = '' // 같은 파일 재선택 허용
+    if (!file) return
+    if (!file.type.startsWith('image/')) {
+      setPhotoError('이미지 파일만 등록할 수 있어요')
+      return
+    }
+    if (file.size > MAX_IMAGE_MB * 1024 * 1024) {
+      setPhotoError(`이미지는 ${MAX_IMAGE_MB}MB 이하만 등록할 수 있어요`)
+      return
+    }
+    setPhotoError(null)
+    form.setValue('storeImageFile', file, { shouldDirty: true })
+  }
+
+  const removePhoto = () => {
+    form.setValue('storeImageFile', undefined, { shouldDirty: true })
+    setPhotoError(null)
+  }
 
   // 진위확인 입력(대표자명·번호·개업일자) 변경 시 조회 결과·검증 플래그 리셋 (재조회 강제)
   const resetBiz = () => {
@@ -101,22 +136,38 @@ export function StoreRegisterForm() {
     openDate.trim().length > 0 &&
     !biz.isPending
 
-  const selectAddr = (addr: string) => {
-    form.setValue('storeAddress', addr, { shouldValidate: true })
-    setAddrOpen(false)
+  // Daum 우편번호 위젯 — 도로명 주소 + 지오코딩 키(sigunguCode·roadnameCode)를 받아 구조화 저장
+  const searchAddress = async () => {
+    setAddrPending(true)
+    setAddrError(null)
+    try {
+      const address = await searchStoreAddress()
+      form.setValue('storeAddress', address, { shouldValidate: true, shouldDirty: true })
+      form.clearErrors('storeAddress')
+    } catch (error) {
+      setAddrError(error instanceof Error ? error.message : '주소를 선택하지 못했어요')
+    } finally {
+      setAddrPending(false)
+    }
   }
 
   function onSubmit(values: StoreRegistrationInput) {
+    // storeAddress non-null 은 refine 이 보장
+    const addr = values.storeAddress!
     create.mutate(
       {
-        representativeName: values.representativeName,
         businessNumber: values.businessNumber,
+        representativeName: values.representativeName,
         openDate: values.openDate,
-        storeName: values.storeName,
-        storeAddress: values.storeAddress,
-        storeAddressDetail: values.storeAddressDetail?.trim() || undefined,
-        storePhone: values.storePhone,
-        photoAdded: values.photoAdded,
+        name: values.storeName,
+        roadAddress: addr.roadAddress,
+        jibunAddress: addr.jibunAddress,
+        detailAddress: values.storeAddressDetail?.trim() || undefined,
+        zonecode: addr.zonecode,
+        phone: values.storePhone,
+        sigunguCode: addr.sigunguCode,
+        roadnameCode: addr.roadnameCode,
+        imageFile: values.storeImageFile,
       },
       {
         onSuccess: (store) => {
@@ -148,32 +199,49 @@ export function StoreRegisterForm() {
             사업자 정보를 확인하면 심사 없이 바로 등록돼요.
           </p>
 
-          {/* 대표 사진 — mock 토글 (선택). 실제 업로드는 BE·연동 PR */}
-          <button
-            type="button"
-            onClick={togglePhoto}
-            className={cn(
-              'mb-5 flex h-[168px] w-full flex-col items-center justify-center gap-2 rounded-[14px] border-[1.5px] transition',
-              photoAdded
-                ? 'border-solid border-primary bg-gradient-to-br from-secondary to-[#ffd9c7] text-secondary-foreground'
-                : 'border-dashed border-border bg-background text-muted-foreground',
-            )}
-          >
-            <span className="text-[34px] leading-none">{photoAdded ? '🏪' : '📷'}</span>
-            <span className="text-[13.5px] font-semibold">
-              {photoAdded ? '대표 사진 등록 완료' : '대표 사진 등록'}
-            </span>
-            <span
+          {/* 대표 사진 — 선택 업로드 (multipart image 파트). 없어도 등록 완료 */}
+          <div className="mb-5">
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              aria-label="매장 대표 사진"
+              onChange={onPickFile}
+            />
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
               className={cn(
-                'text-[11.5px]',
-                photoAdded ? 'text-secondary-foreground' : 'text-placeholder',
+                'flex h-[168px] w-full flex-col items-center justify-center gap-2 overflow-hidden rounded-[14px] border-[1.5px] transition',
+                storeImageFile
+                  ? 'border-solid border-primary'
+                  : 'border-dashed border-border bg-background text-muted-foreground',
               )}
             >
-              {photoAdded
-                ? '탭하면 사진을 제거합니다 (데모)'
-                : '매장 외관이 잘 보이는 사진을 권장해요'}
-            </span>
-          </button>
+              {previewUrl ? (
+                <img src={previewUrl} alt="매장 대표 사진 미리보기" className="size-full object-cover" />
+              ) : (
+                <>
+                  <span className="text-[34px] leading-none">📷</span>
+                  <span className="text-[13.5px] font-semibold">대표 사진 등록</span>
+                  <span className="text-[11.5px] text-placeholder">
+                    매장 외관이 잘 보이는 사진을 권장해요 (선택)
+                  </span>
+                </>
+              )}
+            </button>
+            {storeImageFile && (
+              <button
+                type="button"
+                onClick={removePhoto}
+                className="mt-2 text-[12.5px] font-semibold text-muted-foreground underline"
+              >
+                사진 제거
+              </button>
+            )}
+            {photoError && <p className="mt-1.5 text-xs text-destructive">{photoError}</p>}
+          </div>
 
           <FormField
             control={form.control}
@@ -350,17 +418,25 @@ export function StoreRegisterForm() {
                       placeholder="주소를 검색하세요"
                       readOnly
                       className="pr-[104px]"
-                      {...field}
+                      name={field.name}
+                      ref={field.ref}
+                      onBlur={field.onBlur}
+                      value={field.value?.roadAddress ?? ''}
                     />
                   </FormControl>
                   <button
                     type="button"
-                    onClick={() => setAddrOpen(true)}
-                    className="absolute right-1.5 top-1/2 h-11 -translate-y-1/2 rounded-lg bg-secondary px-3.5 text-[13px] font-bold text-secondary-foreground"
+                    onClick={searchAddress}
+                    disabled={addrPending}
+                    className="absolute right-1.5 top-1/2 h-11 -translate-y-1/2 rounded-lg bg-secondary px-3.5 text-[13px] font-bold text-secondary-foreground disabled:opacity-50"
                   >
-                    주소 검색
+                    {addrPending ? '검색 중' : '주소 검색'}
                   </button>
                 </div>
+                <p className="mt-1.5 text-xs text-muted-foreground">
+                  도로명·지번 모두 검색 가능해요. 위치는 등록한 주소를 기준으로 자동 설정됩니다.
+                </p>
+                {addrError && <p className="mt-1.5 text-xs text-destructive">{addrError}</p>}
                 <FormMessage />
               </FormItem>
             )}
@@ -416,27 +492,6 @@ export function StoreRegisterForm() {
             {create.isPending ? '등록 중…' : '매장 등록'}
           </button>
         </div>
-
-        <Sheet open={addrOpen} onOpenChange={setAddrOpen}>
-          <SheetContent side="bottom" className="max-h-[70vh] rounded-t-[22px]">
-            <SheetHeader>
-              <SheetTitle>주소 검색</SheetTitle>
-            </SheetHeader>
-            <ul className="overflow-y-auto px-5 pb-6">
-              {SAMPLE_ADDRESSES.map((addr) => (
-                <li key={addr}>
-                  <button
-                    type="button"
-                    onClick={() => selectAddr(addr)}
-                    className="w-full border-b border-border py-3.5 text-left text-sm font-bold text-foreground last:border-b-0"
-                  >
-                    {addr}
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </SheetContent>
-        </Sheet>
       </form>
     </Form>
   )
