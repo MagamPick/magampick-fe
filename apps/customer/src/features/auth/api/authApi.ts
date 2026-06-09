@@ -2,13 +2,13 @@ import { ApiError } from '@/shared/lib/apiError'
 import { apiClient } from '@/shared/lib/axios'
 import {
   passwordSchema,
-  PASSWORD_RESET_ERROR,
   PASSWORD_CHANGE_ERROR,
   kakaoExchangeResultSchema,
   tokenResponseSchema,
   termsSchema,
   phoneVerificationTokenResponseSchema,
   emailAvailabilityResponseSchema,
+  passwordResetVerifyResponseSchema,
 } from '../types'
 import type {
   SignupInput,
@@ -23,16 +23,6 @@ const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
 /** Mock: 로그인 사용자의 현재 비밀번호 (실연동 시 BE 가 세션 사용자 해시로 검증) */
 const MOCK_CURRENT_PASSWORD = 'Magampick1!'
-
-/**
- * Mock: 비밀번호 재설정 매칭용 등록 계정 (이메일+휴대폰 쌍). 휴대폰 unique X 라 쌍으로만 식별.
- * 실연동 시 BE 가 customers/sellers 조회 + verificationToken 의 휴대폰 일치 검증으로 대체.
- * socialOnly = 카카오 가입(password_hash NULL) — 매칭은 되지만 비번 재설정 불가.
- */
-const RESET_ACCOUNTS: { email: string; phone: string; socialOnly: boolean }[] = [
-  { email: 'demo@magampick.com', phone: '010-1234-5678', socialOnly: false },
-  { email: 'kakao.user@kakao.com', phone: '010-2222-3333', socialOnly: true },
-]
 
 export const authApi = {
   async listTerms(): Promise<SignupTerm[]> {
@@ -124,60 +114,30 @@ export const authApi = {
   /**
    * 비밀번호 재설정 Step 2→3 게이트 — 이메일↔휴대폰 매칭 + 소셜전용 차단 후 resetToken 발급.
    * 존재 비노출: 이메일 미등록·휴대폰 불일치 모두 동일 RESET_VERIFICATION_FAILED (노션 AC).
-   * Mock: 실연동 시 verificationToken 의 휴대폰 일치 검증 + 계정 조회로 교체.
+   * BE 가 verificationToken 의 휴대폰 일치 검증 + 계정 조회 후 resetToken 발급.
    */
   async verifyPasswordResetIdentity(input: {
     email: string
     phone: string
     verificationToken: string
   }): Promise<{ resetToken: string }> {
-    await delay(600)
-    if (!input.verificationToken) {
-      throw new ApiError(
-        400,
-        PASSWORD_RESET_ERROR.PHONE_VERIFICATION_REQUIRED,
-        '휴대폰 본인인증이 필요합니다',
-      )
-    }
-    const account = RESET_ACCOUNTS.find((a) => a.email === input.email && a.phone === input.phone)
-    if (!account) {
-      throw new ApiError(
-        404,
-        PASSWORD_RESET_ERROR.RESET_VERIFICATION_FAILED,
-        '입력하신 정보와 일치하는 계정을 찾을 수 없어요',
-      )
-    }
-    if (account.socialOnly) {
-      throw new ApiError(
-        409,
-        PASSWORD_RESET_ERROR.SOCIAL_ONLY_ACCOUNT,
-        '카카오로 가입한 계정이에요. 카카오로 로그인해 주세요',
-      )
-    }
-    return { resetToken: `mock-reset-token:${input.email}` }
+    const res = await apiClient.post('/auth/password-resets/verify-identity', {
+      email: input.email,
+      phone: input.phone,
+      verificationToken: input.verificationToken,
+    })
+    return passwordResetVerifyResponseSchema.parse(res.data)
   },
 
   /**
-   * 새 비밀번호 저장 — Mock: 실연동 시 비번 해시 업데이트 + 해당 계정 Redis refresh 키 일괄 삭제
-   * (모든 기기 강제 로그아웃, 자동 로그인 X — 노션 명세). 여기선 정책 검증 후 resolve.
+   * 새 비밀번호 저장 — BE 가 비번 해시 업데이트 + 해당 계정 Redis refresh 키 일괄 삭제
+   * (모든 기기 강제 로그아웃, 자동 로그인 X — 노션 명세). 204 No Content.
    */
   async resetPassword(input: { resetToken: string; newPassword: string }): Promise<void> {
-    await delay(700)
-    if (!input.resetToken) {
-      throw new ApiError(
-        400,
-        PASSWORD_RESET_ERROR.PHONE_VERIFICATION_REQUIRED,
-        '본인인증이 필요합니다',
-      )
-    }
-    if (!passwordSchema.safeParse(input.newPassword).success) {
-      throw new ApiError(
-        400,
-        PASSWORD_RESET_ERROR.PASSWORD_POLICY_VIOLATION,
-        '비밀번호는 8자 이상, 영문·숫자·특수문자를 포함해야 합니다',
-      )
-    }
-    // Mock: 실제 갱신 없음
+    await apiClient.post('/auth/password-resets/confirm', {
+      resetToken: input.resetToken,
+      newPassword: input.newPassword,
+    })
   },
 
   /**
