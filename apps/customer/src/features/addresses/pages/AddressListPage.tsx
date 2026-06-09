@@ -7,23 +7,23 @@ import { EmptyState } from '@/shared/components/EmptyState'
 import { ErrorState } from '@/shared/components/ErrorState'
 import { ListRowSkeleton } from '@/shared/components/Skeletons'
 import { AddressCard } from '../components/AddressCard'
-import { AddressSearchSheet } from '../components/AddressSearchSheet'
 import { useAddresses } from '../hooks/useAddresses'
 import { useSetDefaultAddress } from '../hooks/useSetDefaultAddress'
 import { useReverseGeocode } from '../hooks/useReverseGeocode'
+import { searchAddressForAddresses } from '../lib/addressSearch'
 import type { AddressSearchResult } from '../types'
 
 /**
- * 주소 설정 (프로토타입 60-addresses). 저장된 주소 목록 + 현재위치/검색으로 추가 진입 + 기본 전환.
- * 추가 흐름: 검색/현재위치로 도로명+좌표를 정한 뒤 입력 페이지(/addresses/new)로 state 전달.
- * 진입(마이페이지·홈 헤더 링크)은 후속 PR — 지금은 /addresses 직접 진입으로 동작.
+ * 주소 설정 (프로토타입 60-addresses). 저장된 주소 목록 + 다음 위젯/현재위치로 추가 진입 + 기본 전환.
+ * 추가 흐름: 다음 우편번호 위젯(팝업) 또는 GPS 역지오코딩으로 도로명을 정한 뒤
+ *           입력 페이지(/addresses/new)로 state 전달.
  */
 export function AddressListPage() {
   const navigate = useNavigate()
   const { data: addresses, isPending, isError, refetch } = useAddresses()
   const setDefault = useSetDefaultAddress()
   const reverseGeocode = useReverseGeocode()
-  const [sheetOpen, setSheetOpen] = useState(false)
+  const [gpsError, setGpsError] = useState<string | null>(null)
 
   // 기본 주소를 맨 위로 (배달앱 패턴) — 나머지는 등록순 유지(stable sort)
   const sortedAddresses = addresses
@@ -34,8 +34,22 @@ export function AddressListPage() {
     navigate(ROUTES.ADDRESS_NEW, { state: { result } })
   }
 
-  function useCurrentLocation() {
-    reverseGeocode.mutate(undefined, { onSuccess: (result) => goToNew(result) })
+  async function handleSearchAddress() {
+    try {
+      const result = await searchAddressForAddresses()
+      goToNew(result)
+    } catch {
+      // 위젯 팝업 닫기(취소) — 에러 없이 무시
+    }
+  }
+
+  function handleCurrentLocation() {
+    setGpsError(null)
+    reverseGeocode.mutate(undefined, {
+      onSuccess: (result) => goToNew(result),
+      onError: (e) =>
+        setGpsError(e instanceof Error ? e.message : '위치를 가져오지 못했어요.'),
+    })
   }
 
   return (
@@ -53,10 +67,10 @@ export function AddressListPage() {
       </header>
 
       <main className="flex-1 px-5 pb-10">
-        {/* 검색바 */}
+        {/* 검색바 — 다음 우편번호 위젯 팝업 */}
         <button
           type="button"
-          onClick={() => setSheetOpen(true)}
+          onClick={handleSearchAddress}
           className="mt-4 flex w-full items-center gap-2 rounded-xl border-[1.5px] border-border bg-background px-3.5 py-3 text-left"
         >
           <Search className="h-4 w-4 shrink-0 text-muted-foreground" />
@@ -66,18 +80,23 @@ export function AddressListPage() {
         {/* 현재 위치로 찾기 */}
         <button
           type="button"
-          onClick={useCurrentLocation}
+          onClick={handleCurrentLocation}
           disabled={reverseGeocode.isPending}
           className="mt-3 flex min-h-[50px] w-full items-center justify-center gap-2 rounded-xl border-[1.25px] border-border bg-card px-4 text-sm font-bold text-foreground disabled:opacity-60"
         >
           <LocateFixed className="h-[18px] w-[18px]" />
           {reverseGeocode.isPending ? '위치 찾는 중…' : '현재 위치로 찾기'}
         </button>
+        {gpsError && (
+          <p role="alert" className="mt-2 text-[12.5px] text-destructive">
+            {gpsError}
+          </p>
+        )}
 
-        {/* 주소 추가 */}
+        {/* 주소 추가 — 다음 우편번호 위젯 팝업 */}
         <button
           type="button"
-          onClick={() => setSheetOpen(true)}
+          onClick={handleSearchAddress}
           className="mt-[18px] flex min-h-[56px] w-full items-center gap-2.5 text-[16px] font-extrabold text-foreground"
         >
           <Plus className="h-5 w-5" />
@@ -109,12 +128,6 @@ export function AddressListPage() {
           </EmptyState>
         )}
       </main>
-
-      <AddressSearchSheet
-        open={sheetOpen}
-        onOpenChange={setSheetOpen}
-        onSelect={(result) => goToNew(result)}
-      />
     </ScreenContainer>
   )
 }

@@ -3,7 +3,7 @@ import { addressesApi } from '../api/addressesApi'
 import { addressKeys } from './addressQueryKeys'
 import type { CreateAddressInput } from '../types'
 
-/** 주소 추가 — 성공 시 목록 무효화 (첫 주소는 서버에서 자동 기본 처리) */
+/** 주소 추가 — POST /customers/me/addresses. 성공 시 목록 무효화 */
 export function useCreateAddress() {
   const queryClient = useQueryClient()
   return useMutation({

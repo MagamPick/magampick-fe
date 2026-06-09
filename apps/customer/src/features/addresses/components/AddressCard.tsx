@@ -13,7 +13,7 @@ interface AddressCardProps {
 }
 
 export function AddressCard({ address, onSelect, onEdit, disabled }: AddressCardProps) {
-  const { label, roadAddress, detail, isDefault } = address
+  const { label, roadAddress, detailAddress, isDefault } = address
   return (
     <div className="grid grid-cols-[28px_1fr_28px_36px] items-center gap-2.5 border-b border-border py-[18px] last:border-b-0">
       <span aria-hidden className="text-center text-[18px]">
@@ -35,7 +35,7 @@ export function AddressCard({ address, onSelect, onEdit, disabled }: AddressCard
         </span>
         <span className="mt-1 block text-[13.5px] leading-[1.45] text-foreground">
           {roadAddress}
-          {detail ? ` ${detail}` : ''}
+          {detailAddress ? ` ${detailAddress}` : ''}
         </span>
       </button>
       <span className="text-center text-primary">
