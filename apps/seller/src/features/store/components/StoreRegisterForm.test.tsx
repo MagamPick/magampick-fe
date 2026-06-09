@@ -38,7 +38,7 @@ describe('StoreRegisterForm', () => {
     vi.clearAllMocks()
     vi.useFakeTimers({ toFake: ['Date'] }) // Date 만 고정 (setTimeout 은 실제 — userEvent 정상 동작)
     vi.setSystemTime(new Date(2026, 5, 15)) // 2026-06-15
-    useCurrentStoreStore.setState({ selectedStoreId: 's1' })
+    useCurrentStoreStore.setState({ selectedStoreId: 1 })
   })
   afterEach(() => vi.useRealTimers())
 
@@ -66,7 +66,7 @@ describe('StoreRegisterForm', () => {
   it('필수 입력 + 조회 성공 시 활성화 → 제출하면 새 매장 선택 + 홈 이동', async () => {
     vi.mocked(storeApi.checkBusinessNumber).mockResolvedValue({ verified: true })
     vi.mocked(storeApi.createStore).mockResolvedValue({
-      id: 's3',
+      id: 3,
       name: '마감픽 베이커리 신촌점',
       operationStatus: 'CLOSED_TODAY',
     })
@@ -100,6 +100,6 @@ describe('StoreRegisterForm', () => {
       }),
     )
     await waitFor(() => expect(navigateSpy).toHaveBeenCalledWith('/'))
-    expect(useCurrentStoreStore.getState().selectedStoreId).toBe('s3')
+    expect(useCurrentStoreStore.getState().selectedStoreId).toBe(3)
   })
 })

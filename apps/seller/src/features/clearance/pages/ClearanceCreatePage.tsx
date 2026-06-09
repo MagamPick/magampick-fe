@@ -79,11 +79,13 @@ export function ClearanceCreatePage() {
   const navigate = useNavigate()
   const [params] = useSearchParams()
   const preselectId = params.get('productId') ?? ''
-  const storeId = useCurrentStoreStore((s) => s.selectedStoreId)
+  const selectedStoreId = useCurrentStoreStore((s) => s.selectedStoreId)
+  // mock hook(string storeId) 전달용 변환 — Step 2 실연동 시 이전
+  const storeId = selectedStoreId != null ? String(selectedStoreId) : ''
 
   const { data: products = [], isLoading: loadingProducts } = useProducts(storeId)
   const { data: clearances = [] } = useClearances(storeId)
-  const { data: status, isLoading: loadingStatus } = useStoreStatus(storeId)
+  const { data: status, isLoading: loadingStatus } = useStoreStatus(selectedStoreId)
   const create = useCreateClearance(storeId)
 
   const activeProductIds = new Set(

@@ -10,7 +10,7 @@ import type { StoreDetail } from '../types'
 vi.mock('../api/storeApi')
 
 const detail: StoreDetail = {
-  id: 's1',
+  id: 1,
   storeName: '마감픽 베이커리 역삼점',
   storeAddress: '서울 강남구 역삼로 180',
   storeAddressDetail: '1층',
@@ -32,7 +32,7 @@ function renderPage() {
 describe('StoreEditPage', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    useCurrentStoreStore.setState({ selectedStoreId: 's1' })
+    useCurrentStoreStore.setState({ selectedStoreId: 1 })
   })
 
   it('화면 셸 배경을 bg_card로 유지', () => {
@@ -48,7 +48,7 @@ describe('StoreEditPage', () => {
     await waitFor(() =>
       expect(screen.getByDisplayValue('마감픽 베이커리 역삼점')).toBeInTheDocument(),
     )
-    expect(storeApi.getStore).toHaveBeenCalledWith('s1')
+    expect(storeApi.getStore).toHaveBeenCalledWith(1)
     expect(screen.getByRole('button', { name: '저장' })).toBeInTheDocument()
   })
 })

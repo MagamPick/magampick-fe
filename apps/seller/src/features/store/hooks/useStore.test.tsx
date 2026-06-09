@@ -12,7 +12,7 @@ describe('useStore', () => {
 
   it('매장 상세 조회 성공 시 미리채움 상세를 반환한다', async () => {
     const detail: StoreDetail = {
-      id: 's1',
+      id: 1,
       storeName: '마감픽 베이커리 역삼점',
       storeAddress: '서울 강남구 역삼로 180',
       storeAddressDetail: '1층',
@@ -21,10 +21,16 @@ describe('useStore', () => {
     }
     vi.mocked(storeApi.getStore).mockResolvedValue(detail)
 
-    const { result } = renderHook(() => useStore('s1'), { wrapper: createQueryWrapper() })
+    const { result } = renderHook(() => useStore(1), { wrapper: createQueryWrapper() })
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true))
     expect(result.current.data).toEqual(detail)
-    expect(storeApi.getStore).toHaveBeenCalledWith('s1')
+    expect(storeApi.getStore).toHaveBeenCalledWith(1)
+  })
+
+  it('storeId 가 null 이면 쿼리를 실행하지 않는다', () => {
+    const { result } = renderHook(() => useStore(null), { wrapper: createQueryWrapper() })
+    expect(result.current.fetchStatus).toBe('idle')
+    expect(storeApi.getStore).not.toHaveBeenCalled()
   })
 })

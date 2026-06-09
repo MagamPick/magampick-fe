@@ -21,7 +21,7 @@ function setup() {
 }
 
 const input: UpdateStoreInput = {
-  storeId: 's1',
+  storeId: 1,
   storeName: '마감픽 베이커리 역삼본점',
   storeAddress: '서울 강남구 테헤란로 152',
   storeAddressDetail: '2층',
@@ -30,7 +30,7 @@ const input: UpdateStoreInput = {
 }
 
 const updated: StoreDetail = {
-  id: 's1',
+  id: 1,
   storeName: input.storeName,
   storeAddress: input.storeAddress,
   storeAddressDetail: input.storeAddressDetail,
@@ -52,7 +52,7 @@ describe('useUpdateStore', () => {
     await waitFor(() => expect(result.current.isSuccess).toBe(true))
     expect(storeApi.updateStore).toHaveBeenCalledWith(input)
     expect(invalidate).toHaveBeenCalledWith({ queryKey: storeKeys.list() })
-    expect(invalidate).toHaveBeenCalledWith({ queryKey: storeKeys.detail('s1') })
+    expect(invalidate).toHaveBeenCalledWith({ queryKey: storeKeys.detail(1) })
     expect(result.current.data).toEqual(updated)
   })
 })

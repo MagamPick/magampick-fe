@@ -29,13 +29,13 @@ describe('useSaveBusinessHours', () => {
     vi.mocked(storeApi.saveBusinessHours).mockResolvedValue(saved)
     const { queryClient, wrapper } = setup()
     const invalidate = vi.spyOn(queryClient, 'invalidateQueries')
-    const { result } = renderHook(() => useSaveBusinessHours('s1'), { wrapper })
+    const { result } = renderHook(() => useSaveBusinessHours(1), { wrapper })
 
     result.current.mutate(saved)
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true))
-    expect(queryClient.getQueryData(storeKeys.businessHours('s1'))).toEqual(saved)
-    expect(invalidate).toHaveBeenCalledWith({ queryKey: storeKeys.status('s1') })
+    expect(queryClient.getQueryData(storeKeys.businessHours(1))).toEqual(saved)
+    expect(invalidate).toHaveBeenCalledWith({ queryKey: storeKeys.status(1) })
   })
 
   it('거부(TODAY_BUSINESS_HOURS_LOCKED) 시 에러를 노출한다', async () => {
@@ -43,7 +43,7 @@ describe('useSaveBusinessHours', () => {
       new ApiError(409, 'TODAY_BUSINESS_HOURS_LOCKED', '영업 중에는 오늘 영업시간을 변경할 수 없어요'),
     )
     const { wrapper } = setup()
-    const { result } = renderHook(() => useSaveBusinessHours('s1'), { wrapper })
+    const { result } = renderHook(() => useSaveBusinessHours(1), { wrapper })
 
     result.current.mutate([])
 

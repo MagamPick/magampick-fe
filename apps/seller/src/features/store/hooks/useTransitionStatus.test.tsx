@@ -25,18 +25,18 @@ describe('useTransitionStatus', () => {
 
   it('전환 성공 시 해당 매장 status 캐시를 갱신한다', async () => {
     vi.mocked(storeApi.transitionStatus).mockResolvedValue({
-      storeId: 's1',
+      storeId: 1,
       operationStatus: 'BREAK',
       canOpenToday: true,
       todayCloseTime: '21:00',
     })
     const { queryClient, wrapper } = setup()
-    const { result } = renderHook(() => useTransitionStatus('s1'), { wrapper })
+    const { result } = renderHook(() => useTransitionStatus(1), { wrapper })
 
     result.current.mutate('BREAK')
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true))
-    expect(queryClient.getQueryData(storeKeys.status('s1'))).toMatchObject({
+    expect(queryClient.getQueryData(storeKeys.status(1))).toMatchObject({
       operationStatus: 'BREAK',
     })
   })
@@ -46,7 +46,7 @@ describe('useTransitionStatus', () => {
       new ApiError(409, 'STORE_CLOSED_TODAY', '오늘은 영업 요일이 아니에요'),
     )
     const { wrapper } = setup()
-    const { result } = renderHook(() => useTransitionStatus('s2'), { wrapper })
+    const { result } = renderHook(() => useTransitionStatus(2), { wrapper })
 
     result.current.mutate('OPEN')
 

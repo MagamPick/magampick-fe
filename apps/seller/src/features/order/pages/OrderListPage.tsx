@@ -45,7 +45,9 @@ function matchesQuery(order: Order, q: string): boolean {
  * 거절은 확인 시트(자동환불), 미수령은 상세에서만. 카드 본문 탭 → 주문 상세.
  */
 export function OrderListPage() {
-  const storeId = useCurrentStoreStore((s) => s.selectedStoreId)
+  const _storeIdNum = useCurrentStoreStore((s) => s.selectedStoreId)
+  // mock hook(string storeId) 전달용 변환 — Step 2 실연동 시 이전
+  const storeId = _storeIdNum != null ? String(_storeIdNum) : ''
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
 

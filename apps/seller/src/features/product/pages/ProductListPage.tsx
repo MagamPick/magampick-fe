@@ -30,7 +30,9 @@ const FILTERS: { value: CategoryFilter; label: string }[] = [
  * `?tab=deal` 로 마감 할인 탭을 바로 열 수 있다(홈 "모두 보기" 등).
  */
 export function ProductListPage() {
-  const storeId = useCurrentStoreStore((s) => s.selectedStoreId)
+  const _storeIdNum = useCurrentStoreStore((s) => s.selectedStoreId)
+  // mock hook(string storeId) 전달용 변환 — Step 2 실연동 시 이전
+  const storeId = _storeIdNum != null ? String(_storeIdNum) : ''
   const [searchParams, setSearchParams] = useSearchParams()
   const tab: Tab = searchParams.get('tab') === 'deal' ? 'deal' : 'normal'
   const setTab = (next: Tab) => setSearchParams(next === 'deal' ? { tab: 'deal' } : {}, { replace: true })

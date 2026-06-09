@@ -18,9 +18,11 @@ import type { AnalyticsPanel, AnalyticsPeriod } from '../types'
  * 매장 전환(헤더 칩)으로 매장별 통계를 본다. 기간 변경은 재조회, 패널 전환은 즉시.
  */
 export function AnalyticsPage() {
-  const storeId = useCurrentStoreStore((s) => s.selectedStoreId)
+  const selectedStoreId = useCurrentStoreStore((s) => s.selectedStoreId)
+  // 다른 피처 훅(mock, string storeId)에 전달용 변환 — Step 2 실연동 시 hook 시그니처도 number로 이전
+  const storeId = selectedStoreId != null ? String(selectedStoreId) : ''
   const { data: stores } = useStores()
-  const storeName = stores?.find((s) => s.id === storeId)?.name
+  const storeName = stores?.find((s) => s.id === selectedStoreId)?.name
 
   const [period, setPeriod] = useState<AnalyticsPeriod>('today')
   const [panel, setPanel] = useState<AnalyticsPanel>('sales')

@@ -26,14 +26,14 @@ export const WEEKDAY_LABEL: Record<Weekday, string> = {
 
 /** 보유 매장 요약 — 헤더 매장 선택기·전환 모달용 (영업 상태 라벨 포함) */
 export interface StoreSummary {
-  id: string
+  id: number
   name: string
   operationStatus: OperationStatus
 }
 
 /** 매장 영업 상태 — 카드/시트 렌더 소스 */
 export interface StoreStatus {
-  storeId: string
+  storeId: number
   operationStatus: OperationStatus
   /** 오늘 요일이 영업 요일인가 — OPEN 전환 가능 조건 (영업 요일 0개면 false) */
   canOpenToday: boolean
@@ -138,11 +138,11 @@ export const storeEditSchema = z.object({
 export type StoreEditInput = z.infer<typeof storeEditSchema>
 
 /** updateStore API payload — 대상 매장 id + 수정 필드 */
-export type UpdateStoreInput = StoreEditInput & { storeId: string }
+export type UpdateStoreInput = StoreEditInput & { storeId: number }
 
 /** 매장 상세 — 수정 폼 미리채움 소스 (getStore 응답). 수정 가능 필드 + id */
 export interface StoreDetail {
-  id: string
+  id: number
   storeName: string
   storeAddress: string
   storeAddressDetail?: string

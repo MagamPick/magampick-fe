@@ -26,11 +26,13 @@ export function ProductDetailPage() {
   const params = useParams()
   const parsed = paramsSchema.safeParse(params)
   const id = parsed.success ? parsed.data.id : ''
-  const storeId = useCurrentStoreStore((s) => s.selectedStoreId)
+  const selectedStoreId = useCurrentStoreStore((s) => s.selectedStoreId)
+  // mock hook(string storeId) 전달용 변환 — Step 2 실연동 시 이전
+  const storeId = selectedStoreId != null ? String(selectedStoreId) : ''
 
   const { data: product, isLoading, isError, refetch } = useProduct(id)
   const { data: clearances } = useClearances(storeId)
-  const { data: status } = useStoreStatus(storeId)
+  const { data: status } = useStoreStatus(selectedStoreId)
   const del = useDeleteProduct(id, storeId)
 
   const [sheetOpen, setSheetOpen] = useState(false)

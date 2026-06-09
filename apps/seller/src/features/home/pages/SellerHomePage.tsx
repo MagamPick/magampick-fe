@@ -31,7 +31,7 @@ export function SellerHomePage() {
       <HomeQuickActions />
       <HomeDealList />
 
-      {status && (
+      {status && selectedStoreId != null && (
         <BizStatusSheet
           open={sheetOpen}
           onOpenChange={setSheetOpen}
