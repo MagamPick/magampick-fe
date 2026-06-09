@@ -45,8 +45,8 @@ describe('profileApi', () => {
     })
 
     it('phone_undefined이면_빈_문자열로_변환한다', async () => {
-      const { phone: _p, ...rest } = BASE_DTO
-      vi.mocked(apiClient.get).mockResolvedValue({ data: rest })
+      const { id, email, nickname } = BASE_DTO
+      vi.mocked(apiClient.get).mockResolvedValue({ data: { id, email, nickname } })
       const profile = await profileApi.getProfile()
       expect(profile.phone).toBe('')
     })
