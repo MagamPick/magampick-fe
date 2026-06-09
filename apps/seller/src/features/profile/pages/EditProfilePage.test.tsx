@@ -4,13 +4,29 @@ import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { EditProfilePage } from './EditProfilePage'
-import { __resetProfileStoreForTest } from '../api/profileApi'
+import { apiClient } from '@/shared/lib/axios'
+
+vi.mock('@/shared/lib/axios', () => ({
+  apiClient: {
+    get: vi.fn(),
+    post: vi.fn(),
+    patch: vi.fn(),
+  },
+}))
 
 const mockNavigate = vi.fn()
 vi.mock('react-router', async (importOriginal) => {
   const actual = await importOriginal<typeof import('react-router')>()
   return { ...actual, useNavigate: () => mockNavigate }
 })
+
+/** BE 응답 shape — phone은 하이픈 없는 원시값 */
+const beProfile = {
+  id: 1,
+  email: 'minsoo@magampick.com',
+  name: '김민수',
+  phone: '01012345678',
+}
 
 function renderPage() {
   const qc = new QueryClient({
@@ -27,7 +43,8 @@ function renderPage() {
 
 describe('EditProfilePage (내 정보 수정)', () => {
   beforeEach(() => {
-    __resetProfileStoreForTest()
+    vi.clearAllMocks()
+    vi.mocked(apiClient.get).mockResolvedValue({ data: beProfile })
     mockNavigate.mockClear()
   })
   afterEach(() => {
@@ -40,6 +57,11 @@ describe('EditProfilePage (내 정보 수정)', () => {
     await waitFor(() => expect(screen.getByText('김민수')).toBeInTheDocument())
     expect(screen.getByText('minsoo@magampick.com')).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: /대표 이메일/ })).toBeNull()
+  })
+
+  it('휴대폰 번호를 하이픈 포맷으로 표시한다', async () => {
+    renderPage()
+    await waitFor(() => expect(screen.getByText('010-1234-5678')).toBeInTheDocument())
   })
 
   it('실명 행을 누르면 실명 수정 시트가 열린다', async () => {

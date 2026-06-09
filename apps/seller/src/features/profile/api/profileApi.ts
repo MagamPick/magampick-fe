@@ -1,42 +1,43 @@
-import { ApiError } from '@/shared/lib/apiError'
-import { PROFILE_ERROR, type Profile } from '../types'
+import { z } from 'zod'
+import { apiClient } from '@/shared/lib/axios'
+import { formatPhone } from '@/shared/lib/formatPhone'
+import type { Profile } from '../types'
+
+/** M1: 아바타는 BE 비범위 — 기본 이모지 상수로 주입 */
+const DEFAULT_AVATAR_EMOJI = '👤'
 
 /**
- * ⚠️ Mock 스텁 — 백엔드 seller 프로필 API 가 아직 연동 전이라 가짜 응답.
- * 모듈 인메모리 `profile` 로 실명 수정을 흉내낸다(세션 내 유지). 실명 2~20자(노션 AC)는 여기서 enforce.
- * 연동 PR 에서 각 함수 본문을 apiClient 호출 + Zod 응답 검증으로 교체(시그니처 유지). SEED/__reset 제거.
+ * BE `/api/v1/seller/me` 응답 Zod 스키마 (필요 필드만 tighten).
+ * M2: phone은 사장 계정에선 항상 non-null (z.string() 필수).
+ * SpringDoc 관행상 전부 optional 으로 생성되지만 email/name/phone 은 비즈니스 필수.
  */
+const sellerMeResponseSchema = z.object({
+  email: z.string(),
+  name: z.string(),
+  phone: z.string(),
+  id: z.number().optional(),
+  phoneVerifiedAt: z.string().nullish(),
+  createdAt: z.string().nullish(),
+})
 
-const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
-const clone = <T>(value: T): T => JSON.parse(JSON.stringify(value)) as T
-
-/** 시드 프로필 (연동 시 제거) — 프로토타입 53-profile-edit 값 */
-const SEED_PROFILE: Profile = {
-  name: '김민수',
-  email: 'minsoo@magampick.com',
-  phone: '010-1234-5678',
-  avatarEmoji: '👤',
+/** BE 응답 → 도메인 Profile 매핑 */
+function toProfile(res: z.infer<typeof sellerMeResponseSchema>): Profile {
+  return {
+    name: res.name,
+    email: res.email,
+    phone: formatPhone(res.phone), // M2: '01012345678' → '010-1234-5678'
+    avatarEmoji: DEFAULT_AVATAR_EMOJI, // M1: BE 아바타 없음 — 기본 이모지 주입
+  } satisfies Profile
 }
-
-let profile: Profile = clone(SEED_PROFILE)
 
 export const profileApi = {
   async getProfile(): Promise<Profile> {
-    await delay(200)
-    return clone(profile)
+    const res = await apiClient.get('/seller/me')
+    return toProfile(sellerMeResponseSchema.parse(res.data))
   },
 
   async updateName(name: string): Promise<Profile> {
-    await delay(300)
-    if (name.length < 2 || name.length > 20) {
-      throw new ApiError(400, PROFILE_ERROR.NAME_LENGTH, '실명은 2~20자여야 해요')
-    }
-    profile = { ...profile, name }
-    return clone(profile)
+    const res = await apiClient.patch('/seller/me', { name })
+    return toProfile(sellerMeResponseSchema.parse(res.data))
   },
-}
-
-/** 테스트 전용 — `profile` 을 시드(또는 주어진 값)로 리셋. 연동 PR 에서 제거. */
-export function __resetProfileStoreForTest(seed: Profile = SEED_PROFILE): void {
-  profile = clone(seed)
 }
