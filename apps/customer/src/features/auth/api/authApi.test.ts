@@ -1,83 +1,97 @@
-import { describe, it, expect } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { apiClient } from '@/shared/lib/axios'
 import { authApi } from './authApi'
+import { ApiError } from '@/shared/lib/apiError'
 import { PASSWORD_RESET_ERROR, PASSWORD_CHANGE_ERROR } from '../types'
 
+vi.mock('@/shared/lib/axios', () => ({
+  apiClient: {
+    post: vi.fn(),
+  },
+}))
+
 /**
- * 비밀번호 재설정 mock — 이메일↔휴대폰 매칭 + 소셜전용 차단 + 새 비번 정책.
- * (회원가입·로그인 mock 은 기존 훅 테스트가 커버 — 여기선 재설정 신규 함수만)
+ * 비밀번호 재설정 실연동 — POST /auth/password-resets/verify-identity + /confirm
  */
-describe('authApi 비밀번호 재설정 (mock)', () => {
-  const TOKEN = 'mock-verification-token'
+describe('authApi 비밀번호 재설정 (실연동)', () => {
+  beforeEach(() => vi.clearAllMocks())
 
   describe('verifyPasswordResetIdentity', () => {
-    it('등록 계정의 이메일+휴대폰이 일치하면 resetToken 을 발급한다', async () => {
+    it('올바른 엔드포인트·body를 호출하고 resetToken을 반환한다', async () => {
+      vi.mocked(apiClient.post).mockResolvedValue({ data: { resetToken: 'real-reset-token' } })
+
       const res = await authApi.verifyPasswordResetIdentity({
         email: 'demo@magampick.com',
         phone: '010-1234-5678',
-        verificationToken: TOKEN,
+        verificationToken: 'mock-verification-token',
       })
-      expect(res.resetToken).toBeTruthy()
+
+      expect(res.resetToken).toBe('real-reset-token')
+      expect(apiClient.post).toHaveBeenCalledWith('/auth/password-resets/verify-identity', {
+        email: 'demo@magampick.com',
+        phone: '010-1234-5678',
+        verificationToken: 'mock-verification-token',
+      })
     })
 
-    it('본인인증 토큰이 없으면 PHONE_VERIFICATION_REQUIRED', async () => {
-      await expect(
-        authApi.verifyPasswordResetIdentity({
-          email: 'demo@magampick.com',
-          phone: '010-1234-5678',
-          verificationToken: '',
-        }),
-      ).rejects.toMatchObject({ code: PASSWORD_RESET_ERROR.PHONE_VERIFICATION_REQUIRED })
-    })
+    it('BE가 RESET_VERIFICATION_FAILED를 반환하면 ApiError를 전파한다', async () => {
+      vi.mocked(apiClient.post).mockRejectedValue(
+        new ApiError(
+          404,
+          PASSWORD_RESET_ERROR.RESET_VERIFICATION_FAILED,
+          '입력하신 정보와 일치하는 계정을 찾을 수 없어요',
+        ),
+      )
 
-    it('등록되지 않은 이메일은 RESET_VERIFICATION_FAILED (존재 여부 비노출)', async () => {
       await expect(
         authApi.verifyPasswordResetIdentity({
           email: 'nobody@magampick.com',
           phone: '010-1234-5678',
-          verificationToken: TOKEN,
+          verificationToken: 'mock-verification-token',
         }),
       ).rejects.toMatchObject({ code: PASSWORD_RESET_ERROR.RESET_VERIFICATION_FAILED })
     })
 
-    it('이메일은 있지만 휴대폰이 다르면 RESET_VERIFICATION_FAILED', async () => {
-      await expect(
-        authApi.verifyPasswordResetIdentity({
-          email: 'demo@magampick.com',
-          phone: '010-0000-0000',
-          verificationToken: TOKEN,
-        }),
-      ).rejects.toMatchObject({ code: PASSWORD_RESET_ERROR.RESET_VERIFICATION_FAILED })
-    })
+    it('BE가 SOCIAL_ONLY_ACCOUNT를 반환하면 ApiError를 전파한다', async () => {
+      vi.mocked(apiClient.post).mockRejectedValue(
+        new ApiError(
+          409,
+          PASSWORD_RESET_ERROR.SOCIAL_ONLY_ACCOUNT,
+          '카카오로 가입한 계정이에요. 카카오로 로그인해 주세요',
+        ),
+      )
 
-    it('소셜 전용 계정(password_hash NULL)은 SOCIAL_ONLY_ACCOUNT', async () => {
       await expect(
         authApi.verifyPasswordResetIdentity({
           email: 'kakao.user@kakao.com',
           phone: '010-2222-3333',
-          verificationToken: TOKEN,
+          verificationToken: 'mock-verification-token',
         }),
       ).rejects.toMatchObject({ code: PASSWORD_RESET_ERROR.SOCIAL_ONLY_ACCOUNT })
     })
   })
 
   describe('resetPassword', () => {
-    const resetToken = 'mock-reset-token:demo@magampick.com'
+    it('올바른 엔드포인트·body를 호출하고 void를 반환한다 (204 No Content)', async () => {
+      vi.mocked(apiClient.post).mockResolvedValue({ data: undefined })
 
-    it('정책을 충족하는 새 비밀번호면 성공한다', async () => {
       await expect(
-        authApi.resetPassword({ resetToken, newPassword: 'abcd1234!' }),
+        authApi.resetPassword({ resetToken: 'real-reset-token', newPassword: 'abcd1234!' }),
       ).resolves.toBeUndefined()
+
+      expect(apiClient.post).toHaveBeenCalledWith('/auth/password-resets/confirm', {
+        resetToken: 'real-reset-token',
+        newPassword: 'abcd1234!',
+      })
     })
 
-    it('정책 미충족(약한 비번)이면 PASSWORD_POLICY_VIOLATION', async () => {
-      await expect(
-        authApi.resetPassword({ resetToken, newPassword: 'weak' }),
-      ).rejects.toMatchObject({ code: PASSWORD_RESET_ERROR.PASSWORD_POLICY_VIOLATION })
-    })
+    it('BE가 토큰 만료를 반환하면 ApiError를 전파한다', async () => {
+      vi.mocked(apiClient.post).mockRejectedValue(
+        new ApiError(400, PASSWORD_RESET_ERROR.PHONE_VERIFICATION_REQUIRED, '토큰이 만료되었습니다'),
+      )
 
-    it('resetToken 이 없으면 PHONE_VERIFICATION_REQUIRED', async () => {
       await expect(
-        authApi.resetPassword({ resetToken: '', newPassword: 'abcd1234!' }),
+        authApi.resetPassword({ resetToken: 'expired-token', newPassword: 'abcd1234!' }),
       ).rejects.toMatchObject({ code: PASSWORD_RESET_ERROR.PHONE_VERIFICATION_REQUIRED })
     })
   })

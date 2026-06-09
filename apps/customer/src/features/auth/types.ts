@@ -158,6 +158,11 @@ export interface SocialSignupInput {
 }
 
 // ── 비밀번호 재설정 ───────────────────────────────────────────────────
+/** POST /auth/password-resets/verify-identity 응답 스키마 (BE 계약) */
+export const passwordResetVerifyResponseSchema = z.object({
+  resetToken: z.string(),
+})
+
 /** 비밀번호 재설정 에러 코드 (노션 AC) */
 export const PASSWORD_RESET_ERROR = {
   /** 이메일 미등록 또는 이메일↔휴대폰 불일치 — 존재 여부 비노출 위해 동일 코드 */
