@@ -10,14 +10,15 @@ vi.mock('../api/storeApi')
 describe('useStore', () => {
   beforeEach(() => vi.clearAllMocks())
 
-  it('매장 상세 조회 성공 시 미리채움 상세를 반환한다', async () => {
+  it('매장 상세 조회 성공 시 StoreDetail 을 반환한다', async () => {
     const detail: StoreDetail = {
       id: 1,
-      storeName: '마감픽 베이커리 역삼점',
-      storeAddress: '서울 강남구 역삼로 180',
-      storeAddressDetail: '1층',
-      storePhone: '02-501-1234',
-      photoAdded: true,
+      name: '마감픽 베이커리 역삼점',
+      roadAddress: '서울 강남구 역삼로 180',
+      zonecode: '06242',
+      phone: '02-501-1234',
+      detailAddress: '1층',
+      imageUrl: 'https://example.com/store.jpg',
     }
     vi.mocked(storeApi.getStore).mockResolvedValue(detail)
 

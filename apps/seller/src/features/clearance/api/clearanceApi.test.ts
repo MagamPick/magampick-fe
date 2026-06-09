@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { clearanceApi, resetClearanceState } from './clearanceApi'
 import { resetProductState } from '@/features/product/api/productApi'
-import { resetStoreState, storeApi } from '@/features/store/api/storeApi'
+import { storeApi } from '@/features/store/api/storeApi'
 import type { CreateClearancePayload } from '../types'
 
 /** p2 아메리카노(3000, onSale, 활성 떨이 없음) 기준 정상 페이로드 */
@@ -16,7 +16,6 @@ const base: CreateClearancePayload = {
 describe('clearanceApi', () => {
   beforeEach(() => {
     resetProductState()
-    resetStoreState()
     resetClearanceState()
     // getStoreStatus 는 실연동(apiClient) — 떨이 등록 검증 의존성을 영업중·마감 21:00 으로 stub.
     // (개별 케이스 STORE_NOT_OPEN 은 자체 spyOn 으로 override)

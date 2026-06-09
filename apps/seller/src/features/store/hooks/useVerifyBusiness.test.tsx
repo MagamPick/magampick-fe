@@ -18,8 +18,8 @@ const input = { businessNumber: '123-45-67890', representativeName: '김사장',
 describe('useVerifyBusiness', () => {
   beforeEach(() => vi.clearAllMocks())
 
-  it('진위확인 통과 시 verified 를 반환한다', async () => {
-    vi.mocked(storeApi.checkBusinessNumber).mockResolvedValue({ verified: true })
+  it('진위확인 통과 시 (204 void) isSuccess 가 true 가 된다', async () => {
+    vi.mocked(storeApi.checkBusinessNumber).mockResolvedValue(undefined)
     const { result } = renderHook(() => useVerifyBusiness(), { wrapper })
 
     result.current.mutate(input)
@@ -28,13 +28,24 @@ describe('useVerifyBusiness', () => {
     expect(storeApi.checkBusinessNumber).toHaveBeenCalledWith(input)
   })
 
-  it('조회 실패(000 시작) 시 에러를 노출한다', async () => {
+  it('BUSINESS_INFO_MISMATCH 에러 시 isError 가 true 가 된다', async () => {
     vi.mocked(storeApi.checkBusinessNumber).mockRejectedValue(
-      new ApiError(404, 'BUSINESS_NUMBER_INVALID', '조회되지 않는 사업자등록번호입니다'),
+      new ApiError(400, 'BUSINESS_INFO_MISMATCH', '사업자 정보가 일치하지 않습니다'),
     )
     const { result } = renderHook(() => useVerifyBusiness(), { wrapper })
 
-    result.current.mutate({ ...input, businessNumber: '000-45-67890' })
+    result.current.mutate(input)
+
+    await waitFor(() => expect(result.current.isError).toBe(true))
+  })
+
+  it('BUSINESS_NUMBER_NOT_ACTIVE 에러 시 isError 가 true 가 된다', async () => {
+    vi.mocked(storeApi.checkBusinessNumber).mockRejectedValue(
+      new ApiError(400, 'BUSINESS_NUMBER_NOT_ACTIVE', '폐업·휴업 사업자입니다'),
+    )
+    const { result } = renderHook(() => useVerifyBusiness(), { wrapper })
+
+    result.current.mutate({ ...input, businessNumber: '999-99-99999' })
 
     await waitFor(() => expect(result.current.isError).toBe(true))
   })
