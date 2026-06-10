@@ -10,7 +10,7 @@ import type { BusinessStatus, StoreDeal } from '../types'
 vi.mock('../hooks/useStoreDeals')
 
 const deal: StoreDeal = {
-  id: 'sd-1',
+  id: 1,
   name: '크루아상 세트',
   imageUrl: null,
   discountRate: 50,
@@ -27,12 +27,12 @@ function LocationDisplay() {
 
 function renderTab(businessStatus: BusinessStatus = 'OPEN') {
   return render(
-    <MemoryRouter initialEntries={['/store/st-1']}>
+    <MemoryRouter initialEntries={['/store/1']}>
       <ComingSoonProvider>
         <Routes>
           <Route
             path="/store/:id"
-            element={<DealTab storeId="st-1" businessStatus={businessStatus} />}
+            element={<DealTab storeId={1} businessStatus={businessStatus} />}
           />
           <Route path="/product/:kind/:productId" element={<LocationDisplay />} />
         </Routes>
@@ -72,6 +72,6 @@ describe('DealTab', () => {
     expect(screen.getByText(/영업 외 상태/)).toBeInTheDocument()
     // 영업 외여도 진입은 허용 — 차단은 상품 상세 화면이 처리
     await user.click(screen.getByText('크루아상 세트'))
-    expect(screen.getByTestId('loc')).toHaveTextContent('/product/deal/sd-1')
+    expect(screen.getByTestId('loc')).toHaveTextContent('/product/deal/1')
   })
 })

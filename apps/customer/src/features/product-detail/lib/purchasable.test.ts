@@ -6,8 +6,8 @@ const NOW = Date.parse('2026-05-31T12:00:00.000Z')
 
 const baseMenu: MenuProductDetail = {
   kind: 'menu',
-  id: 'mn-1',
-  storeId: 'st-1',
+  id: 1,
+  storeId: 1,
   storeName: '브레드샵',
   distanceKm: 0.3,
   businessStatus: 'OPEN',
@@ -16,14 +16,15 @@ const baseMenu: MenuProductDetail = {
   description: null,
   rating: 4.5,
   reviewCount: 10,
+  closingTime: '21:00',
   price: 3000,
   isOnSale: true,
 }
 
 const baseDeal: DealProductDetail = {
   kind: 'deal',
-  id: 'sd-1',
-  storeId: 'st-1',
+  id: 1,
+  storeId: 1,
   storeName: '브레드샵',
   distanceKm: 0.3,
   businessStatus: 'OPEN',
@@ -32,6 +33,7 @@ const baseDeal: DealProductDetail = {
   description: null,
   rating: 4.8,
   reviewCount: 412,
+  closingTime: '21:00',
   originalPrice: 9000,
   salePrice: 4500,
   discountRate: 50,

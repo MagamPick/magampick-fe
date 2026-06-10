@@ -17,7 +17,7 @@ export function StoreLocationPage() {
   const params = useParams()
   const navigate = useNavigate()
   const parsed = storeDetailParamsSchema.safeParse(params)
-  const { data: store } = useStoreDetail(parsed.success ? parsed.data.id : '')
+  const { data: store } = useStoreDetail(parsed.success ? Number(parsed.data.id) : 0)
   const { position } = useGeolocation()
 
   if (!parsed.success) return <Navigate to={ROUTES.HOME} replace />

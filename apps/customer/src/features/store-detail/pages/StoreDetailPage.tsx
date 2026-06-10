@@ -7,6 +7,7 @@ import { PullToRefresh } from '@/shared/components/PullToRefresh'
 import { Button } from '@/shared/components/ui/button'
 import { ErrorState } from '@/shared/components/ErrorState'
 import { ROUTES } from '@/shared/lib/routes'
+import { useToggleFavorite } from '@/features/favorites/hooks/useToggleFavorite'
 import { storeDetailParamsSchema } from '../types'
 import { useStoreDetail } from '../hooks/useStoreDetail'
 import { useStoreDetailRefresh } from '../hooks/useStoreDetailRefresh'
@@ -36,10 +37,13 @@ export function StoreDetailPage() {
 }
 
 function StoreDetailView({ storeId }: { storeId: string }) {
+  /** URL 파라미터(string) → BE number ID */
+  const storeIdNum = Number(storeId)
   const navigate = useNavigate()
   const { show } = useComingSoon()
-  const { data: store, isPending, isError, refetch } = useStoreDetail(storeId)
-  const refresh = useStoreDetailRefresh(storeId)
+  const { data: store, isPending, isError, refetch } = useStoreDetail(storeIdNum)
+  const refresh = useStoreDetailRefresh(storeIdNum)
+  const toggle = useToggleFavorite()
   const [searchParams] = useSearchParams()
   // 상품 상세의 평점·리뷰 영역에서 ?tab=review 로 진입하면 리뷰 탭으로 시작
   const [activeTab, setActiveTab] = useState<StoreTabKey>(() =>
@@ -66,9 +70,10 @@ function StoreDetailView({ storeId }: { storeId: string }) {
     }
   }
 
-  // TODO(#6): 매장 상세 실연동(number storeId) 시 useToggleFavorite 재연결
+  /** 단골 하트 토글 — useToggleFavorite 재연결 (#6 매장 상세 실연동) */
   const handleToggleFavorite = () => {
-    show('단골 등록은 매장 연동 후 제공돼요')
+    if (!store) return
+    toggle.mutate({ storeId: store.id, next: !store.isFavorite })
   }
 
   if (isPending) {
@@ -106,8 +111,8 @@ function StoreDetailView({ storeId }: { storeId: string }) {
         <ScreenContainer variant="bleed" className="pb-[96px]">
           <StoreHero
             imageUrl={store.imageUrl}
-            isFavorite={false}
-            favoritePending={false}
+            isFavorite={store.isFavorite}
+            favoritePending={toggle.isPending}
             onBack={handleBack}
             onShare={handleShare}
             onToggleFavorite={handleToggleFavorite}
@@ -115,18 +120,18 @@ function StoreDetailView({ storeId }: { storeId: string }) {
           <StoreHeadMeta store={store} />
           <StoreActions
             phone={store.phone}
-            onMap={() => navigate(ROUTES.STORE_LOCATION(storeId))}
+            onMap={() => navigate(ROUTES.STORE_LOCATION(storeIdNum))}
             onShare={handleShare}
           />
           <StoreTabs active={activeTab} onSelect={setActiveTab} />
           <div>
             {activeTab === 'deal' && (
-              <DealTab storeId={storeId} businessStatus={store.businessStatus} />
+              <DealTab storeId={storeIdNum} businessStatus={store.businessStatus} />
             )}
             {activeTab === 'menu' && (
-              <MenuTab storeId={storeId} businessStatus={store.businessStatus} />
+              <MenuTab storeId={storeIdNum} businessStatus={store.businessStatus} />
             )}
-            {activeTab === 'review' && <ReviewTab storeId={storeId} />}
+            {activeTab === 'review' && <ReviewTab storeId={storeIdNum} />}
             {activeTab === 'info' && <InfoTab store={store} />}
           </div>
         </ScreenContainer>

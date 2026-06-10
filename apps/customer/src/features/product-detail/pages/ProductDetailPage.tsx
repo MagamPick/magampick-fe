@@ -34,9 +34,11 @@ export function ProductDetailPage() {
 }
 
 function ProductDetailView({ kind, productId }: { kind: ProductKind; productId: string }) {
+  /** URL 파라미터(string) → BE number ID */
+  const productIdNum = Number(productId)
   const navigate = useNavigate()
-  const { data: product, isPending, isError, refetch } = useProductDetail(kind, productId)
-  const refresh = useProductDetailRefresh(kind, productId)
+  const { data: product, isPending, isError, refetch } = useProductDetail(kind, productIdNum)
+  const refresh = useProductDetailRefresh(kind, productIdNum)
 
   const handleBack = () => navigate(-1)
 

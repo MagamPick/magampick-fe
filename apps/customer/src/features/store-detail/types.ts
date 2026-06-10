@@ -24,85 +24,92 @@ export type OperatingHour = z.infer<typeof operatingHourSchema>
 
 /** 매장 상세 — 헤더/메타/정보 탭 + 지도 sub-route 의 단일 소스 */
 export const storeDetailSchema = z.object({
-  id: z.string(),
-  name: z.string(),
+  /** BE int64 → number */
+  id: z.number(),
+  name: z.string().default(''),
   /** 대표 사진 1장 (없으면 폴백) */
-  imageUrl: z.string().nullable(),
+  imageUrl: z.string().nullish().transform((v) => v ?? null),
   businessStatus: businessStatusSchema,
-  /** 다음 영업 종료 시각 (HH:mm) — 메타 "{closingTime} 마감" */
-  closingTime: z.string(),
+  /** 다음 영업 종료 시각 (HH:mm) — 오늘 휴무면 null */
+  closingTime: z.string().nullish().transform((v) => v ?? null),
   /** 평균 평점 */
-  rating: z.number(),
+  rating: z.number().default(0),
   /** 리뷰 개수 */
-  reviewCount: z.number(),
+  reviewCount: z.number().int().default(0),
   /** 직선거리(km) */
-  distanceKm: z.number(),
-  /** 단골 여부 (헤더 하트) */
-  isFavorite: z.boolean(),
+  distanceKm: z.number().default(0),
+  /** 단골 여부 (헤더 하트) — BE 실값 */
+  isFavorite: z.boolean().default(false),
   // 정보 탭
-  address: z.string(),
-  phone: z.string(),
+  address: z.string().default(''),
+  phone: z.string().default(''),
   /** 사업자 등록 번호 */
-  businessNumber: z.string(),
+  businessNumber: z.string().default(''),
   /** 요일별 영업시간 (월~일 7개) */
-  operatingHours: z.array(operatingHourSchema),
-  // 지도 sub-route (placeholder 위치/추후 카카오맵 SDK 좌표)
-  lat: z.number(),
-  lng: z.number(),
+  operatingHours: z.array(operatingHourSchema).default([]),
+  // 지도 sub-route (카카오맵 SDK 좌표)
+  lat: z.number().default(0),
+  lng: z.number().default(0),
 })
 export type StoreDetail = z.infer<typeof storeDetailSchema>
 
 /** 마감 할인 탭 — 매장의 활성 떨이(clearance) 카드 */
 export const storeDealSchema = z.object({
-  id: z.string(),
-  name: z.string(),
-  imageUrl: z.string().nullable(),
+  /** BE int64 → number */
+  id: z.number(),
+  name: z.string().default(''),
+  imageUrl: z.string().nullish().transform((v) => v ?? null),
   /** 할인율(%) */
-  discountRate: z.number(),
+  discountRate: z.number().default(0),
   /** 원가(취소선) */
-  originalPrice: z.number(),
+  originalPrice: z.number().default(0),
   /** 할인가 */
-  salePrice: z.number(),
+  salePrice: z.number().default(0),
   /** 픽업 마감 시각(ISO) — 실시간 카운트다운 기준 */
   pickupDeadline: z.string(),
   /** 잔여 수량 */
-  stockLeft: z.number(),
+  stockLeft: z.number().int().default(0),
 })
 export type StoreDeal = z.infer<typeof storeDealSchema>
 
 /** 메뉴 탭 — 판매 ON 일반 상품(product). 카테고리로 그룹화 노출 */
 export const storeMenuItemSchema = z.object({
-  id: z.string(),
-  name: z.string(),
-  imageUrl: z.string().nullable(),
+  /** BE int64 → number */
+  id: z.number(),
+  name: z.string().default(''),
+  imageUrl: z.string().nullish().transform((v) => v ?? null),
   /** 정가 */
-  price: z.number(),
+  price: z.number().default(0),
   /** 카테고리 (베이커리·음료·디저트 등) — 그룹화 키 */
-  category: z.string(),
+  category: z.string().default(''),
 })
 export type StoreMenuItem = z.infer<typeof storeMenuItemSchema>
 
 /** 리뷰 카드 — 사장 답글이 있으면 함께 노출 */
 export const storeReviewSchema = z.object({
-  id: z.string(),
-  authorNickname: z.string(),
+  /** BE int64 → number */
+  id: z.number(),
+  authorNickname: z.string().default(''),
   /** 별점 1~5 */
-  rating: z.number(),
-  content: z.string(),
+  rating: z.number().int().default(0),
+  content: z.string().default(''),
   /** 작성일 (M/D 표기용 ISO) */
   createdAt: z.string(),
   /** 주문 상품들 — 각 상품 상세 링크(kind 로 경로 분기) */
-  products: z.array(
-    z.object({
-      productId: z.string(),
-      kind: z.enum(['deal', 'menu']),
-      name: z.string(),
-    }),
-  ),
-  photos: z.array(z.string()),
-  tags: z.array(z.string()),
+  products: z
+    .array(
+      z.object({
+        /** BE int64 → number */
+        productId: z.number(),
+        kind: z.enum(['deal', 'menu']),
+        name: z.string().default(''),
+      }),
+    )
+    .default([]),
+  photos: z.array(z.string()).default([]),
+  tags: z.array(z.string()).default([]),
   /** 사장 답글 (없으면 null) */
-  ownerReply: z.string().nullable(),
+  ownerReply: z.string().nullish().transform((v) => v ?? null),
 })
 export type StoreReview = z.infer<typeof storeReviewSchema>
 
@@ -115,21 +122,34 @@ export type RatingBucket = z.infer<typeof ratingBucketSchema>
 
 /** 리뷰 요약 — 평균 + 분포(목록 상단 고정) */
 export const reviewSummarySchema = z.object({
-  average: z.number(),
-  count: z.number(),
+  average: z.number().default(0),
+  count: z.number().int().default(0),
   /** 5→1점 순 분포 */
-  distribution: z.array(ratingBucketSchema),
+  distribution: z.array(ratingBucketSchema).default([]),
 })
 export type ReviewSummary = z.infer<typeof reviewSummarySchema>
 
-/** 리뷰 무한 스크롤 페이지 — nextCursor null 이면 마지막 */
-export const storeReviewPageSchema = z.object({
-  items: z.array(storeReviewSchema),
-  nextCursor: z.number().nullable(),
-})
+/**
+ * 리뷰 무한 스크롤 페이지 — BE offset 응답(SliceResponse) → items 매핑.
+ * BE shape: { content, page, size, hasNext }
+ * FE 다운스트림: items(=content), page, size, hasNext
+ */
+export const storeReviewPageSchema = z
+  .object({
+    content: z.array(storeReviewSchema).default([]),
+    page: z.number().int().default(0),
+    size: z.number().int().default(0),
+    hasNext: z.boolean().default(false),
+  })
+  .transform((d) => ({
+    items: d.content,
+    page: d.page,
+    size: d.size,
+    hasNext: d.hasNext,
+  }))
 export type StoreReviewPage = z.infer<typeof storeReviewPageSchema>
 
-/** 매장 상세 라우트 파라미터 — mock id 는 문자열(`st-1`) */
+/** 매장 상세 라우트 파라미터 — URL 에서 string으로 수신, 훅/API 호출 시 Number() 변환 */
 export const storeDetailParamsSchema = z.object({
   id: z.string().min(1),
 })

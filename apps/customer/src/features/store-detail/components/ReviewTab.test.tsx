@@ -22,12 +22,12 @@ const summary: ReviewSummary = {
 }
 
 const review: StoreReview = {
-  id: 'rv-1',
+  id: 1,
   authorNickname: '빵순이',
   rating: 5,
   content: '빵도 신선하고 좋았어요.',
   createdAt: new Date('2026-05-20').toISOString(),
-  products: [{ productId: 'sd-1', kind: 'deal', name: '크루아상 세트' }],
+  products: [{ productId: 1, kind: 'deal', name: '크루아상 세트' }],
   photos: [],
   tags: ['#신선해요'],
   ownerReply: '감사해요. 또 들러주세요!',
@@ -43,7 +43,7 @@ function mockSummary(value: ReviewSummary) {
 
 function mockReviews(items: StoreReview[]) {
   vi.mocked(useStoreReviews).mockReturnValue({
-    data: { pages: [{ items, nextCursor: null }] },
+    data: { pages: [{ items, page: 0, size: items.length, hasNext: false }] },
     isPending: false,
     isError: false,
     hasNextPage: false,
@@ -58,7 +58,7 @@ describe('ReviewTab', () => {
     mockReviews([review])
     render(
       <MemoryRouter>
-        <ReviewTab storeId="st-1" />
+        <ReviewTab storeId={1} />
       </MemoryRouter>,
     )
 
@@ -73,7 +73,7 @@ describe('ReviewTab', () => {
     mockReviews([])
     render(
       <MemoryRouter>
-        <ReviewTab storeId="st-1" />
+        <ReviewTab storeId={1} />
       </MemoryRouter>,
     )
 

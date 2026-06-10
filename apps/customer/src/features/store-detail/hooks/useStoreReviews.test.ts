@@ -7,7 +7,7 @@ import type { StoreReview } from '../types'
 
 vi.mock('../api/storeDetailApi')
 
-const review = (id: string): StoreReview => ({
+const review = (id: number): StoreReview => ({
   id,
   authorNickname: '빵순이',
   rating: 5,
@@ -21,14 +21,13 @@ const review = (id: string): StoreReview => ({
 
 describe('useStoreReviews', () => {
   it('무한스크롤_다음페이지_누적_그리고_마지막', async () => {
-    vi.mocked(storeDetailApi.getStoreReviews).mockImplementation(async (_id, opts) => {
-      const cursor = opts?.cursor ?? 0
-      return cursor === 0
-        ? { items: [review('rv-1'), review('rv-2')], nextCursor: 1 }
-        : { items: [review('rv-3')], nextCursor: null }
+    vi.mocked(storeDetailApi.getStoreReviews).mockImplementation(async (_id, { page = 0 } = {}) => {
+      return page === 0
+        ? { items: [review(1), review(2)], page: 0, size: 2, hasNext: true }
+        : { items: [review(3)], page: 1, size: 1, hasNext: false }
     })
 
-    const { result } = renderHook(() => useStoreReviews('st-1'), { wrapper: createQueryWrapper() })
+    const { result } = renderHook(() => useStoreReviews(1), { wrapper: createQueryWrapper() })
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true))
     expect(result.current.data?.pages[0].items).toHaveLength(2)

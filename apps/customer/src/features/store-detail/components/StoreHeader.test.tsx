@@ -7,7 +7,7 @@ import { StoreActions } from './StoreActions'
 import type { StoreDetail } from '../types'
 
 const STORE: StoreDetail = {
-  id: 'st-1',
+  id: 1,
   name: '베이커리 브레드샵',
   imageUrl: null,
   businessStatus: 'OPEN',
@@ -57,6 +57,13 @@ describe('StoreHeadMeta', () => {
   it('영업외_상태_라벨_노출', () => {
     render(<StoreHeadMeta store={{ ...STORE, businessStatus: 'CLOSED_TODAY' }} />)
     expect(screen.getByText('오늘 영업 종료')).toBeInTheDocument()
+  })
+
+  it('closingTime_null이면_마감_미노출', () => {
+    render(<StoreHeadMeta store={{ ...STORE, closingTime: null }} />)
+    expect(screen.queryByText(/마감/)).toBeNull()
+    // 다른 메타는 그대로 노출
+    expect(screen.getByText('★ 4.8 (412)')).toBeInTheDocument()
   })
 })
 

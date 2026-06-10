@@ -1,12 +1,15 @@
 import { useInfiniteQuery } from '@tanstack/react-query'
 import { storeDetailApi } from '../api/storeDetailApi'
 
-/** 리뷰 탭 — 무한 스크롤 (커서 페이지네이션). nextCursor null 이면 마지막 페이지 */
-export function useStoreReviews(id: string) {
+/**
+ * 리뷰 탭 — offset 무한 스크롤.
+ * BE SliceResponse: hasNext=true면 다음 페이지(page+1) 있음.
+ */
+export function useStoreReviews(storeId: number) {
   return useInfiniteQuery({
-    queryKey: ['store', id, 'reviews'],
-    queryFn: ({ pageParam }) => storeDetailApi.getStoreReviews(id, { cursor: pageParam }),
+    queryKey: ['store', storeId, 'reviews'],
+    queryFn: ({ pageParam }) => storeDetailApi.getStoreReviews(storeId, { page: pageParam }),
     initialPageParam: 0,
-    getNextPageParam: (lastPage) => lastPage.nextCursor,
+    getNextPageParam: (lastPage) => (lastPage.hasNext ? lastPage.page + 1 : undefined),
   })
 }
