@@ -38,6 +38,9 @@ export const ROUTES = {
   // 결제 화면 + 주문 완료 (TabLayout 밖 풀스크린, 프로토타입 41-checkout · 42-order-success)
   CHECKOUT: '/checkout',
   ORDER_SUCCESS: '/order/success',
+  // 토스 결제창 리다이렉트 콜백 (실 결제 연동 시 사용, VITE_USE_REAL_PAYMENT=true)
+  PAYMENT_SUCCESS: '/order/payment/success',
+  PAYMENT_FAIL: '/order/payment/fail',
 
   // 주문 상세 (TabLayout 밖 풀스크린, 프로토타입 50-order-detail)
   ORDER_DETAIL: (id: string) => `/orders/${id}`,

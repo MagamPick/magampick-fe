@@ -1,6 +1,8 @@
+import { z } from 'zod'
 import { orderSchema, type Order, type OrderAmounts, type OrderStatus } from '../types'
 import { refundDeadline } from '../lib/refundPolicy'
 import type { CartItem, CartStoreInfo, Pickup } from '@/features/cart/types'
+import { apiClient } from '@/shared/lib/axios'
 
 /**
  * ⚠️ Mock 스텁 — 주문 BE(order 도메인 미구현)가 아직이라 클라이언트에서 가짜 생성/저장.
@@ -277,6 +279,90 @@ export function resetOrderState() {
 
 seed()
 
+// ─── 실 BE 주문 준비 (prepare) ────────────────────────────────────────────
+
+/** POST /api/v1/orders 응답 스키마 (PrepareOrderResponse) */
+const prepareOrderResponseSchema = z.object({
+  orderId: z.number(),
+  tossOrderId: z.string(),
+  amount: z.number(),
+  orderName: z.string(),
+})
+export type PrepareResponse = z.infer<typeof prepareOrderResponseSchema>
+
+/** prepare() 입력 — 카트 + 혜택 정보 */
+export interface PrepareInput {
+  store: Pick<CartStoreInfo, 'id' | 'name'>
+  items: CartItem[]
+  pickup: Pickup
+  memo: string
+  /** 결제 금액 (calcCheckoutAmounts 결과 — 쿠폰·포인트·적립 포함) */
+  amounts: OrderAmounts
+  /** 사용 쿠폰 UserCoupon string ID (선택) */
+  couponId?: string | null
+  /** 사용 포인트 (선택, 0 이상) */
+  pointUsed?: number
+}
+
+interface CreateOrderBody {
+  storeId: number
+  items: Array<{ kind: 'DEAL' | 'MENU'; refId: number; quantity: number }>
+  pickup: { type: 'ASAP' | 'SLOT'; time?: string }
+  memo?: string
+  paymentMethod: string
+  paymentAgreed: boolean
+  amounts: {
+    normalTotal: number
+    discountTotal: number
+    payTotal: number
+    couponDiscount?: number
+    pointUsed?: number
+    earnedPoints?: number
+  }
+  userCouponId?: number
+  pointToUse?: number
+}
+
+/**
+ * 카트 → CreateOrderRequest 변환 (BE 전달용 body 빌더).
+ *
+ * ⚠️ 상류(상품/매장) 실연동 전까지 storeId·refId 가 NaN 가능 — 상품/매장 실연동 시 정상화.
+ *    (CartItem.id 와 CartStoreInfo.id 는 현재 'sd-1' 같은 문자열 mock id 를 사용 중)
+ */
+export function buildCreateOrderRequest(input: PrepareInput): CreateOrderBody {
+  return {
+    storeId: Number(input.store.id),
+    items: input.items.map((item) => ({
+      kind: item.kind.toUpperCase() as 'DEAL' | 'MENU',
+      refId: Number(item.id),
+      quantity: item.qty,
+    })),
+    pickup:
+      input.pickup.type === 'slot'
+        ? { type: 'SLOT', time: input.pickup.time }
+        : { type: 'ASAP' },
+    ...(input.memo ? { memo: input.memo } : {}),
+    paymentMethod: 'toss',
+    paymentAgreed: true,
+    amounts: {
+      normalTotal: input.amounts.normalTotal,
+      discountTotal: input.amounts.discountTotal,
+      payTotal: input.amounts.payTotal,
+      ...(input.amounts.couponDiscount !== undefined
+        ? { couponDiscount: input.amounts.couponDiscount }
+        : {}),
+      ...(input.amounts.pointUsed !== undefined ? { pointUsed: input.amounts.pointUsed } : {}),
+      ...(input.amounts.earnedPoints !== undefined
+        ? { earnedPoints: input.amounts.earnedPoints }
+        : {}),
+    },
+    ...(input.couponId ? { userCouponId: Number(input.couponId) } : {}),
+    ...(input.pointUsed && input.pointUsed > 0 ? { pointToUse: input.pointUsed } : {}),
+  }
+}
+
+// ─── Mock 주문 생성 입력 ───────────────────────────────────────────────────
+
 export interface CreateOrderInput {
   store: Pick<CartStoreInfo, 'id' | 'name'>
   items: CartItem[]
@@ -292,6 +378,17 @@ function generatePickupCode(): string {
 }
 
 export const orderApi = {
+  /**
+   * 주문 준비 — 실 BE POST /api/v1/orders.
+   * AWAITING_PAYMENT 상태로 주문을 임시 생성하고 tossOrderId·amount·orderName 을 반환.
+   * 반환값을 토스 SDK requestPayment 에 전달한 후 confirm 으로 최종 승인.
+   */
+  async prepare(input: PrepareInput): Promise<PrepareResponse> {
+    const body = buildCreateOrderRequest(input)
+    const { data } = await apiClient.post('/orders', body)
+    return prepareOrderResponseSchema.parse(data)
+  },
+
   async listOrders(): Promise<Order[]> {
     await delay(300)
     return [...ORDERS.values()].sort(

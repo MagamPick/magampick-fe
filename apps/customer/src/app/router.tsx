@@ -29,6 +29,8 @@ import { AddressFormPage } from '@/features/addresses/pages/AddressFormPage'
 import { CartPage } from '@/features/cart/pages/CartPage'
 import { CheckoutPage } from '@/features/order/pages/CheckoutPage'
 import { OrderSuccessPage } from '@/features/order/pages/OrderSuccessPage'
+import { PaymentSuccessPage } from '@/features/order/pages/PaymentSuccessPage'
+import { PaymentFailPage } from '@/features/order/pages/PaymentFailPage'
 import { PointHistoryPage } from '@/features/points/pages/PointHistoryPage'
 import { CouponBoxPage } from '@/features/coupons/pages/CouponBoxPage'
 import { EventPage } from '@/features/coupons/pages/EventPage'
@@ -175,6 +177,23 @@ export const router = createBrowserRouter([
     element: (
       <ProtectedRoute>
         <OrderSuccessPage />
+      </ProtectedRoute>
+    ),
+  },
+  // 토스 결제창 리다이렉트 콜백 — 실 결제 연동 (VITE_USE_REAL_PAYMENT=true) 시 사용
+  {
+    path: ROUTES.PAYMENT_SUCCESS,
+    element: (
+      <ProtectedRoute>
+        <PaymentSuccessPage />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: ROUTES.PAYMENT_FAIL,
+    element: (
+      <ProtectedRoute>
+        <PaymentFailPage />
       </ProtectedRoute>
     ),
   },
