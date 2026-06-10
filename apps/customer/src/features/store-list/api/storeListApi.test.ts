@@ -1,79 +1,119 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { storeListApi } from './storeListApi'
-import type { StoreListItem, StoreSort } from '../types'
 
-/** mock 페이지 크기 — storeListApi 내부 상수와 일치(바뀌면 같이 갱신) */
-const PAGE_SIZE = 6
+vi.mock('@/shared/lib/axios', () => ({
+  apiClient: {
+    get: vi.fn(),
+  },
+}))
 
-/** 모든 페이지를 커서 끝까지 모아 한 배열로 (정렬 검증용) */
-async function fetchAll(sort: StoreSort): Promise<StoreListItem[]> {
-  const items: StoreListItem[] = []
-  let cursor: number | null = 0
-  while (cursor !== null) {
-    const page = await storeListApi.getStores({ sort, cursor })
-    items.push(...page.items)
-    cursor = page.nextCursor
+import { apiClient } from '@/shared/lib/axios'
+
+const mockItem = (id: number) => ({
+  id,
+  name: `매장 ${id}`,
+  imageUrl: null,
+  distanceKm: 0.5,
+  rating: 4.5,
+  activeDealCount: 1,
+  isFavorite: false,
+})
+
+const mockPage = (overrides?: Partial<ReturnType<typeof makePage>>) =>
+  ({ data: makePage(overrides) })
+
+function makePage(overrides?: object) {
+  return {
+    items: [mockItem(1), mockItem(2)],
+    page: 0,
+    size: 20,
+    hasNext: false,
+    total: 2,
+    dealStoreCount: 2,
+    ...overrides,
   }
-  return items
 }
 
+beforeEach(() => {
+  vi.mocked(apiClient.get).mockResolvedValue(mockPage())
+})
+
 describe('storeListApi.getStores', () => {
-  it('cursor_페이징_total_dealStoreCount_노출', async () => {
-    const page0 = await storeListApi.getStores({ sort: 'recommended', cursor: 0 })
-    expect(page0.items).toHaveLength(PAGE_SIZE)
-    expect(page0.nextCursor).toBe(1)
-    expect(page0.total).toBe(12)
-    expect(page0.dealStoreCount).toBe(9) // 활성 떨이 보유 매장 수
+  it('올바른_엔드포인트와_파라미터로_요청', async () => {
+    await storeListApi.getStores({ sort: 'recommended', page: 0 })
 
-    const page1 = await storeListApi.getStores({ sort: 'recommended', cursor: 1 })
-    expect(page1.items).toHaveLength(6)
-    expect(page1.nextCursor).toBeNull() // 마지막 페이지
+    expect(apiClient.get).toHaveBeenCalledWith('/stores', {
+      params: { sort: 'recommended', page: 0, size: 20 },
+    })
   })
 
-  it('거리순_오름차순', async () => {
-    const items = await fetchAll('distance')
-    expect(items).toHaveLength(12)
-    expect(items[0].id).toBe('st-1') // 0.3km
-    for (let i = 1; i < items.length; i++) {
-      expect(items[i].distanceKm).toBeGreaterThanOrEqual(items[i - 1].distanceKm)
-    }
+  it('page_파라미터_전달_검증', async () => {
+    await storeListApi.getStores({ sort: 'distance', page: 2 })
+
+    expect(apiClient.get).toHaveBeenCalledWith('/stores', {
+      params: { sort: 'distance', page: 2, size: 20 },
+    })
   })
 
-  it('별점순_내림차순_리뷰0_매장은_뒤로', async () => {
-    const items = await fetchAll('rating')
-    expect(items[0].rating).toBe(4.9) // 최고 평점
-    expect(items[items.length - 1].rating).toBe(0) // 리뷰 0개 매장은 맨 뒤
+  it('offset_페이징_응답_파싱_hasNext_true', async () => {
+    vi.mocked(apiClient.get).mockResolvedValue(
+      mockPage({ hasNext: true, page: 0, total: 40, dealStoreCount: 15 }),
+    )
+
+    const result = await storeListApi.getStores({ sort: 'recommended' })
+
+    expect(result.items).toHaveLength(2)
+    expect(result.hasNext).toBe(true)
+    expect(result.page).toBe(0)
+    expect(result.total).toBe(40)
+    expect(result.dealStoreCount).toBe(15)
   })
 
-  it('할인율순_떨이없는_매장은_뒤로', async () => {
-    const items = await fetchAll('discount')
-    expect(items[0].id).toBe('nb-3') // 최대 할인율 매장
-    const dealFlags = items.map((s) => s.activeDealCount > 0)
-    // 떨이 보유 매장이 전부 떨이 0개 매장보다 앞에 온다
-    expect(dealFlags.lastIndexOf(true)).toBeLessThan(dealFlags.indexOf(false))
+  it('마지막_페이지_hasNext_false', async () => {
+    vi.mocked(apiClient.get).mockResolvedValue(
+      mockPage({ hasNext: false, page: 1, total: 10 }),
+    )
+
+    const result = await storeListApi.getStores({ sort: 'rating', page: 1 })
+
+    expect(result.hasNext).toBe(false)
+    expect(result.page).toBe(1)
   })
 
-  it('마감임박순_가장_임박한_매장_먼저_떨이없으면_뒤로', async () => {
-    const items = await fetchAll('closing')
-    expect(items[0].id).toBe('nb-3') // 가장 임박
-    const dealFlags = items.map((s) => s.activeDealCount > 0)
-    expect(dealFlags.lastIndexOf(true)).toBeLessThan(dealFlags.indexOf(false))
+  it('id가_number로_파싱', async () => {
+    const result = await storeListApi.getStores({ sort: 'distance' })
+
+    expect(typeof result.items[0].id).toBe('number')
+    expect(result.items[0].id).toBe(1)
   })
 
-  it('추천순_기본_거리순과_다른_순서', async () => {
-    const recommended = await fetchAll('recommended')
-    expect(recommended[0].id).toBe('st-1')
-    const distance = await fetchAll('distance')
-    // 추천 점수는 거리+평점+떨이 보너스라 단순 거리순과 달라야 한다
-    expect(recommended.map((s) => s.id)).not.toEqual(distance.map((s) => s.id))
+  it('imageUrl_absent이면_null로_변환', async () => {
+    vi.mocked(apiClient.get).mockResolvedValue({
+      data: {
+        items: [{ id: 1, name: '테스트', distanceKm: 0.5, rating: 4.0, activeDealCount: 0, isFavorite: false }],
+        page: 0,
+        size: 20,
+        hasNext: false,
+        total: 1,
+        dealStoreCount: 0,
+      },
+    })
+
+    const result = await storeListApi.getStores({ sort: 'recommended' })
+
+    expect(result.items[0].imageUrl).toBeNull()
   })
 
-  it('isFavorite_전환적_false_고정_매장목록_실연동_#6_에서_BE_응답_필드로', async () => {
-    // 단골 isFavorite 은 #6 매장 목록 실연동 시 BE join 응답 필드로 대체.
-    // 현재는 mock storeListApi 가 전환적으로 false 고정.
-    const items = await fetchAll('distance')
-    for (const item of items) {
-      expect(item.isFavorite).toBe(false)
-    }
+  it('Zod_검증_통과_후_반환', async () => {
+    const result = await storeListApi.getStores({ sort: 'recommended' })
+
+    expect(result).toMatchObject({
+      items: expect.any(Array),
+      page: expect.any(Number),
+      size: expect.any(Number),
+      hasNext: expect.any(Boolean),
+      total: expect.any(Number),
+      dealStoreCount: expect.any(Number),
+    })
   })
 })

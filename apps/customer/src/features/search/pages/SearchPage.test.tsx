@@ -33,7 +33,7 @@ describe('SearchPage', () => {
     vi.mocked(searchApi.search).mockResolvedValue({
       stores: [
         {
-          id: 'st-1',
+          id: 101,
           name: '베이커리 브레드샵',
           imageUrl: null,
           distanceKm: 0.3,
@@ -127,7 +127,7 @@ describe('SearchPage', () => {
     vi.mocked(searchApi.search).mockResolvedValue({
       stores: [
         {
-          id: 'st-1',
+          id: 101,
           name: '베이커리 브레드샵',
           imageUrl: null,
           distanceKm: 0.3,

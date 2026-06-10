@@ -47,28 +47,39 @@ export type StoreListParams = z.infer<typeof storeListParamsSchema>
 
 /** 매장 카드 — 매장 단위 (이름·거리·평점·진행 중 마감 할인 개수·단골 여부) */
 export const storeListItemSchema = z.object({
-  id: z.string(),
-  name: z.string(),
-  imageUrl: z.string().nullable(),
+  /** BE int64 → number */
+  id: z.number(),
+  name: z.string().default(''),
+  /**
+   * BE optional·null 가능 — nullish().transform 으로 absent/null → null 변환.
+   */
+  imageUrl: z
+    .string()
+    .nullish()
+    .transform((v) => v ?? null),
   /** 직선거리(km) — BE 계산 */
-  distanceKm: z.number(),
+  distanceKm: z.number().default(0),
   /** 리뷰 평균 평점 (0 = 리뷰 없음) */
-  rating: z.number(),
+  rating: z.number().default(0),
   /** 진행 중(ACTIVE) 마감 할인 개수 — 0이면 카드 배지 생략 */
-  activeDealCount: z.number(),
+  activeDealCount: z.number().default(0),
   /** 소비자가 단골 등록한 매장이면 true → 단골 뱃지 노출 */
-  isFavorite: z.boolean(),
+  isFavorite: z.boolean().default(false),
 })
 export type StoreListItem = z.infer<typeof storeListItemSchema>
 
-/** 무한 스크롤 페이지 — cursor 페이징 + 상단 요약 집계 */
+/** 무한 스크롤 페이지 — offset 페이징 + 상단 요약 집계 */
 export const storeListPageSchema = z.object({
   items: z.array(storeListItemSchema),
-  /** 다음 페이지 커서 — null 이면 마지막 페이지 */
-  nextCursor: z.number().nullable(),
+  /** 현재 페이지 번호 (0-based) */
+  page: z.number().default(0),
+  /** 페이지 크기 */
+  size: z.number().default(0),
+  /** 다음 페이지 존재 여부 — false 면 마지막 페이지 */
+  hasNext: z.boolean().default(false),
   /** 5km 이내 노출 매장 총 수 ("전체 N곳") */
-  total: z.number(),
+  total: z.number().default(0),
   /** 그 중 진행 중 마감 할인 보유 매장 수 ("마감 할인 진행 M곳") */
-  dealStoreCount: z.number(),
+  dealStoreCount: z.number().default(0),
 })
 export type StoreListPage = z.infer<typeof storeListPageSchema>

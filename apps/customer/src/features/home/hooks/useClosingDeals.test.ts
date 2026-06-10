@@ -10,7 +10,7 @@ describe('useClosingDeals', () => {
   it('마감임박_목록_조회_성공', async () => {
     vi.mocked(homeApi.getClosingDeals).mockResolvedValue([
       {
-        id: 'cd-1',
+        id: 1,
         storeName: '테스트 베이커리',
         productName: '크루아상',
         imageUrl: null,

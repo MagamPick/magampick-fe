@@ -47,7 +47,7 @@ describe('StoreRow', () => {
     render(
       <StoreRow
         store={{
-          id: 'nb',
+          id: 3,
           name: '동네집',
           imageUrl: null,
           distanceKm: 0.8,
@@ -62,6 +62,6 @@ describe('StoreRow', () => {
     expect(screen.queryByText(/진행 중 마감 할인/)).not.toBeInTheDocument()
 
     await user.click(screen.getByRole('button'))
-    expect(mockNavigate).toHaveBeenCalledWith('/store/nb')
+    expect(mockNavigate).toHaveBeenCalledWith('/store/3')
   })
 })
