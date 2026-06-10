@@ -10,11 +10,12 @@ export type CreateProductFields = Omit<CreateProductPayload, 'storeId'>
  * 상품 등록 — 현재 매장(storeId)에 등록하고 성공 시 해당 매장 상품 목록을 무효화(즉시 반영).
  * 성공 후 화면 이동은 호출 측(폼)이 담당.
  */
-export function useCreateProduct(storeId: string) {
+export function useCreateProduct(storeId: number | null) {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: (fields: CreateProductFields) => productApi.createProduct({ ...fields, storeId }),
+    mutationFn: (fields: CreateProductFields) =>
+      productApi.createProduct(storeId!, fields),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: productKeys.list(storeId) })
     },

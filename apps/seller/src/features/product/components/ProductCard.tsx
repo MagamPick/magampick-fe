@@ -1,4 +1,5 @@
 import { cn } from '@/shared/lib/utils'
+import { CATEGORY_LABELS } from '../types'
 import type { ProductSaleStatus } from '../types'
 
 /**
@@ -63,7 +64,11 @@ export function ProductCard({
         </span>
         <div className="min-w-0 flex-1">
           <p className="truncate text-[14px] font-bold text-foreground">{name}</p>
-          {showCategory && <p className="mt-0.5 text-[12px] text-muted-foreground">{category}</p>}
+          {showCategory && (
+              <p className="mt-0.5 text-[12px] text-muted-foreground">
+                {CATEGORY_LABELS[category] ?? category}
+              </p>
+            )}
           <p className="mt-1 text-[14px] font-extrabold text-foreground">{won(price)}</p>
           {hasDeal && (
             <p className="mt-1 text-[11px] font-bold text-primary">🔥 마감 할인 진행중</p>

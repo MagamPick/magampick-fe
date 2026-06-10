@@ -16,10 +16,10 @@ import { ClearanceCreatePage } from './ClearanceCreatePage'
 import type { Product } from '@/features/product/types'
 
 const americano: Product = {
-  id: 'p2',
-  storeId: 's1',
+  id: 2,
+  storeId: 1,
   name: '아메리카노',
-  category: '음료',
+  category: 'BEVERAGE',
   price: 3000,
   onSale: true,
 }
@@ -36,7 +36,7 @@ function setup(opts?: { open?: boolean; initial?: string; products?: Product[] }
   >)
   vi.mocked(useStoreStatus).mockReturnValue({
     data: {
-      storeId: 's1',
+      storeId: 1,
       operationStatus: opts?.open === false ? 'BREAK' : 'OPEN',
       canOpenToday: true,
       todayCloseTime: '21:00',
@@ -94,7 +94,7 @@ describe('ClearanceCreatePage', () => {
   })
 
   it('?productId 로 진입하면 해당 상품이 선택되어 수량 단계부터 시작한다', () => {
-    setup({ initial: '/clearance/new?productId=p2' })
+    setup({ initial: '/clearance/new?productId=2' })
     // step2 의 "선택 상품" 표기 + 상품명
     expect(screen.getByText('선택 상품')).toBeInTheDocument()
     expect(screen.getByText('아메리카노')).toBeInTheDocument()

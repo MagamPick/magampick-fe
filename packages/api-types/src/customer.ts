@@ -2971,7 +2971,7 @@ export interface components {
             imageUrl?: string;
             /** @description 상품명 */
             name?: string;
-            /** @description 상품 설명 (현재 미지원, null) */
+            /** @description 상품 설명 (없으면 null) */
             description?: string;
             /**
              * Format: double
@@ -3213,7 +3213,7 @@ export interface components {
             imageUrl?: string;
             /** @description 상품명 */
             name?: string;
-            /** @description 상품 설명 (현재 미지원, null) */
+            /** @description 상품 설명 (없으면 null) */
             description?: string;
             /**
              * Format: double

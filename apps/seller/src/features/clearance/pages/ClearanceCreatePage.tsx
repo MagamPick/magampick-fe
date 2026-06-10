@@ -80,16 +80,14 @@ export function ClearanceCreatePage() {
   const [params] = useSearchParams()
   const preselectId = params.get('productId') ?? ''
   const selectedStoreId = useCurrentStoreStore((s) => s.selectedStoreId)
-  // mock hook(string storeId) 전달용 변환 — Step 2 실연동 시 이전
-  const storeId = selectedStoreId != null ? String(selectedStoreId) : ''
 
-  const { data: products = [], isLoading: loadingProducts } = useProducts(storeId)
-  const { data: clearances = [] } = useClearances(storeId)
+  const { data: products = [], isLoading: loadingProducts } = useProducts(selectedStoreId)
+  const { data: clearances = [] } = useClearances(selectedStoreId)
   const { data: status, isLoading: loadingStatus } = useStoreStatus(selectedStoreId)
-  const create = useCreateClearance(storeId)
+  const create = useCreateClearance(selectedStoreId)
 
   const activeProductIds = new Set(
-    clearances.filter((c) => c.status === 'ACTIVE').map((c) => c.productId),
+    clearances.filter((c) => c.status === 'OPEN').map((c) => c.productId),
   )
   const eligible = products.filter((p) => p.onSale && !activeProductIds.has(p.id))
 
@@ -107,14 +105,14 @@ export function ClearanceCreatePage() {
   useEffect(() => {
     if (initRef.current || !preselectId || loadingProducts) return
     initRef.current = true
-    if (eligible.some((p) => p.id === preselectId)) {
+    if (eligible.some((p) => String(p.id) === preselectId)) {
       form.setValue('productId', preselectId, { shouldValidate: true })
       setStep(2)
     }
   }, [preselectId, loadingProducts, eligible, form])
 
   const v = form.watch()
-  const selected = products.find((p) => p.id === v.productId)
+  const selected = products.find((p) => String(p.id) === v.productId)
   const original = selected?.price ?? 0
   const saleNum = Number(v.salePrice || '0')
   const rate = selected && /^\d+$/.test(v.salePrice) ? discountRate(original, saleNum) : null
@@ -152,7 +150,7 @@ export function ClearanceCreatePage() {
     setServerError(null)
     create.mutate(
       {
-        productId: v.productId,
+        productId: Number(v.productId),
         salePrice: saleNum,
         totalQty: Number(v.totalQty),
         closeTime: v.closeTime,
@@ -233,14 +231,14 @@ export function ClearanceCreatePage() {
                     ) : (
                       <div className="flex flex-col gap-2">
                         {eligible.map((p) => {
-                          const on = v.productId === p.id
+                          const on = v.productId === String(p.id)
                           return (
                             <button
                               key={p.id}
                               type="button"
                               aria-pressed={on}
                               onClick={() =>
-                                form.setValue('productId', p.id, { shouldValidate: true })
+                                form.setValue('productId', String(p.id), { shouldValidate: true })
                               }
                               className={cn(
                                 'flex items-center gap-3 rounded-[14px] border-[1.5px] bg-card p-3 text-left transition',

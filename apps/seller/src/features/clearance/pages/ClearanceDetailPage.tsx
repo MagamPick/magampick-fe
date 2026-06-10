@@ -28,37 +28,35 @@ import { updateClearanceInputSchema } from '../types'
 import type { ClearanceStatus, UpdateClearanceInput } from '../types'
 import { discountRate } from '../lib/clearanceStatus'
 
-const paramsSchema = z.object({ id: z.string().min(1) })
+const paramsSchema = z.object({ id: z.coerce.number().int().positive() })
 const won = (n: number) => `₩${n.toLocaleString('ko-KR')}`
 
 const STATUS_BADGE: Record<ClearanceStatus, { label: string; className: string }> = {
-  ACTIVE: { label: '진행중', className: 'bg-success/10 text-success' },
+  OPEN: { label: '진행중', className: 'bg-success/10 text-success' },
   CLOSED: { label: '마감', className: 'bg-muted text-muted-foreground' },
   SOLD_OUT: { label: '품절', className: 'bg-muted text-muted-foreground' },
 }
-const CLOSE_REASON_TEXT = {
-  EXPIRED: '픽업 마감 시각이 지나 마감됐어요.',
+
+const STATUS_CLOSE_TEXT: Partial<Record<ClearanceStatus, string>> = {
   SOLD_OUT: '수량이 모두 소진되어 마감됐어요.',
-  MANUAL: '사장님이 직접 마감했어요.',
-} as const
+  CLOSED: '마감된 마감 할인이에요.',
+}
 
 /**
  * 떨이 상세 · 수정 · 조기 마감 (노션: 떨이 상품 수정 / 떨이 상품 마감 처리, 프로토타입 32-deal-detail).
- * 활성(ACTIVE)일 때만 할인가·남은 수량·픽업 마감 수정 + 조기 마감 가능. 마감되면 읽기전용.
+ * 활성(OPEN)일 때만 할인가·남은 수량·픽업 마감 수정 + 조기 마감 가능. 마감되면 읽기전용.
  */
 export function ClearanceDetailPage() {
   const navigate = useNavigate()
   const params = useParams()
   const parsed = paramsSchema.safeParse(params)
-  const id = parsed.success ? parsed.data.id : ''
+  const id = parsed.success ? parsed.data.id : 0
   const selectedStoreId = useCurrentStoreStore((s) => s.selectedStoreId)
-  // mock hook(string storeId) 전달용 변환 — Step 2 실연동 시 이전
-  const storeId = selectedStoreId != null ? String(selectedStoreId) : ''
 
-  const { data: clearance, isLoading, isError, refetch } = useClearance(id)
+  const { data: clearance, isLoading, isError, refetch } = useClearance(selectedStoreId, id)
   const { data: status } = useStoreStatus(selectedStoreId)
-  const update = useUpdateClearance(id, storeId)
-  const close = useCloseClearance(id, storeId)
+  const update = useUpdateClearance(id, selectedStoreId)
+  const close = useCloseClearance(id, selectedStoreId)
 
   const [sheetOpen, setSheetOpen] = useState(false)
   const [serverError, setServerError] = useState<string | null>(null)
@@ -82,7 +80,7 @@ export function ClearanceDetailPage() {
 
   if (!parsed.success) return <Navigate to={ROUTES.HOME} replace />
 
-  const editable = clearance?.status === 'ACTIVE'
+  const editable = clearance?.status === 'OPEN'
   const v = form.watch()
   const original = clearance?.originalPrice ?? 0
   const saleNum = Number(v.salePrice || '0')
@@ -91,12 +89,12 @@ export function ClearanceDetailPage() {
   const todayClose = status?.todayCloseTime
 
   const onSave = () => {
-    if (priceTooHigh) return
+    if (!clearance || priceTooHigh) return
     setServerError(null)
     update.mutate(
       {
         salePrice: saleNum,
-        remainingQty: Number(v.remainingQty),
+        totalQuantity: clearance.soldQty + Number(v.remainingQty),
         closeTime: v.closeTime,
       },
       {
@@ -298,9 +296,7 @@ export function ClearanceDetailPage() {
             <section className="rounded-[14px] border border-border bg-card p-4">
               <p className="text-[13px] font-bold text-foreground">마감된 마감 할인</p>
               <p className="mt-1.5 text-[13px] leading-relaxed text-muted-foreground">
-                {clearance.closeReason
-                  ? CLOSE_REASON_TEXT[clearance.closeReason]
-                  : '마감된 마감 할인이에요.'}{' '}
+                {STATUS_CLOSE_TEXT[clearance.status] ?? '마감된 마감 할인이에요.'}{' '}
                 마감된 마감 할인은 수정하거나 다시 시작할 수 없어요.
               </p>
             </section>

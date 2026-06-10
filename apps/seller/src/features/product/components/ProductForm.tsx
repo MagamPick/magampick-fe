@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useNavigate } from 'react-router'
@@ -19,8 +19,8 @@ import { ROUTES } from '@/shared/lib/routes'
 import { useCurrentStoreStore } from '@/features/store/stores/currentStoreStore'
 import { useCreateProduct } from '../hooks/useCreateProduct'
 import { useUpdateProduct } from '../hooks/useUpdateProduct'
-import { PRODUCT_CATEGORIES, createProductInputSchema } from '../types'
-import type { CreateProductInput, Product, ProductCategory } from '../types'
+import { PRODUCT_CATEGORIES, CATEGORY_LABELS, createProductInputSchema } from '../types'
+import type { CreateProductInput, Product } from '../types'
 
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024
 
@@ -33,24 +33,34 @@ interface Props {
 /**
  * 일반 상품 등록/수정 공용 폼 (노션: 일반 상품 등록 / 수정·삭제).
  * 등록: 현재 매장에 생성 → 목록으로. 수정: 기존 상품 프리필 → 변경 저장 → 상세로.
- * 사진은 로컬 dataURL — 수정 시 새로 고르지 않으면 기존 사진 유지(미전송).
+ * 사진은 File 객체 → multipart 전송. 수정 시 새로 고르지 않으면 기존 사진 유지(미전송).
+ * objectURL 은 useMemo 로 파생 + cleanup effect 로 revoke (React Compiler 호환).
  */
 export function ProductForm({ mode = 'create', product }: Props) {
   const navigate = useNavigate()
-  const _storeIdNum = useCurrentStoreStore((s) => s.selectedStoreId)
-  // mock hook(string storeId) 전달용 변환 — Step 2 실연동 시 이전
-  const storeId = _storeIdNum != null ? String(_storeIdNum) : ''
+  const storeId = useCurrentStoreStore((s) => s.selectedStoreId)
   const isEdit = mode === 'edit' && !!product
 
   const create = useCreateProduct(storeId)
-  const update = useUpdateProduct(product?.id ?? '', storeId)
+  const update = useUpdateProduct(product?.id ?? 0, storeId)
   const mutation = isEdit ? update : create
 
   const fileInputRef = useRef<HTMLInputElement>(null)
-  // 새로 고른 사진 dataURL (수정 시 미선택이면 null → 기존 사진 유지)
-  const [imageDataUrl, setImageDataUrl] = useState<string | null>(null)
+  const [imageFile, setImageFile] = useState<File | null>(null)
   const [imageError, setImageError] = useState<string | null>(null)
-  const previewUrl = imageDataUrl ?? product?.imageUrl ?? null
+
+  // objectURL — useMemo 로 파생, cleanup effect 로 revoke (FileReader/dataURL 대신)
+  const objectUrl = useMemo(
+    () => (imageFile ? URL.createObjectURL(imageFile) : null),
+    [imageFile],
+  )
+  useEffect(() => {
+    return () => {
+      if (objectUrl) URL.revokeObjectURL(objectUrl)
+    }
+  }, [objectUrl])
+
+  const previewUrl = objectUrl ?? product?.imageUrl ?? null
 
   const form = useForm<CreateProductInput>({
     resolver: zodResolver(createProductInputSchema),
@@ -58,14 +68,14 @@ export function ProductForm({ mode = 'create', product }: Props) {
     defaultValues: isEdit
       ? {
           name: product.name,
-          category: product.category,
+          category: product.category as 'BAKERY' | 'BEVERAGE' | 'DESSERT',
           price: String(product.price),
           description: product.description ?? '',
           onSale: product.onSale,
         }
       : {
           name: '',
-          category: '' as ProductCategory,
+          category: undefined,
           price: '',
           description: '',
           onSale: true,
@@ -90,11 +100,7 @@ export function ProductForm({ mode = 'create', product }: Props) {
       return
     }
     setImageError(null)
-    const reader = new FileReader()
-    reader.onload = () => {
-      if (typeof reader.result === 'string') setImageDataUrl(reader.result)
-    }
-    reader.readAsDataURL(file)
+    setImageFile(file)
   }
 
   function onSubmit(values: CreateProductInput) {
@@ -105,7 +111,7 @@ export function ProductForm({ mode = 'create', product }: Props) {
       price: Number(values.price),
       description: description || undefined,
       onSale: values.onSale,
-      imageDataUrl: imageDataUrl ?? undefined,
+      imageFile: imageFile ?? undefined,
     }
     if (isEdit) {
       update.mutate(payload, {
@@ -206,7 +212,7 @@ export function ProductForm({ mode = 'create', product }: Props) {
                             : 'border-border bg-card text-foreground',
                         )}
                       >
-                        {cat}
+                        {CATEGORY_LABELS[cat]}
                       </button>
                     )
                   })}

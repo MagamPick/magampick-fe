@@ -21,33 +21,32 @@ function setup() {
   return { queryClient, wrapper }
 }
 
-const fields = { productId: 'p2', salePrice: 1500, totalQty: 10, closeTime: '20:00' }
+const fields = { productId: 2, salePrice: 1500, totalQty: 10, closeTime: '20:00' }
 
 describe('useCreateClearance', () => {
   beforeEach(() => vi.clearAllMocks())
 
-  it('등록 성공 시 storeId 를 붙여 호출하고 떨이·상품 목록을 무효화한다', async () => {
+  it('등록 성공 시 storeId 와 payload 로 호출하고 떨이·상품 목록을 무효화한다', async () => {
     vi.mocked(clearanceApi.createClearance).mockResolvedValue({
-      id: 'c100',
-      storeId: 's1',
-      ...fields,
+      id: 1,
       soldQty: 0,
-      status: 'ACTIVE',
+      status: 'OPEN',
       createdAt: '2026-06-01T10:00:00.000Z',
       productName: '아메리카노',
       originalPrice: 3000,
       remainingQty: 10,
+      ...fields,
     } as ClearanceView)
     const { queryClient, wrapper } = setup()
     const invalidate = vi.spyOn(queryClient, 'invalidateQueries')
-    const { result } = renderHook(() => useCreateClearance('s1'), { wrapper })
+    const { result } = renderHook(() => useCreateClearance(1), { wrapper })
 
     result.current.mutate(fields)
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true))
-    expect(clearanceApi.createClearance).toHaveBeenCalledWith({ ...fields, storeId: 's1' })
-    expect(invalidate).toHaveBeenCalledWith({ queryKey: clearanceKeys.list('s1') })
-    expect(invalidate).toHaveBeenCalledWith({ queryKey: productKeys.list('s1') })
+    expect(clearanceApi.createClearance).toHaveBeenCalledWith(1, fields)
+    expect(invalidate).toHaveBeenCalledWith({ queryKey: clearanceKeys.list(1) })
+    expect(invalidate).toHaveBeenCalledWith({ queryKey: productKeys.list(1) })
   })
 
   it('거부(PRODUCT_ALREADY_ON_CLEARANCE) 시 에러를 노출한다', async () => {
@@ -55,7 +54,7 @@ describe('useCreateClearance', () => {
       new ApiError(409, 'PRODUCT_ALREADY_ON_CLEARANCE', '이미 진행 중인 마감 할인이 있어요'),
     )
     const { wrapper } = setup()
-    const { result } = renderHook(() => useCreateClearance('s1'), { wrapper })
+    const { result } = renderHook(() => useCreateClearance(1), { wrapper })
 
     result.current.mutate(fields)
 

@@ -12,14 +12,14 @@ describe('useProducts', () => {
 
   it('현재 매장의 상품 목록을 조회한다', async () => {
     const list: Product[] = [
-      { id: 'p1', storeId: 's1', name: '아메리카노', category: '음료', price: 3000, onSale: true },
+      { id: 1, storeId: 1, name: '아메리카노', category: 'BEVERAGE', price: 3000, onSale: true },
     ]
     vi.mocked(productApi.listProducts).mockResolvedValue(list)
 
-    const { result } = renderHook(() => useProducts('s1'), { wrapper: createQueryWrapper() })
+    const { result } = renderHook(() => useProducts(1), { wrapper: createQueryWrapper() })
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true))
-    expect(productApi.listProducts).toHaveBeenCalledWith('s1')
+    expect(productApi.listProducts).toHaveBeenCalledWith(1)
     expect(result.current.data).toEqual(list)
   })
 })
