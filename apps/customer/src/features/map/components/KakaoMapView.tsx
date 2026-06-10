@@ -53,7 +53,7 @@ export function KakaoMapView({
   stores: MapStore[]
   center: GeoPosition
   radiusKm: MapDistance
-  selectedId: string | null
+  selectedId: number | null
   onStoreSelect: (store: MapStore) => void
 }) {
   const containerRef = useRef<HTMLDivElement>(null)

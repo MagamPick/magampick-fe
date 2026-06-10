@@ -5,7 +5,7 @@ import { StorePreviewCard } from './StorePreviewCard'
 import type { MapStore } from '../types'
 
 const store = (over: Partial<MapStore> = {}): MapStore => ({
-  id: 'st-1',
+  id: 1,
   name: '베이커리 브레드샵',
   imageUrl: null,
   latitude: 37.55,
