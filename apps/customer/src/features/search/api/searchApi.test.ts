@@ -1,79 +1,225 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { searchApi } from './searchApi'
 
-describe('searchApi.search (키워드 검색 mock)', () => {
-  it('매장명_매칭은_매장_섹션에', async () => {
-    const r = await searchApi.search({ q: '브레드', sort: 'recommended' })
-    expect(r.stores.length).toBeGreaterThan(0)
-    expect(r.stores.every((s) => s.name.includes('브레드'))).toBe(true)
-  })
+vi.mock('@/shared/lib/axios', () => ({
+  apiClient: {
+    get: vi.fn(),
+  },
+}))
 
-  it('상품명_매칭은_상품_섹션에', async () => {
-    const r = await searchApi.search({ q: '크루아상', sort: 'recommended' })
-    expect(r.products.length).toBeGreaterThan(0)
-    expect(r.products.every((p) => p.name.includes('크루아상'))).toBe(true)
-  })
+import { apiClient } from '@/shared/lib/axios'
 
-  it('소속_상품만_매칭된_매장은_매장섹션에_안_들어온다', async () => {
-    // '크루아상'은 상품명 — 그 상품을 파는 매장이라도 매장명에 '크루아상'이 없으면 매장 섹션 0건
-    const r = await searchApi.search({ q: '크루아상', sort: 'recommended' })
-    expect(r.stores).toHaveLength(0)
-  })
+/** BE StoreListItemResponse 픽스처 */
+const storePayload = {
+  id: 101,
+  name: '베이커리 브레드샵',
+  imageUrl: null,
+  distanceKm: 0.3,
+  rating: 4.6,
+  activeDealCount: 2,
+  isFavorite: false,
+}
 
-  it('매장·상품_둘다_매칭되면_각_섹션에_분리', async () => {
-    const r = await searchApi.search({ q: '베이글', sort: 'recommended' })
-    expect(r.stores.length).toBeGreaterThan(0)
-    expect(r.products.length).toBeGreaterThan(0)
-  })
+/** BE DealSearchItem 픽스처 */
+const dealPayload = {
+  kind: 'deal',
+  id: 1001,
+  storeId: 101,
+  storeName: '베이커리 브레드샵',
+  name: '크루아상',
+  imageUrl: 'https://cdn.example.com/croissant.jpg',
+  originalPrice: 4000,
+  salePrice: 2400,
+  discountRate: 40,
+}
 
-  it('매칭_없으면_양쪽_빈_배열', async () => {
-    const r = await searchApi.search({ q: '존재하지않는검색어zzz', sort: 'recommended' })
-    expect(r.stores).toHaveLength(0)
-    expect(r.products).toHaveLength(0)
-  })
+/** BE MenuSearchItem 픽스처 */
+const menuPayload = {
+  kind: 'menu',
+  id: 2001,
+  storeId: 102,
+  storeName: '카페 모리',
+  name: '아메리카노',
+  imageUrl: null,
+  price: 4000,
+}
 
-  it('거리순은_가까운_매장부터', async () => {
-    const r = await searchApi.search({ q: '브레드', sort: 'distance' })
-    const dists = r.stores.map((s) => s.distanceKm)
-    expect(dists).toEqual([...dists].sort((a, b) => a - b))
-  })
-
-  it('할인율순은_상품_할인율_내림차순', async () => {
-    const r = await searchApi.search({ q: '베이글', sort: 'discount' })
-    const rates = r.products.map((p) => ('discountRate' in p ? p.discountRate : 0))
-    expect(rates).toEqual([...rates].sort((a, b) => b - a))
+beforeEach(() => {
+  vi.mocked(apiClient.get).mockResolvedValue({
+    data: { stores: [storePayload], products: [dealPayload, menuPayload] },
   })
 })
 
-describe('searchApi.autocomplete (자동완성 mock)', () => {
-  it('부분_입력으로_유사_매장명·상품명_제안', async () => {
-    const s = await searchApi.autocomplete({ q: '크루' })
-    expect(s.length).toBeGreaterThan(0)
-    expect(s.some((x) => x.text.includes('크루아상'))).toBe(true)
+describe('searchApi.search (키워드 검색)', () => {
+  it('올바른_엔드포인트와_파라미터로_요청', async () => {
+    await searchApi.search({ q: '크루아상', sort: 'recommended' })
+
+    expect(apiClient.get).toHaveBeenCalledWith('/search', {
+      params: { q: '크루아상', sort: 'recommended' },
+    })
   })
 
-  it('오타도_유사도로_매칭_pg_trgm', async () => {
-    const s = await searchApi.autocomplete({ q: '크로아상' }) // 오타
-    expect(s.some((x) => x.text === '크루아상')).toBe(true)
+  it('정렬_파라미터가_올바르게_전달', async () => {
+    await searchApi.search({ q: '빵', sort: 'distance' })
+
+    expect(apiClient.get).toHaveBeenCalledWith('/search', {
+      params: { q: '빵', sort: 'distance' },
+    })
   })
 
-  it('매장·상품을_kind로_구분', async () => {
-    const s = await searchApi.autocomplete({ q: '베이' })
-    expect(s.some((x) => x.kind === 'store')).toBe(true)
-    expect(s.some((x) => x.kind === 'product')).toBe(true)
+  it('BE_payload를_Zod_파싱하여_반환', async () => {
+    const result = await searchApi.search({ q: '크루아상', sort: 'recommended' })
+
+    expect(result.stores).toHaveLength(1)
+    expect(result.products).toHaveLength(2)
   })
 
-  it('빈_입력은_빈_배열', async () => {
-    expect(await searchApi.autocomplete({ q: '' })).toEqual([])
-    expect(await searchApi.autocomplete({ q: '   ' })).toEqual([])
+  it('deal_kind_판별_및_id가_number', async () => {
+    const result = await searchApi.search({ q: '크루아상', sort: 'recommended' })
+    const deal = result.products.find((p) => p.kind === 'deal')
+
+    expect(deal).toBeDefined()
+    expect(deal!.kind).toBe('deal')
+    expect(typeof deal!.id).toBe('number')
+    expect(deal!.id).toBe(1001)
   })
 
-  it('매칭_없으면_빈_배열', async () => {
-    expect(await searchApi.autocomplete({ q: 'zzz존재안함' })).toEqual([])
+  it('menu_kind_판별_및_id가_number', async () => {
+    const result = await searchApi.search({ q: '크루아상', sort: 'recommended' })
+    const menu = result.products.find((p) => p.kind === 'menu')
+
+    expect(menu).toBeDefined()
+    expect(menu!.kind).toBe('menu')
+    expect(typeof menu!.id).toBe('number')
+    expect(menu!.id).toBe(2001)
   })
 
-  it('최대_8개로_제한', async () => {
-    const s = await searchApi.autocomplete({ q: '아' }) // 광범위 매칭
-    expect(s.length).toBeLessThanOrEqual(8)
+  it('storeId가_number', async () => {
+    const result = await searchApi.search({ q: '크루아상', sort: 'recommended' })
+    const deal = result.products.find((p) => p.kind === 'deal')
+
+    expect(typeof deal!.storeId).toBe('number')
+    expect(deal!.storeId).toBe(101)
+  })
+
+  it('imageUrl_키_생략_시_null로_변환', async () => {
+    vi.mocked(apiClient.get).mockResolvedValue({
+      data: {
+        stores: [],
+        products: [
+          {
+            kind: 'deal',
+            id: 999,
+            storeId: 1,
+            originalPrice: 1000,
+            salePrice: 800,
+            discountRate: 20,
+          },
+        ],
+      },
+    })
+
+    const result = await searchApi.search({ q: '빵', sort: 'recommended' })
+    const item = result.products[0]
+
+    expect(item.imageUrl).toBeNull()
+  })
+
+  it('storeName_name_생략_시_빈문자열_default', async () => {
+    vi.mocked(apiClient.get).mockResolvedValue({
+      data: {
+        stores: [],
+        products: [
+          {
+            kind: 'menu',
+            id: 888,
+            storeId: 2,
+            price: 3000,
+          },
+        ],
+      },
+    })
+
+    const result = await searchApi.search({ q: '음료', sort: 'recommended' })
+    const item = result.products[0]
+
+    expect(item.storeName).toBe('')
+    expect(item.name).toBe('')
+  })
+
+  it('stores가_없으면_빈배열_default', async () => {
+    vi.mocked(apiClient.get).mockResolvedValue({
+      data: { products: [dealPayload] },
+    })
+
+    const result = await searchApi.search({ q: '크루아상', sort: 'recommended' })
+
+    expect(result.stores).toEqual([])
+  })
+
+  it('products가_없으면_빈배열_default', async () => {
+    vi.mocked(apiClient.get).mockResolvedValue({
+      data: { stores: [storePayload] },
+    })
+
+    const result = await searchApi.search({ q: '베이커리', sort: 'recommended' })
+
+    expect(result.products).toEqual([])
+  })
+})
+
+describe('searchApi.autocomplete (자동완성)', () => {
+  it('올바른_엔드포인트와_파라미터로_요청', async () => {
+    vi.mocked(apiClient.get).mockResolvedValue({
+      data: [{ kind: 'store', text: '베이커리 브레드샵' }],
+    })
+
+    await searchApi.autocomplete({ q: '베이' })
+
+    expect(apiClient.get).toHaveBeenCalledWith('/search/autocomplete', {
+      params: { q: '베이' },
+    })
+  })
+
+  it('배열_응답을_Zod_파싱하여_반환', async () => {
+    vi.mocked(apiClient.get).mockResolvedValue({
+      data: [
+        { kind: 'store', text: '베이커리 브레드샵' },
+        { kind: 'product', text: '크루아상' },
+      ],
+    })
+
+    const result = await searchApi.autocomplete({ q: '베이' })
+
+    expect(result).toHaveLength(2)
+  })
+
+  it('store_kind_구분', async () => {
+    vi.mocked(apiClient.get).mockResolvedValue({
+      data: [{ kind: 'store', text: '베이커리 브레드샵' }],
+    })
+
+    const result = await searchApi.autocomplete({ q: '베이' })
+
+    expect(result[0].kind).toBe('store')
+    expect(result[0].text).toBe('베이커리 브레드샵')
+  })
+
+  it('product_kind_구분', async () => {
+    vi.mocked(apiClient.get).mockResolvedValue({
+      data: [{ kind: 'product', text: '크루아상' }],
+    })
+
+    const result = await searchApi.autocomplete({ q: '크루' })
+
+    expect(result[0].kind).toBe('product')
+  })
+
+  it('빈_배열_응답_처리', async () => {
+    vi.mocked(apiClient.get).mockResolvedValue({ data: [] })
+
+    const result = await searchApi.autocomplete({ q: '존재안함zzz' })
+
+    expect(result).toEqual([])
   })
 })

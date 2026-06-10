@@ -7,8 +7,8 @@ import type { SearchProductItem } from '../types'
 
 const dealProduct: SearchProductItem = {
   kind: 'deal',
-  id: 'p-1',
-  storeId: 'st-1',
+  id: 1001,
+  storeId: 101,
   storeName: '브레드샵',
   name: '크루아상',
   imageUrl: null,
@@ -19,8 +19,8 @@ const dealProduct: SearchProductItem = {
 
 const menuProduct: SearchProductItem = {
   kind: 'menu',
-  id: 'p-8',
-  storeId: 'st-2',
+  id: 2008,
+  storeId: 102,
   storeName: '카페 모리',
   name: '아메리카노',
   imageUrl: null,
@@ -62,13 +62,13 @@ describe('ProductResultRow', () => {
     const user = userEvent.setup()
     renderRow(dealProduct)
     await user.click(screen.getByRole('button'))
-    expect(screen.getByTestId('loc')).toHaveTextContent('/product/deal/p-1')
+    expect(screen.getByTestId('loc')).toHaveTextContent('/product/deal/1001')
   })
 
   it('일반상품_탭하면_상품상세_menu_경로', async () => {
     const user = userEvent.setup()
     renderRow(menuProduct)
     await user.click(screen.getByRole('button'))
-    expect(screen.getByTestId('loc')).toHaveTextContent('/product/menu/p-8')
+    expect(screen.getByTestId('loc')).toHaveTextContent('/product/menu/2008')
   })
 })
