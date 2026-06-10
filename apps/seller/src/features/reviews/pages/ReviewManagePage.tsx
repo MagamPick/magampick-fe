@@ -20,7 +20,6 @@ import type { SellerReview } from '../types'
 export function ReviewManagePage() {
   const navigate = useNavigate()
   const _storeIdNum = useCurrentStoreStore((s) => s.selectedStoreId)
-  // mock hook(string storeId) 전달용 변환 — Step 2 실연동 시 이전
   const storeId = _storeIdNum != null ? String(_storeIdNum) : ''
   const { data: summary } = useReviewSummary(storeId)
   const { data: reviews, isPending, isError, refetch } = useStoreReviews(storeId)

@@ -597,6 +597,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/seller/stores/{storeId}/reviews": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 사장 본인 매장 리뷰 목록
+         * @description 본인 매장에 달린 리뷰 목록 (최신순, 삭제 제외). 사장 답글 포함.
+         */
+        get: operations["getStoreReviews"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/seller/stores/{storeId}/refunds": {
         parameters: {
             query?: never;
@@ -3819,6 +3839,38 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["SettlementSummaryResponse"];
+                };
+            };
+        };
+    };
+    getStoreReviews: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description 매장 ID */
+                storeId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 조회 성공 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["StoreReviewResponse"][];
+                };
+            };
+            /** @description 본인 매장 아님 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["StoreReviewResponse"][];
                 };
             };
         };
