@@ -299,8 +299,8 @@ export interface PrepareInput {
   memo: string
   /** 결제 금액 (calcCheckoutAmounts 결과 — 쿠폰·포인트·적립 포함) */
   amounts: OrderAmounts
-  /** 사용 쿠폰 UserCoupon string ID (선택) */
-  couponId?: string | null
+  /** 사용 쿠폰 UserCoupon number ID (선택) */
+  couponId?: number | null
   /** 사용 포인트 (선택, 0 이상) */
   pointUsed?: number
 }
@@ -357,7 +357,7 @@ export function buildCreateOrderRequest(input: PrepareInput): CreateOrderBody {
         ? { earnedPoints: input.amounts.earnedPoints }
         : {}),
     },
-    ...(input.couponId ? { userCouponId: Number(input.couponId) } : {}),
+    ...(input.couponId ? { userCouponId: input.couponId } : {}),
     ...(input.pointUsed && input.pointUsed > 0 ? { pointToUse: input.pointUsed } : {}),
   }
 }

@@ -13,9 +13,9 @@ import { PointHero } from '../components/PointHero'
 import { PointHistoryRow } from '../components/PointHistoryRow'
 
 const TABS: SegTabItem<PointHistoryFilter>[] = [
-  { value: 'all', label: '전체' },
-  { value: 'earn', label: '적립' },
-  { value: 'use', label: '사용' },
+  { value: 'ALL', label: '전체' },
+  { value: 'EARN', label: '적립' },
+  { value: 'USE', label: '사용' },
 ]
 
 /**
@@ -24,7 +24,7 @@ const TABS: SegTabItem<PointHistoryFilter>[] = [
  */
 export function PointHistoryPage() {
   const navigate = useNavigate()
-  const [filter, setFilter] = useState<PointHistoryFilter>('all')
+  const [filter, setFilter] = useState<PointHistoryFilter>('ALL')
   const { data: summary } = usePointSummary()
   const { data: history, isPending, isError, refetch } = usePointHistory(filter)
 

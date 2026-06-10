@@ -12,11 +12,11 @@ describe('usePointHistory', () => {
   it('선택한 필터를 api 에 전달한다', async () => {
     vi.mocked(pointApi.listHistory).mockResolvedValue([])
 
-    const { result } = renderHook(() => usePointHistory('earn'), {
+    const { result } = renderHook(() => usePointHistory('EARN'), {
       wrapper: createQueryWrapper(),
     })
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true))
-    expect(pointApi.listHistory).toHaveBeenCalledWith('earn')
+    expect(pointApi.listHistory).toHaveBeenCalledWith('EARN')
   })
 })

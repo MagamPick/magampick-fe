@@ -3,8 +3,6 @@ import { calcCheckoutAmounts } from './calcCheckoutAmounts'
 import type { CartItem } from '@/features/cart/types'
 import type { Coupon } from '@/features/coupons/types'
 
-const NOW = new Date('2026-06-01T09:00:00+09:00')
-
 const deal = (over: Partial<CartItem> = {}): CartItem => ({
   id: 'd1',
   kind: 'deal',
@@ -26,9 +24,9 @@ const menu = (over: Partial<CartItem> = {}): CartItem => ({
   ...over,
 })
 const coupon = (over: Partial<Coupon> = {}): Coupon => ({
-  id: 'cp1',
-  status: 'usable',
-  discountType: 'rate',
+  id: 1,
+  status: 'USABLE',
+  discountType: 'RATE',
   value: 30,
   minOrder: 0,
   label: '쿠폰',
@@ -43,7 +41,6 @@ describe('calcCheckoutAmounts', () => {
       coupon: null,
       pointInput: 0,
       pointBalance: 0,
-      now: NOW,
     })
     expect(a.normalTotal).toBe(10000)
     expect(a.dealDiscount).toBe(4000)
@@ -57,10 +54,9 @@ describe('calcCheckoutAmounts', () => {
   it('쿠폰은 일반(menu) 상품 금액에만 적용 — 떨이 제외', () => {
     const a = calcCheckoutAmounts({
       items: [deal(), menu()], // payProduct 11000, menuSubtotal 5000
-      coupon: coupon({ discountType: 'rate', value: 30, minOrder: 0 }),
+      coupon: coupon({ discountType: 'RATE', value: 30, minOrder: 0 }),
       pointInput: 0,
       pointBalance: 0,
-      now: NOW,
     })
     expect(a.menuSubtotal).toBe(5000)
     expect(a.couponDiscount).toBe(1500) // 30% of 5000
@@ -70,10 +66,9 @@ describe('calcCheckoutAmounts', () => {
   it('전액 떨이 주문 — 쿠폰 적용 불가', () => {
     const a = calcCheckoutAmounts({
       items: [deal()],
-      coupon: coupon({ discountType: 'amount', value: 2000, minOrder: 0 }),
+      coupon: coupon({ discountType: 'AMOUNT', value: 2000, minOrder: 0 }),
       pointInput: 0,
       pointBalance: 0,
-      now: NOW,
     })
     expect(a.couponApplicable).toBe(false)
     expect(a.couponDiscount).toBe(0)
@@ -86,10 +81,27 @@ describe('calcCheckoutAmounts', () => {
       coupon: coupon({ minOrder: 5000 }),
       pointInput: 0,
       pointBalance: 0,
-      now: NOW,
     })
     expect(a.couponApplicable).toBe(false)
     expect(a.couponDiscount).toBe(0)
+  })
+
+  it('EXPIRED/USED 쿠폰은 적용 불가 (BE status 신뢰)', () => {
+    const aExp = calcCheckoutAmounts({
+      items: [menu({ salePrice: 5000, originalPrice: 5000 })],
+      coupon: coupon({ status: 'EXPIRED' }),
+      pointInput: 0,
+      pointBalance: 0,
+    })
+    expect(aExp.couponApplicable).toBe(false)
+
+    const aUsed = calcCheckoutAmounts({
+      items: [menu({ salePrice: 5000, originalPrice: 5000 })],
+      coupon: coupon({ status: 'USED' }),
+      pointInput: 0,
+      pointBalance: 0,
+    })
+    expect(aUsed.couponApplicable).toBe(false)
   })
 
   it('포인트는 쿠폰 적용 후 잔액 한도 내에서 차감', () => {
@@ -98,7 +110,6 @@ describe('calcCheckoutAmounts', () => {
       coupon: coupon({ value: 30, minOrder: 0 }), // 3000 할인
       pointInput: 99999,
       pointBalance: 5000,
-      now: NOW,
     })
     expect(a.couponDiscount).toBe(3000)
     expect(a.afterCoupon).toBe(7000)
@@ -114,7 +125,6 @@ describe('calcCheckoutAmounts', () => {
       coupon: null,
       pointInput: 10000,
       pointBalance: 10000,
-      now: NOW,
     })
     expect(a.pointCap).toBe(6000)
     expect(a.pointUsed).toBe(6000)
@@ -128,7 +138,6 @@ describe('calcCheckoutAmounts', () => {
       coupon: null,
       pointInput: -100,
       pointBalance: 5000,
-      now: NOW,
     })
     expect(a.pointUsed).toBe(0)
     expect(a.payTotal).toBe(6000)
@@ -137,10 +146,9 @@ describe('calcCheckoutAmounts', () => {
   it('쿠폰+포인트 동시 — 계산 순서 상품 → 쿠폰 → 포인트', () => {
     const a = calcCheckoutAmounts({
       items: [deal(), menu({ salePrice: 10000, originalPrice: 10000 })], // payProduct 16000, menuSubtotal 10000
-      coupon: coupon({ discountType: 'amount', value: 2000, minOrder: 0 }),
+      coupon: coupon({ discountType: 'AMOUNT', value: 2000, minOrder: 0 }),
       pointInput: 3000,
       pointBalance: 3000,
-      now: NOW,
     })
     expect(a.couponDiscount).toBe(2000)
     expect(a.afterCoupon).toBe(14000)

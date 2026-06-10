@@ -10,9 +10,9 @@ import type { Coupon } from '../types'
 vi.mock('../api/couponApi')
 
 const coupon = (over: Partial<Coupon>): Coupon => ({
-  id: 'x',
-  status: 'usable',
-  discountType: 'rate',
+  id: 1,
+  status: 'USABLE',
+  discountType: 'RATE',
   value: 30,
   minOrder: 5000,
   label: '쿠폰',
@@ -32,11 +32,11 @@ function renderPage() {
 describe('CouponBoxPage', () => {
   beforeEach(() => vi.clearAllMocks())
 
-  it('사용 가능 쿠폰을 기본 표시하고, 탭 전환 시 상태별로 필터한다', async () => {
+  it('사용 가능(USABLE) 쿠폰을 기본 표시하고, 탭 전환 시 상태별로 필터한다', async () => {
     vi.mocked(couponApi.listCoupons).mockResolvedValue([
-      coupon({ id: 'a', status: 'usable', label: '쿠폰A' }),
-      coupon({ id: 'b', status: 'used', label: '쿠폰B' }),
-      coupon({ id: 'c', status: 'expired', label: '쿠폰C' }),
+      coupon({ id: 1, status: 'USABLE', label: '쿠폰A' }),
+      coupon({ id: 2, status: 'USED', label: '쿠폰B' }),
+      coupon({ id: 3, status: 'EXPIRED', label: '쿠폰C' }),
     ])
 
     renderPage()
@@ -51,7 +51,7 @@ describe('CouponBoxPage', () => {
 
   it('해당 탭에 쿠폰이 없으면 빈 상태를 표시', async () => {
     vi.mocked(couponApi.listCoupons).mockResolvedValue([
-      coupon({ id: 'b', status: 'used', label: '쿠폰B' }),
+      coupon({ id: 2, status: 'USED', label: '쿠폰B' }),
     ])
 
     renderPage()

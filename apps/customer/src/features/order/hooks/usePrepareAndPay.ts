@@ -12,7 +12,7 @@ export interface PrepareAndPayVars {
   pickup: Pickup
   memo: string
   amounts: OrderAmounts
-  couponId?: string | null
+  couponId?: number | null
   pointUsed?: number
 }
 

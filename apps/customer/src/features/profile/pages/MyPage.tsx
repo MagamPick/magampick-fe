@@ -29,7 +29,7 @@ function MyPageContent() {
   const pointValue =
     pointSummary != null ? `${pointSummary.balance.toLocaleString('ko-KR')}P` : undefined
   const usableCouponValue =
-    coupons != null ? `${coupons.filter((c) => c.status === 'usable').length}장` : undefined
+    coupons != null ? `${coupons.filter((c) => c.status === 'USABLE').length}장` : undefined
 
   const soon = () => show(COMING_SOON)
   const handleLogout = () => {
