@@ -1030,6 +1030,11 @@ export interface components {
              */
             status?: "OPEN" | "SOLD_OUT" | "CLOSED";
             /**
+             * @description 마감 사유 (OPEN 상태이면 null)
+             * @enum {string}
+             */
+            closeReason?: "EXPIRED" | "SOLD_OUT" | "MANUAL";
+            /**
              * Format: date-time
              * @description 등록 시각
              */
@@ -3280,6 +3285,13 @@ export interface operations {
             };
             /** @description 상품 없음 */
             404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description 진행 중인 떨이 존재 */
+            409: {
                 headers: {
                     [name: string]: unknown;
                 };
