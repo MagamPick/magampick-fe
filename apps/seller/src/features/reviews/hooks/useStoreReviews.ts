@@ -6,6 +6,7 @@ import { reviewKeys } from './reviewKeys'
 export function useStoreReviews(storeId: string) {
   return useQuery({
     queryKey: reviewKeys.list(storeId),
-    queryFn: () => reviewsApi.listStoreReviews(),
+    queryFn: () => reviewsApi.listStoreReviews(storeId),
+    enabled: !!storeId,
   })
 }
