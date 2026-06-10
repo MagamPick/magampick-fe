@@ -3,8 +3,9 @@ import { orderApi, resetOrderState, buildCreateOrderRequest, type CreateOrderInp
 import { apiClient } from '@/shared/lib/axios'
 
 vi.mock('@/shared/lib/axios', () => ({
-  apiClient: { post: vi.fn() },
+  apiClient: { get: vi.fn(), post: vi.fn() },
 }))
+const mockedGet = vi.mocked(apiClient.get)
 const mockedPost = vi.mocked(apiClient.post)
 
 const input: CreateOrderInput = {
@@ -107,6 +108,104 @@ describe('orderApi.prepare', () => {
 })
 
 // ─── buildCreateOrderRequest ─────────────────────────────────────────────────
+
+// ─── 실 BE 응답 픽스처 (OrderResponse) ───────────────────────────────────────
+
+const mockOrderResponse = {
+  id: 42,
+  orderNo: '0042',
+  storeId: 1,
+  storeName: '브레드샵',
+  storePhone: '02-1234-5678',
+  items: [
+    {
+      id: 10,
+      kind: 'DEAL',
+      name: '크루아상 세트',
+      imageUrl: null,
+      originalPrice: 10000,
+      salePrice: 6000,
+      qty: 1,
+    },
+  ],
+  pickup: { type: 'SLOT', time: '18:30' },
+  memo: '포장 부탁드려요',
+  amounts: { normalTotal: 10000, discountTotal: 4000, payTotal: 6000 },
+  pickupCode: '1234',
+  status: 'PENDING',
+  paymentMethod: 'toss',
+  createdAt: '2026-06-10T10:00:00.000Z',
+}
+
+// ─── orderApi.listOrders (실 BE) ──────────────────────────────────────────────
+
+describe('orderApi.listOrders (실 BE)', () => {
+  beforeEach(() => vi.clearAllMocks())
+
+  it('GET /orders 를 호출하고 Order[] 를 반환한다', async () => {
+    mockedGet.mockResolvedValueOnce({ data: [mockOrderResponse] })
+    const result = await orderApi.listOrders()
+    expect(mockedGet).toHaveBeenCalledWith('/orders')
+    expect(result).toHaveLength(1)
+    expect(result[0].id).toBe('42')
+    expect(result[0].storeName).toBe('브레드샵')
+  })
+
+  it('최신순 정렬 — BE 순서와 무관하게 createdAt 내림차순', async () => {
+    const older = { ...mockOrderResponse, id: 1, createdAt: '2026-06-09T10:00:00.000Z' }
+    const newer = { ...mockOrderResponse, id: 2, createdAt: '2026-06-10T10:00:00.000Z' }
+    mockedGet.mockResolvedValueOnce({ data: [older, newer] })
+    const result = await orderApi.listOrders()
+    expect(result[0].id).toBe('2') // newer first
+    expect(result[1].id).toBe('1')
+  })
+
+  it('응답이 OrderResponse 스키마에 맞지 않으면 Zod 에러', async () => {
+    mockedGet.mockResolvedValueOnce({ data: [{ id: '문자열임' }] })
+    await expect(orderApi.listOrders()).rejects.toThrow()
+  })
+})
+
+// ─── orderApi.getOrder (실 BE) ────────────────────────────────────────────────
+
+describe('orderApi.getOrder (실 BE)', () => {
+  beforeEach(() => vi.clearAllMocks())
+
+  it('GET /orders/:id 를 호출하고 Order 를 반환한다', async () => {
+    mockedGet.mockResolvedValueOnce({ data: mockOrderResponse })
+    const result = await orderApi.getOrder('42')
+    expect(mockedGet).toHaveBeenCalledWith('/orders/42')
+    expect(result.id).toBe('42')
+    expect(result.storeName).toBe('브레드샵')
+    expect(result.pickupCode).toBe('1234')
+  })
+
+  it('응답이 OrderResponse 스키마에 맞지 않으면 Zod 에러', async () => {
+    mockedGet.mockResolvedValueOnce({ data: { status: 'UNKNOWN_STATUS' } })
+    await expect(orderApi.getOrder('42')).rejects.toThrow()
+  })
+})
+
+// ─── orderApi.cancelOrder (실 BE) ─────────────────────────────────────────────
+
+describe('orderApi.cancelOrder (실 BE)', () => {
+  beforeEach(() => vi.clearAllMocks())
+
+  it('POST /orders/:id/cancel 을 호출하고 CANCELLED Order 를 반환한다', async () => {
+    const cancelled = { ...mockOrderResponse, status: 'CANCELLED', cancelledAt: '2026-06-10T11:00:00.000Z' }
+    mockedPost.mockResolvedValueOnce({ data: cancelled })
+    const result = await orderApi.cancelOrder('42')
+    expect(mockedPost).toHaveBeenCalledWith('/orders/42/cancel')
+    expect(result.status).toBe('CANCELLED')
+    // cancelledAt → completedAt 흡수 검증
+    expect(result.completedAt).toBe('2026-06-10T11:00:00.000Z')
+  })
+
+  it('응답이 OrderResponse 스키마에 맞지 않으면 Zod 에러', async () => {
+    mockedPost.mockResolvedValueOnce({ data: { status: 9999 } })
+    await expect(orderApi.cancelOrder('42')).rejects.toThrow()
+  })
+})
 
 describe('buildCreateOrderRequest', () => {
   it('pickup asap → type ASAP (time 없음)', () => {

@@ -1,9 +1,10 @@
 import { z } from 'zod'
 import { apiClient } from '@/shared/lib/axios'
-import type { Order, OrderStatus } from '../types'
+import { orderStatusSchema } from '../types'
+import type { Order, RefundStatus } from '../types'
 import type { CartItem, CartItemKind, Pickup } from '@/features/cart/types'
 
-// ─── confirm 응답 스키마 (OrderResponse 대응) ────────────────────────────────
+// ─── BE OrderResponse Zod 스키마 (공용 — confirm/listOrders/getOrder/cancelOrder 공유) ─────
 
 const orderItemFromResponseSchema = z.object({
   id: z.number().optional(),
@@ -15,7 +16,20 @@ const orderItemFromResponseSchema = z.object({
   qty: z.number().optional(),
 })
 
-const confirmResponseSchema = z.object({
+const refundInfoResponseSchema = z.object({
+  status: z.string().optional(),
+  reason: z.string().optional(),
+  requestedAt: z.string().optional(),
+  rejectReason: z.string().optional(),
+  resolvedAt: z.string().optional(),
+})
+
+/**
+ * BE OrderResponse 단건 Zod 스키마.
+ * status 는 도메인 7-enum 으로 엄격 검증 — BE 가 AWAITING_PAYMENT 등 외부 값을 보내면 파스에서 throw.
+ * (런타임 미검증 리스크: listOrders 에 AWAITING_PAYMENT 주문이 포함될 수 있으나 실 데이터 확인 불가 — 리포트 명시)
+ */
+export const orderResponseSchema = z.object({
   id: z.number().optional(),
   orderNo: z.string().optional(),
   storeId: z.number().optional(),
@@ -37,13 +51,19 @@ const confirmResponseSchema = z.object({
     })
     .optional(),
   pickupCode: z.string().optional(),
-  status: z.string().optional(),
+  /** 도메인 7-enum 엄격 검증 (PENDING·PREPARING·READY·COMPLETED·NO_SHOW·REJECTED·CANCELLED) */
+  status: orderStatusSchema.optional(),
   paymentMethod: z.string().optional(),
   createdAt: z.string().optional(),
+  /** 수령완료 시각 (COMPLETED) */
   completedAt: z.string().optional(),
+  /** 취소 시각 (CANCELLED) — 도메인에선 completedAt 으로 흡수 */
+  cancelledAt: z.string().optional(),
+  /** 환불 정보 (미요청 시 absent) */
+  refund: refundInfoResponseSchema.optional(),
 })
 
-export type TossConfirmResponse = z.infer<typeof confirmResponseSchema>
+export type TossConfirmResponse = z.infer<typeof orderResponseSchema>
 
 export interface TossConfirmInput {
   /** 토스 발급 결제 키 */
@@ -61,15 +81,19 @@ export const paymentApi = {
    */
   async confirm(input: TossConfirmInput): Promise<TossConfirmResponse> {
     const { data } = await apiClient.post('/payments/toss/confirm', input)
-    return confirmResponseSchema.parse(data)
+    return orderResponseSchema.parse(data)
   },
 }
 
 // ─── BE OrderResponse → 클라이언트 Order 변환 ─────────────────────────────────
 
 /**
- * confirm 응답(BE OrderResponse)을 클라이언트 Order 타입으로 변환.
- * storeId·items[].id 는 string 으로, kind 는 소문자로 변환. pickupCode 기본값 '0000'.
+ * BE OrderResponse → 클라이언트 Order 변환 (공용 — confirm/listOrders/getOrder/cancelOrder 공유).
+ * - storeId·items[].id: number → string
+ * - kind: 'DEAL'/'MENU' → 'deal'/'menu'
+ * - pickup type: 'ASAP'/'SLOT' → 'asap'/'slot'
+ * - completedAt: completedAt ?? cancelledAt (DONE_STATUSES 카드 날짜용 흡수)
+ * - refund: RefundInfoResponse → 도메인 Refund (status 자유 string → RefundStatus 캐스트)
  */
 export function mapToClientOrder(res: TossConfirmResponse): Order {
   const items: CartItem[] = (res.items ?? []).map((item) => ({
@@ -87,6 +111,19 @@ export function mapToClientOrder(res: TossConfirmResponse): Order {
       ? { type: 'slot', time: res.pickup.time }
       : { type: 'asap' }
 
+  const refund =
+    res.refund?.requestedAt
+      ? {
+          status: (res.refund.status ?? 'REQUESTED') as RefundStatus,
+          reason: res.refund.reason ?? '',
+          requestedAt: res.refund.requestedAt,
+          ...(res.refund.rejectReason !== undefined
+            ? { rejectReason: res.refund.rejectReason }
+            : {}),
+          ...(res.refund.resolvedAt !== undefined ? { resolvedAt: res.refund.resolvedAt } : {}),
+        }
+      : undefined
+
   return {
     id: String(res.id ?? 0),
     orderNo: res.orderNo ?? '',
@@ -102,9 +139,11 @@ export function mapToClientOrder(res: TossConfirmResponse): Order {
       payTotal: res.amounts?.payTotal ?? 0,
     },
     pickupCode: res.pickupCode ?? '0000',
-    status: (res.status ?? 'PENDING') as OrderStatus,
+    status: res.status ?? 'PENDING',
     paymentMethod: 'toss',
     createdAt: res.createdAt ?? new Date().toISOString(),
-    completedAt: res.completedAt,
+    /** cancelledAt → completedAt 흡수: DONE_STATUSES 카드 날짜 표시에 단일 필드 사용 */
+    completedAt: res.completedAt ?? res.cancelledAt,
+    ...(refund ? { refund } : {}),
   }
 }
