@@ -4,7 +4,6 @@ import userEvent from '@testing-library/user-event'
 import { ReviewForm } from './ReviewForm'
 
 const baseProps = {
-  storeEmoji: '🥐',
   storeName: '베이커리 브레드샵',
   items: [{ productId: 'sd-1', kind: 'deal' as const, name: '크루아상 세트' }],
   isPending: false,

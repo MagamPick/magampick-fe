@@ -1,5 +1,5 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { orderApi, resetOrderState, buildCreateOrderRequest, type CreateOrderInput } from './orderApi'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { orderApi, buildCreateOrderRequest, type CreateOrderInput } from './orderApi'
 import { apiClient } from '@/shared/lib/axios'
 
 vi.mock('@/shared/lib/axios', () => ({
@@ -45,30 +45,29 @@ describe('orderApi.create (mock)', () => {
   })
 })
 
-describe('orderApi.requestRefund (mock)', () => {
-  beforeEach(() => resetOrderState())
+// ─── orderApi.requestRefund (실 BE) ──────────────────────────────────────────
 
-  it('픽업_완료_주문에_사유와_함께_요청하면_REQUESTED', async () => {
-    const order = await orderApi.requestRefund('o_s4', '받아보니 상태가 좋지 않아요')
-    expect(order.refund?.status).toBe('REQUESTED')
-    expect(order.refund?.reason).toBe('받아보니 상태가 좋지 않아요')
-    expect(order.refund?.requestedAt).toBeTruthy()
+describe('orderApi.requestRefund (실 BE)', () => {
+  it('POST /orders/:id/refund 를 호출하고 환불 요청된 Order 를 반환한다', async () => {
+    const refundResponse = {
+      ...mockOrderResponse,
+      id: 42,
+      status: 'COMPLETED',
+      completedAt: '2026-06-08T10:00:00.000Z',
+      refund: { status: 'REQUESTED', reason: '상품 상태가 안 좋아요', requestedAt: '2026-06-10T10:00:00.000Z' },
+    }
+    mockedPost.mockResolvedValueOnce({ data: refundResponse })
+    const result = await orderApi.requestRefund('42', '상품 상태가 안 좋아요')
+    expect(mockedPost).toHaveBeenCalledWith('/orders/42/refund', { reason: '상품 상태가 안 좋아요' })
+    expect(result.id).toBe('42')
+    expect(result.refund?.status).toBe('REQUESTED')
+    expect(result.refund?.reason).toBe('상품 상태가 안 좋아요')
+    expect(result.refund?.requestedAt).toBe('2026-06-10T10:00:00.000Z')
   })
 
-  it('이미_환불_요청한_주문은_재요청_불가', async () => {
-    await expect(orderApi.requestRefund('o_s6', '또 요청')).rejects.toThrow('이미 환불')
-  })
-
-  it('픽업_완료가_아닌_주문은_요청_불가', async () => {
-    await expect(orderApi.requestRefund('o_s1', '사유')).rejects.toThrow('픽업 완료')
-  })
-
-  it('환불_가능_기간이_지난_완료주문은_요청_불가', async () => {
-    await expect(orderApi.requestRefund('o_s9', '사유')).rejects.toThrow('기간')
-  })
-
-  it('사유가_비면_요청_불가', async () => {
-    await expect(orderApi.requestRefund('o_s4', '   ')).rejects.toThrow('사유')
+  it('응답이 OrderResponse 스키마에 맞지 않으면 Zod 에러', async () => {
+    mockedPost.mockResolvedValueOnce({ data: { status: 9999 } })
+    await expect(orderApi.requestRefund('42', '사유')).rejects.toThrow()
   })
 })
 

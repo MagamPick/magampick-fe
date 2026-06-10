@@ -8,7 +8,32 @@ import { useReviewableOrders } from './useReviewableOrders'
 import { useCreateReview } from './useCreateReview'
 import { useUpdateReview } from './useUpdateReview'
 import { useDeleteReview } from './useDeleteReview'
-import { resetReviewsForTest } from '../api/reviewsApi'
+import { reviewsApi } from '../api/reviewsApi'
+
+vi.mock('../api/reviewsApi')
+
+const mockReview = {
+  id: '1',
+  storeId: '10',
+  storeName: '브레드샵',
+  items: [{ productId: '100', kind: 'deal' as const, name: '크루아상' }],
+  rating: 5,
+  content: '맛있어요',
+  tags: ['맛있어요'],
+  photos: [],
+  createdAt: '2026-06-10T10:00:00Z',
+  ownerReply: null,
+}
+
+const mockOrder = {
+  orderId: '42',
+  storeId: '10',
+  storeName: '브레드샵',
+  items: [{ productId: '100', kind: 'menu' as const, name: '크루아상' }],
+  pickedUpAt: '2026-06-10T09:00:00Z',
+  reviewed: false,
+  reviewId: null,
+}
 
 function setup() {
   const qc = new QueryClient({
@@ -23,10 +48,11 @@ function setup() {
 }
 
 describe('reviews hooks', () => {
-  beforeEach(() => resetReviewsForTest())
+  beforeEach(() => vi.clearAllMocks())
   afterEach(() => cleanup())
 
   it('useMyReviews — 내 리뷰 목록을 불러온다', async () => {
+    vi.mocked(reviewsApi.listMyReviews).mockResolvedValue([mockReview])
     const { wrapper } = setup()
     const { result } = renderHook(() => useMyReviews(), { wrapper })
     await waitFor(() => expect(result.current.isSuccess).toBe(true))
@@ -34,6 +60,7 @@ describe('reviews hooks', () => {
   })
 
   it('useReviewableOrders — 완료주문 목록을 불러온다', async () => {
+    vi.mocked(reviewsApi.listReviewableOrders).mockResolvedValue([mockOrder])
     const { wrapper } = setup()
     const { result } = renderHook(() => useReviewableOrders(), { wrapper })
     await waitFor(() => expect(result.current.isSuccess).toBe(true))
@@ -41,6 +68,7 @@ describe('reviews hooks', () => {
   })
 
   it('useCreateReview — 성공 시 reviews 무효화', async () => {
+    vi.mocked(reviewsApi.createReview).mockResolvedValue(mockReview)
     const { wrapper, invalidate } = setup()
     const { result } = renderHook(() => useCreateReview(), { wrapper })
     result.current.mutate({ orderId: 'od-1', rating: 5, content: '좋아요', tags: [], photos: [] })
@@ -49,17 +77,19 @@ describe('reviews hooks', () => {
   })
 
   it('useUpdateReview — 성공 시 reviews 무효화', async () => {
+    vi.mocked(reviewsApi.updateReview).mockResolvedValue(mockReview)
     const { wrapper, invalidate } = setup()
-    const { result } = renderHook(() => useUpdateReview('rv-2'), { wrapper })
+    const { result } = renderHook(() => useUpdateReview('1'), { wrapper })
     result.current.mutate({ rating: 3, content: '수정', tags: [], photos: [] })
     await waitFor(() => expect(result.current.isSuccess).toBe(true))
     expect(invalidate).toHaveBeenCalledWith({ queryKey: reviewKeys.all })
   })
 
   it('useDeleteReview — 성공 시 reviews 무효화', async () => {
+    vi.mocked(reviewsApi.deleteReview).mockResolvedValue(undefined)
     const { wrapper, invalidate } = setup()
     const { result } = renderHook(() => useDeleteReview(), { wrapper })
-    result.current.mutate('rv-2') // 답글 없는 리뷰
+    result.current.mutate('1')
     await waitFor(() => expect(result.current.isSuccess).toBe(true))
     expect(invalidate).toHaveBeenCalledWith({ queryKey: reviewKeys.all })
   })

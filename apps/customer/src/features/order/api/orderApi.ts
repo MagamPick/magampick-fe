@@ -1,6 +1,5 @@
 import { z } from 'zod'
 import { orderSchema, type Order, type OrderAmounts } from '../types'
-import { refundDeadline } from '../lib/refundPolicy'
 import type { CartItem, CartStoreInfo, Pickup } from '@/features/cart/types'
 import { apiClient } from '@/shared/lib/axios'
 import { orderResponseSchema, mapToClientOrder } from './paymentApi'
@@ -422,25 +421,13 @@ export const orderApi = {
   },
 
   /**
-   * 환불 요청 — 픽업 완료 주문에 사유와 함께 요청 → refund:REQUESTED (노션 「환불 요청」).
-   * 대상 COMPLETED · 미요청(1주문 1요청) · 픽업 후 3일 이내 · 사유 필수 · 전액.
+   * 환불 요청 — 실 BE POST /api/v1/orders/{id}/refund (노션 「환불 요청」).
+   * COMPLETED·미요청·픽업 후 3일 이내·사유 필수 검증은 BE 담당.
+   * FE UI 게이팅(버튼 노출 조건)은 order/lib/refundPolicy.canRequestRefund 가 담당.
    */
   async requestRefund(id: string, reason: string): Promise<Order> {
-    await delay(300)
-    const order = ORDERS.get(id)
-    if (!order) throw new Error('주문을 찾을 수 없어요.')
-    if (order.status !== 'COMPLETED') throw new Error('픽업 완료된 주문만 환불을 요청할 수 있어요.')
-    if (order.refund) throw new Error('이미 환불을 요청한 주문이에요.')
-    if (!order.completedAt || Date.now() > refundDeadline(order.completedAt).getTime())
-      throw new Error('환불 요청 가능 기간(픽업 후 3일)이 지났어요.')
-    const trimmed = reason.trim()
-    if (!trimmed) throw new Error('환불 사유를 입력해 주세요.')
-    const updated: Order = {
-      ...order,
-      refund: { status: 'REQUESTED', reason: trimmed, requestedAt: new Date().toISOString() },
-    }
-    ORDERS.set(id, updated)
-    return updated
+    const { data } = await apiClient.post(`/orders/${id}/refund`, { reason })
+    return mapToClientOrder(orderResponseSchema.parse(data))
   },
 
   async create(input: CreateOrderInput): Promise<Order> {
