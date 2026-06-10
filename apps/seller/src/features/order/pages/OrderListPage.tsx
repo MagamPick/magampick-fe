@@ -46,7 +46,7 @@ function matchesQuery(order: Order, q: string): boolean {
  */
 export function OrderListPage() {
   const _storeIdNum = useCurrentStoreStore((s) => s.selectedStoreId)
-  // mock hook(string storeId) 전달용 변환 — Step 2 실연동 시 이전
+  // 매장 ID(number)를 URL 보간용 string 으로 변환 (실연동 완료)
   const storeId = _storeIdNum != null ? String(_storeIdNum) : ''
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
