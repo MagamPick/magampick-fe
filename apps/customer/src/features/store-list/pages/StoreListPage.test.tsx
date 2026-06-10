@@ -11,7 +11,7 @@ vi.mock('@/shared/components/PullToRefresh', () => ({
   PullToRefresh: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }))
 vi.mock('../components/StoreListCard', () => ({
-  StoreListCard: ({ store }: { store: { id: string } }) => (
+  StoreListCard: ({ store }: { store: { id: number } }) => (
     <div data-testid="store-card">{store.id}</div>
   ),
 }))
@@ -29,7 +29,7 @@ function mockStoreList(overrides: Record<string, unknown>) {
   } as unknown as ReturnType<typeof useStoreList>)
 }
 
-const onePage = (items: { id: string }[]) => ({
+const onePage = (items: { id: number }[]) => ({
   pages: [{ items, total: items.length, dealStoreCount: 0 }],
   pageParams: [undefined],
 })
@@ -71,7 +71,7 @@ describe('StoreListPage 상태 분기', () => {
   })
 
   it('매장이 있으면 카드를 렌더', () => {
-    mockStoreList({ data: onePage([{ id: 's1' }]) })
+    mockStoreList({ data: onePage([{ id: 1 }]) })
     renderPage()
     expect(screen.getByTestId('store-card')).toBeInTheDocument()
     expect(screen.queryByText('주변 5km에 둘러볼 매장이 없어요.')).not.toBeInTheDocument()

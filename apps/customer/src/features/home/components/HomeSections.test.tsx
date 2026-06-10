@@ -55,7 +55,7 @@ describe('ClosingDealsSection', () => {
     vi.mocked(useClosingDeals).mockReturnValue({
       data: [
         {
-          id: 'cd-1',
+          id: 1,
           storeName: '브레드샵',
           productName: '크루아상',
           imageUrl: null,
@@ -111,7 +111,7 @@ describe('NeighborhoodSection', () => {
     vi.mocked(useNeighborhoodStores).mockReturnValue({
       data: [
         {
-          id: 'nb-1',
+          id: 1,
           name: '북카페 무드',
           imageUrl: null,
           distanceKm: 0.8,

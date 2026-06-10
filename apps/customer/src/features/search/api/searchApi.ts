@@ -76,15 +76,16 @@ type MockProduct =
     }
 
 /** 거리 오름차순 정의 (안정 정렬 tie-break 자연스럽게). 베이커리/카페/디저트 테마. */
+// mock id 는 number (#14 검색 실연동 시 BE int64 id 로 교체)
 const STORES: MockStore[] = [
-  { id: 'st-1', name: '베이커리 브레드샵', imageUrl: null, distanceKm: 0.3, rating: 4.6, activeDealCount: 2, maxDiscountRate: 40, nearestDeadlineMin: 35 },
-  { id: 'st-2', name: '카페 모리', imageUrl: null, distanceKm: 0.5, rating: 4.4, activeDealCount: 1, maxDiscountRate: 40, nearestDeadlineMin: 50 },
-  { id: 'st-3', name: '데일리 브레드', imageUrl: null, distanceKm: 0.6, rating: 4.8, activeDealCount: 3, maxDiscountRate: 45, nearestDeadlineMin: 20 },
-  { id: 'st-4', name: '마카롱 공방', imageUrl: null, distanceKm: 0.9, rating: 4.7, activeDealCount: 2, maxDiscountRate: 55, nearestDeadlineMin: 12 },
-  { id: 'st-5', name: '휘낭시에 하우스', imageUrl: null, distanceKm: 1.2, rating: 4.3, activeDealCount: 1, maxDiscountRate: 25, nearestDeadlineMin: 70 },
-  { id: 'st-6', name: '치즈케이크 팩토리', imageUrl: null, distanceKm: 1.6, rating: 4.5, activeDealCount: 2, maxDiscountRate: 50, nearestDeadlineMin: 30 },
-  { id: 'st-7', name: '베이글 브라더스', imageUrl: null, distanceKm: 2.1, rating: 4.1, activeDealCount: 1, maxDiscountRate: 35, nearestDeadlineMin: 60 },
-  { id: 'st-8', name: '소금빵 연구소', imageUrl: null, distanceKm: 2.8, rating: 4.9, activeDealCount: 1, maxDiscountRate: 35, nearestDeadlineMin: 45 },
+  { id: 101, name: '베이커리 브레드샵', imageUrl: null, distanceKm: 0.3, rating: 4.6, activeDealCount: 2, maxDiscountRate: 40, nearestDeadlineMin: 35 },
+  { id: 102, name: '카페 모리', imageUrl: null, distanceKm: 0.5, rating: 4.4, activeDealCount: 1, maxDiscountRate: 40, nearestDeadlineMin: 50 },
+  { id: 103, name: '데일리 브레드', imageUrl: null, distanceKm: 0.6, rating: 4.8, activeDealCount: 3, maxDiscountRate: 45, nearestDeadlineMin: 20 },
+  { id: 104, name: '마카롱 공방', imageUrl: null, distanceKm: 0.9, rating: 4.7, activeDealCount: 2, maxDiscountRate: 55, nearestDeadlineMin: 12 },
+  { id: 105, name: '휘낭시에 하우스', imageUrl: null, distanceKm: 1.2, rating: 4.3, activeDealCount: 1, maxDiscountRate: 25, nearestDeadlineMin: 70 },
+  { id: 106, name: '치즈케이크 팩토리', imageUrl: null, distanceKm: 1.6, rating: 4.5, activeDealCount: 2, maxDiscountRate: 50, nearestDeadlineMin: 30 },
+  { id: 107, name: '베이글 브라더스', imageUrl: null, distanceKm: 2.1, rating: 4.1, activeDealCount: 1, maxDiscountRate: 35, nearestDeadlineMin: 60 },
+  { id: 108, name: '소금빵 연구소', imageUrl: null, distanceKm: 2.8, rating: 4.9, activeDealCount: 1, maxDiscountRate: 35, nearestDeadlineMin: 45 },
 ]
 
 const PRODUCTS: MockProduct[] = [

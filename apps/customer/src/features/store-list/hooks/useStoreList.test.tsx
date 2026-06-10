@@ -7,9 +7,9 @@ import type { StoreListItem } from '../types'
 
 vi.mock('../api/storeListApi')
 
-const item = (id: string): StoreListItem => ({
+const item = (id: number): StoreListItem => ({
   id,
-  name: id,
+  name: String(id),
   imageUrl: null,
   distanceKm: 0.5,
   rating: 4.5,
@@ -18,10 +18,12 @@ const item = (id: string): StoreListItem => ({
 })
 
 describe('useStoreList', () => {
-  it('첫_페이지_total_노출_그리고_nextCursor_있으면_다음페이지_있음', async () => {
+  it('첫_페이지_total_노출_그리고_hasNext_true이면_다음페이지_있음', async () => {
     vi.mocked(storeListApi.getStores).mockResolvedValue({
-      items: [item('a'), item('b')],
-      nextCursor: 1,
+      items: [item(1), item(2)],
+      page: 0,
+      size: 20,
+      hasNext: true,
       total: 4,
       dealStoreCount: 2,
     })
@@ -34,10 +36,12 @@ describe('useStoreList', () => {
     expect(result.current.hasNextPage).toBe(true)
   })
 
-  it('nextCursor_null이면_마지막페이지_더보기없음', async () => {
+  it('hasNext_false이면_마지막페이지_더보기없음', async () => {
     vi.mocked(storeListApi.getStores).mockResolvedValue({
-      items: [item('a')],
-      nextCursor: null,
+      items: [item(1)],
+      page: 0,
+      size: 20,
+      hasNext: false,
       total: 1,
       dealStoreCount: 1,
     })
@@ -51,7 +55,9 @@ describe('useStoreList', () => {
   it('정렬_파라미터가_첫페이지_요청에_전달', async () => {
     vi.mocked(storeListApi.getStores).mockResolvedValue({
       items: [],
-      nextCursor: null,
+      page: 0,
+      size: 20,
+      hasNext: false,
       total: 0,
       dealStoreCount: 0,
     })
@@ -59,6 +65,6 @@ describe('useStoreList', () => {
     const { result } = renderHook(() => useStoreList('rating'), { wrapper: createQueryWrapper() })
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true))
-    expect(storeListApi.getStores).toHaveBeenCalledWith({ sort: 'rating', cursor: 0 })
+    expect(storeListApi.getStores).toHaveBeenCalledWith({ sort: 'rating', page: 0 })
   })
 })

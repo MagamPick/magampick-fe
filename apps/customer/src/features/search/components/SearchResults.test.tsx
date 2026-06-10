@@ -7,7 +7,7 @@ import type { SearchResult } from '../types'
 import type { StoreListItem } from '@/features/store-list/types'
 
 const store: StoreListItem = {
-  id: 'st-1',
+  id: 101,
   name: '베이커리 브레드샵',
   imageUrl: null,
   distanceKm: 0.3,
