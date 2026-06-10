@@ -327,8 +327,8 @@ interface CreateOrderBody {
 /**
  * 카트 → CreateOrderRequest 변환 (BE 전달용 body 빌더).
  *
- * ⚠️ 상류(상품/매장) 실연동 전까지 storeId·refId 가 NaN 가능 — 상품/매장 실연동 시 정상화.
- *    (CartItem.id 와 CartStoreInfo.id 는 현재 'sd-1' 같은 문자열 mock id 를 사용 중)
+ * 상품/매장 실연동 완료 — cart 에 실 PK(String 변환)가 담겨 Number() 정상.
+ * refId = DEAL:clearanceItemId / MENU:productId.
  */
 export function buildCreateOrderRequest(input: PrepareInput): CreateOrderBody {
   return {
