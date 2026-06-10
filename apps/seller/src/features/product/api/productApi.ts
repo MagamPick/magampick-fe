@@ -15,7 +15,8 @@ const productResponseSchema = z.object({
   id: z.number(),
   name: z.string().optional(),
   regularPrice: z.number().optional(),
-  imageUrl: z.string().optional(),
+  // BE 가 imageUrl 을 null 로 내려줄 수 있어 nullish 로 수용 (소비자 앱 패턴 미러)
+  imageUrl: z.string().nullish(),
   status: z.enum(['ON_SALE', 'SOLD_OUT']).optional(),
   category: productCategorySchema.optional(),
   description: z.string().optional(),
@@ -40,7 +41,7 @@ function toProduct(raw: z.infer<typeof productResponseSchema>, storeId: number):
     price: raw.regularPrice ?? 0,
     description: raw.description || undefined,
     onSale: raw.status !== 'SOLD_OUT',
-    imageUrl: raw.imageUrl,
+    imageUrl: raw.imageUrl ?? undefined,
   }
 }
 

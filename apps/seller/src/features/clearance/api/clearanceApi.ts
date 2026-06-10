@@ -36,7 +36,8 @@ function pickupEndAtToHHMM(pickupEndAt: string): string {
 const clearanceItemResponseSchema = z.object({
   id: z.number(),
   productId: z.number().optional(),
-  imageUrl: z.string().optional(),
+  // BE 가 imageUrl 을 null 로 내려줄 수 있어 nullish 로 수용 (소비자 앱 패턴 미러)
+  imageUrl: z.string().nullish(),
   name: z.string().optional(),
   regularPrice: z.number().optional(),
   salePrice: z.number().optional(),
@@ -70,7 +71,7 @@ function toClearanceView(raw: z.infer<typeof clearanceItemResponseSchema>): Clea
     status: raw.status ?? 'CLOSED',
     createdAt: raw.createdAt ?? '',
     productName: raw.name ?? '(상품 정보 없음)',
-    productImageUrl: raw.imageUrl,
+    productImageUrl: raw.imageUrl ?? undefined,
     originalPrice: raw.regularPrice ?? 0,
     remainingQty,
     closeReason: raw.closeReason,

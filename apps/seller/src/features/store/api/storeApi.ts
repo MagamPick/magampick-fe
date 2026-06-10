@@ -82,7 +82,8 @@ const storeDetailResponseSchema = z
     detailAddress: z.string().optional(),
     zonecode: z.string(),
     phone: z.string(),
-    imageUrl: z.string().optional(),
+    // BE 가 imageUrl 을 null 로 내려줄 수 있어 nullish 로 수용 (소비자 앱 패턴 미러)
+    imageUrl: z.string().nullish(),
   })
   .passthrough()
 
@@ -116,7 +117,7 @@ function toStoreDetail(parsed: z.infer<typeof storeDetailResponseSchema>): Store
     detailAddress: parsed.detailAddress,
     zonecode: parsed.zonecode,
     phone: parsed.phone,
-    imageUrl: parsed.imageUrl,
+    imageUrl: parsed.imageUrl ?? undefined,
   }
 }
 
