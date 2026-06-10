@@ -1,5 +1,6 @@
+import { ROUTES } from '@/shared/lib/routes'
 import type { SegTabItem } from '@/shared/components/SegTabs'
-import type { NotificationSegment, NotificationSettingKey } from './types'
+import type { NotificationCategory, NotificationSegment, NotificationSettingKey } from './types'
 
 /** 알림센터 세그먼트 탭 (소비자) — SegTabs 재사용 */
 export const SEGMENT_TABS: SegTabItem<NotificationSegment>[] = [
@@ -23,3 +24,45 @@ export const CUSTOMER_SETTING_META: SettingMeta[] = [
   { key: 'eventBenefit', label: '이벤트·혜택', desc: '이벤트/쿠폰·혜택 소멸 예정 알림' },
   { key: 'marketing', label: '마케팅 정보', desc: '제휴 이벤트·광고성 정보 (필수 아님)' },
 ]
+
+/**
+ * category → 표시 이모지 아이콘.
+ * icon 필드가 BE 응답에 없으므로 category 기반으로 FE 에서 파생한다.
+ */
+export const CATEGORY_ICON: Record<NotificationCategory, string> = {
+  deal: '🔥',
+  order: '🛍️',
+  review: '💬',
+  benefit: '🎁',
+  system: '📢',
+  refund: '↩️',
+  settlement: '💰',
+  notice: '📢',
+  inquiry: '💬',
+}
+
+/**
+ * category → 클릭 시 이동할 내부 라우트.
+ * link 필드(딥링크 문자열)는 무시하고 category 로 결정.
+ * system / settlement 는 별도 라우트 없음 → null.
+ */
+export function resolveNotificationRoute(category: NotificationCategory): string | null {
+  switch (category) {
+    case 'deal':
+      return ROUTES.HOME
+    case 'order':
+    case 'refund':
+      return ROUTES.ORDERS
+    case 'review':
+      return ROUTES.MY_REVIEWS
+    case 'benefit':
+      return ROUTES.COUPONS
+    case 'notice':
+      return ROUTES.NOTICES
+    case 'inquiry':
+      return ROUTES.SUPPORT
+    case 'system':
+    case 'settlement':
+      return null
+  }
+}
