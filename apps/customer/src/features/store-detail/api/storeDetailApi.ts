@@ -12,8 +12,6 @@ import {
   type StoreReview,
   type ReviewSummary,
 } from '../types'
-import { favoritesApi } from '@/features/favorites/api/favoritesApi'
-
 /**
  * ⚠️ Mock 스텁 — 매장 상세 BE(BE 완료 NO)가 아직이라 가짜 응답.
  * BE 완료 후 `apiClient` 실제 호출 + Zod 응답 검증으로 교체 (api-client-convention).
@@ -244,10 +242,10 @@ const REVIEW_PAGE_SIZE = 5
 export const storeDetailApi = {
   async getStoreDetail(id: string): Promise<StoreDetail> {
     await delay(350)
-    // 단골 여부는 단일 소스(favorites)에서 — 매장 상세·홈·단골 목록이 일관 반영
+    // 단골 isFavorite 은 #6 매장 상세 실연동 시 BE 응답 필드로. 전환적 false.
     return storeDetailSchema.parse({
       ...(STORES[id] ?? defaultStore(id)),
-      isFavorite: favoritesApi.isFavorite(id),
+      isFavorite: false,
     })
   },
 

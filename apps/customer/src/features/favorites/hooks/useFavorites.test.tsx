@@ -7,10 +7,11 @@ import type { FavoriteList } from '../types'
 
 vi.mock('../api/favoritesApi')
 
+/** id 는 number — BE FavoriteStoreResponse.id (int64) */
 const LIST: FavoriteList = {
   stores: [
-    { id: 'st-1', name: '브레드샵', imageUrl: null, distanceKm: 0.3, rating: 4.8, activeDealCount: 3 },
-    { id: 'nb-1', name: '북카페 무드', imageUrl: null, distanceKm: 0.6, rating: 4.8, activeDealCount: 0 },
+    { id: 1, name: '브레드샵', imageUrl: null, distanceKm: 0.3, rating: 4.8, activeDealCount: 3 },
+    { id: 2, name: '북카페 무드', imageUrl: null, distanceKm: 0.6, rating: 4.8, activeDealCount: 0 },
   ],
   totalCount: 2,
   totalActiveDealCount: 3,
@@ -24,6 +25,6 @@ describe('useFavorites', () => {
     const { result } = renderHook(() => useFavorites(), { wrapper: createQueryWrapper() })
     await waitFor(() => expect(result.current.isSuccess).toBe(true))
     expect(result.current.data?.totalCount).toBe(2)
-    expect(result.current.data?.stores[0].id).toBe('st-1')
+    expect(result.current.data?.stores[0].id).toBe(1)
   })
 })

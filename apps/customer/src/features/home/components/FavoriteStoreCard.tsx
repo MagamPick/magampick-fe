@@ -1,7 +1,8 @@
 import { useNavigate } from 'react-router'
 import { Thumbnail } from '@/shared/components/Thumbnail'
 import { ROUTES } from '@/shared/lib/routes'
-import type { FavoriteStore } from '../types'
+// 단골 카드는 favorites 도메인 canonical 타입(id: number) 사용 — home/types의 로컬 FavoriteStore 대체
+import type { FavoriteStore } from '@/features/favorites/types'
 
 /** ② 내 단골 가게 — 매장 단위 그리드 카드. 진행 중 할인 0건이면 배지 생략. 탭 시 매장 상세. */
 export function FavoriteStoreCard({ store }: { store: FavoriteStore }) {
@@ -9,7 +10,7 @@ export function FavoriteStoreCard({ store }: { store: FavoriteStore }) {
   return (
     <button
       type="button"
-      onClick={() => navigate(ROUTES.STORE_DETAIL(store.id))}
+      onClick={() => navigate(ROUTES.STORE_DETAIL(String(store.id)))}
       className="overflow-hidden rounded-[14px] border border-border bg-card text-left"
     >
       <Thumbnail src={store.imageUrl} className="h-[86px] w-full" iconClassName="size-8" />

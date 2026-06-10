@@ -12,8 +12,9 @@ vi.mock('react-router', async (importOriginal) => {
 
 beforeEach(() => mockNavigate.mockClear())
 
+/** id 는 number — BE FavoriteStoreResponse.id (int64) */
 const STORE: FavoriteStore = {
-  id: 'fv-1',
+  id: 10,
   name: '북카페 무드',
   imageUrl: null,
   distanceKm: 0.6,
@@ -34,10 +35,11 @@ describe('FavoriteListCard', () => {
     expect(screen.getByText('오늘 진행 중 마감 할인 없음')).toBeInTheDocument()
   })
 
-  it('카드_탭시_매장상세_이동', async () => {
+  it('카드_탭시_매장상세_String_id_이동', async () => {
     const user = userEvent.setup()
     render(<FavoriteListCard store={STORE} />)
     await user.click(screen.getByRole('button'))
-    expect(mockNavigate).toHaveBeenCalledWith('/store/fv-1')
+    // ROUTES.STORE_DETAIL(String(store.id)) → '/store/10'
+    expect(mockNavigate).toHaveBeenCalledWith('/store/10')
   })
 })
