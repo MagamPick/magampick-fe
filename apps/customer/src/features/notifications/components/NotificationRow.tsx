@@ -2,11 +2,13 @@ import { useNavigate } from 'react-router'
 import { cn } from '@/shared/lib/utils'
 import { formatRelativeTime } from '../lib/formatRelativeTime'
 import { useMarkNotificationRead } from '../hooks/useMarkNotificationRead'
+import { CATEGORY_ICON, resolveNotificationRoute } from '../constants'
 import type { Notification } from '../types'
 
 /**
  * 알림 1건 행 (프로토타입 `.notif-row`) — 아이콘 원형 + 제목/본문/상대시각 + 미읽음 dot.
- * 클릭 = 읽음 처리 + (link 있으면) 관련 화면 딥링크.
+ * 클릭 = 읽음 처리 + category 기반 라우팅 (link 필드 무시).
+ * icon 필드는 BE 응답에 없음 — CATEGORY_ICON[category] 로 파생.
  */
 export function NotificationRow({ notification }: { notification: Notification }) {
   const navigate = useNavigate()
@@ -14,8 +16,11 @@ export function NotificationRow({ notification }: { notification: Notification }
 
   const handleClick = () => {
     if (!notification.read) markRead.mutate(notification.id)
-    if (notification.link) navigate(notification.link)
+    const route = resolveNotificationRoute(notification.category)
+    if (route) navigate(route)
   }
+
+  const icon = CATEGORY_ICON[notification.category] ?? '🔔'
 
   return (
     <button
@@ -30,7 +35,7 @@ export function NotificationRow({ notification }: { notification: Notification }
         aria-hidden
         className="flex size-10 shrink-0 items-center justify-center rounded-full bg-muted text-[18px]"
       >
-        {notification.icon}
+        {icon}
       </span>
       <span className="flex min-w-0 flex-1 flex-col gap-0.5">
         <span className="text-sm font-bold text-foreground">{notification.title}</span>
