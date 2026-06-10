@@ -887,6 +887,20 @@ export interface components {
              * @example 4500
              */
             regularPrice: number;
+            /**
+             * @description 카테고리 (BAKERY/BEVERAGE/DESSERT/ETC)
+             * @example BAKERY
+             * @enum {string}
+             */
+            category: "BAKERY" | "BEVERAGE" | "DESSERT" | "ETC";
+            /** @description 상품 설명 (선택, 최대 500자) */
+            description?: string;
+            /**
+             * @description 판매 상태 (null 이면 ON_SALE)
+             * @example ON_SALE
+             * @enum {string}
+             */
+            status?: "ON_SALE" | "SOLD_OUT";
         };
         /** @description 일반 상품 응답 */
         ProductResponse: {
@@ -914,6 +928,13 @@ export interface components {
              */
             status?: "ON_SALE" | "SOLD_OUT";
             /**
+             * @description 카테고리
+             * @enum {string}
+             */
+            category?: "BAKERY" | "BEVERAGE" | "DESSERT" | "ETC";
+            /** @description 상품 설명 (없으면 null) */
+            description?: string;
+            /**
              * Format: date-time
              * @description 등록 시각
              */
@@ -938,12 +959,6 @@ export interface components {
              * @example 5
              */
             totalQuantity: number;
-            /**
-             * Format: date-time
-             * @description 픽업 시작 시각 (KST)
-             * @example 2026-05-20T17:00:00
-             */
-            pickupStartAt: string;
             /**
              * Format: date-time
              * @description 픽업 종료 시각 (KST). 등록 당일만 허용
@@ -1544,6 +1559,20 @@ export interface components {
              * @example 4500
              */
             regularPrice?: number;
+            /**
+             * @description 카테고리 (null 이면 변경 없음)
+             * @example BAKERY
+             * @enum {string}
+             */
+            category?: "BAKERY" | "BEVERAGE" | "DESSERT" | "ETC";
+            /** @description 상품 설명 (null 이면 변경 없음, 최대 500자) */
+            description?: string;
+            /**
+             * @description 판매 상태 (null 이면 변경 없음)
+             * @example SOLD_OUT
+             * @enum {string}
+             */
+            status?: "ON_SALE" | "SOLD_OUT";
         };
         /** @description 매장 영업 상태 전환 요청 */
         OperationStatusTransitionRequest: {
@@ -1592,12 +1621,6 @@ export interface components {
              * @example 3
              */
             totalQuantity?: number;
-            /**
-             * Format: date-time
-             * @description 픽업 시작 시각 (KST). null 이면 변경 없음
-             * @example 2026-05-20T17:00:00
-             */
-            pickupStartAt?: string;
             /**
              * Format: date-time
              * @description 픽업 종료 시각 (KST). null 이면 변경 없음
