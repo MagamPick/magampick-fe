@@ -1,49 +1,170 @@
-import { describe, it, expect, beforeEach } from 'vitest'
-import { notificationsApi, __resetNotificationsForTest } from './notificationsApi'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 
-describe('notificationsApi (mock, 사장)', () => {
-  beforeEach(() => __resetNotificationsForTest())
+vi.mock('@/shared/lib/axios')
+
+import { apiClient } from '@/shared/lib/axios'
+import { notificationsApi } from './notificationsApi'
+
+/** BE NotificationResponse 픽스처 */
+const beNotification = {
+  id: 1,
+  category: 'order',
+  title: '새 주문이 들어왔어요',
+  body: '빵순이님 · 버터 크루아상 외 2건',
+  createdAt: '2026-06-11T10:00:00.000Z',
+  read: false,
+  link: '/orders',
+}
+
+const beSettings = {
+  newOrder: true,
+  orderCancel: true,
+  refundRequest: true,
+  newReview: true,
+  notice: true,
+  marketing: false,
+}
+
+describe('notificationsApi (사장)', () => {
+  beforeEach(() => vi.clearAllMocks())
 
   describe('list', () => {
-    it('세그먼트 없이 최신순 단일 리스트로 반환', async () => {
-      const list = await notificationsApi.list()
-      expect(list).toHaveLength(7)
-      expect(list[0].id).toBe('sn1') // agoMin 5 = 가장 최신
-      const times = list.map((n) => n.createdAt)
-      expect([...times].sort((a, b) => b.localeCompare(a))).toEqual(times)
+    it('GET /seller/notifications 호출하고 Notification[] 로 매핑한다', async () => {
+      vi.mocked(apiClient.get).mockResolvedValue({ data: { items: [beNotification] } })
+
+      const result = await notificationsApi.list()
+
+      expect(apiClient.get).toHaveBeenCalledWith('/seller/notifications')
+      expect(result).toHaveLength(1)
+      expect(result[0]).toMatchObject({
+        id: '1', // number → string
+        category: 'order',
+        title: '새 주문이 들어왔어요',
+        body: '빵순이님 · 버터 크루아상 외 2건',
+        read: false,
+        link: '/orders',
+      })
+    })
+
+    it('{items} 언랩 — items 없으면 빈 배열', async () => {
+      vi.mocked(apiClient.get).mockResolvedValue({ data: {} })
+
+      const result = await notificationsApi.list()
+
+      expect(result).toEqual([])
+    })
+
+    it('createdAt 내림차순(최신순)으로 정렬한다', async () => {
+      const older = { ...beNotification, id: 2, createdAt: '2026-06-10T10:00:00.000Z' }
+      vi.mocked(apiClient.get).mockResolvedValue({
+        data: { items: [older, beNotification] },
+      })
+
+      const result = await notificationsApi.list()
+
+      expect(result[0].id).toBe('1') // 최신 먼저
+      expect(result[1].id).toBe('2')
+    })
+
+    it('optional 필드 없는 응답은 기본값으로 매핑한다', async () => {
+      vi.mocked(apiClient.get).mockResolvedValue({ data: { items: [{ id: 5 }] } })
+
+      const result = await notificationsApi.list()
+
+      expect(result[0]).toMatchObject({
+        id: '5',
+        category: '',
+        title: '',
+        body: '',
+        read: false,
+        link: null,
+      })
     })
   })
 
-  describe('읽음 처리', () => {
-    it('미읽음 수는 처음 3건', async () => {
-      expect(await notificationsApi.unreadCount()).toBe(3)
+  describe('unreadCount', () => {
+    it('GET /seller/notifications/unread-count 호출하고 count 반환', async () => {
+      vi.mocked(apiClient.get).mockResolvedValue({ data: { count: 3 } })
+
+      const result = await notificationsApi.unreadCount()
+
+      expect(apiClient.get).toHaveBeenCalledWith('/seller/notifications/unread-count')
+      expect(result).toBe(3)
     })
 
-    it('단건 읽음 처리하면 미읽음 수가 줄어든다', async () => {
-      await notificationsApi.markRead('sn1')
-      expect(await notificationsApi.unreadCount()).toBe(2)
-    })
+    it('count 없으면 0 반환', async () => {
+      vi.mocked(apiClient.get).mockResolvedValue({ data: {} })
 
-    it('모두 읽음 처리하면 미읽음 수가 0', async () => {
+      const result = await notificationsApi.unreadCount()
+
+      expect(result).toBe(0)
+    })
+  })
+
+  describe('markRead', () => {
+    it('PATCH /seller/notifications/{id}/read 호출', async () => {
+      vi.mocked(apiClient.patch).mockResolvedValue({})
+
+      await notificationsApi.markRead('42')
+
+      expect(apiClient.patch).toHaveBeenCalledWith('/seller/notifications/42/read')
+    })
+  })
+
+  describe('markAllRead', () => {
+    it('PATCH /seller/notifications/read-all 호출', async () => {
+      vi.mocked(apiClient.patch).mockResolvedValue({})
+
       await notificationsApi.markAllRead()
-      expect(await notificationsApi.unreadCount()).toBe(0)
+
+      expect(apiClient.patch).toHaveBeenCalledWith('/seller/notifications/read-all')
     })
   })
 
-  describe('설정', () => {
-    it('기본값은 거래·공지 ON, 마케팅 OFF', async () => {
-      const settings = await notificationsApi.getSettings()
-      expect(settings.newOrder).toBe(true)
-      expect(settings.refundRequest).toBe(true)
-      expect(settings.newReview).toBe(true)
-      expect(settings.notice).toBe(true)
-      expect(settings.marketing).toBe(false)
+  describe('getSettings', () => {
+    it('GET /seller/notification-settings 호출하고 NotificationSettings 로 매핑한다', async () => {
+      vi.mocked(apiClient.get).mockResolvedValue({ data: beSettings })
+
+      const result = await notificationsApi.getSettings()
+
+      expect(apiClient.get).toHaveBeenCalledWith('/seller/notification-settings')
+      expect(result).toMatchObject({
+        newOrder: true,
+        orderCancel: true,
+        refundRequest: true,
+        newReview: true,
+        notice: true,
+        marketing: false,
+      })
     })
 
-    it('토글하면 변경된 설정을 반환하고 유지된다', async () => {
-      const updated = await notificationsApi.updateSetting('marketing', true)
-      expect(updated.marketing).toBe(true)
-      expect((await notificationsApi.getSettings()).marketing).toBe(true)
+    it('optional 필드 없으면 전부 false 기본값', async () => {
+      vi.mocked(apiClient.get).mockResolvedValue({ data: {} })
+
+      const result = await notificationsApi.getSettings()
+
+      expect(result).toEqual({
+        newOrder: false,
+        orderCancel: false,
+        refundRequest: false,
+        newReview: false,
+        notice: false,
+        marketing: false,
+      })
+    })
+  })
+
+  describe('updateSetting', () => {
+    it('PATCH /seller/notification-settings/{key} 호출, body={enabled}, 응답 매핑', async () => {
+      vi.mocked(apiClient.patch).mockResolvedValue({ data: { ...beSettings, marketing: true } })
+
+      const result = await notificationsApi.updateSetting('marketing', true)
+
+      expect(apiClient.patch).toHaveBeenCalledWith(
+        '/seller/notification-settings/marketing',
+        { enabled: true },
+      )
+      expect(result.marketing).toBe(true)
     })
   })
 })
