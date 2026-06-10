@@ -101,4 +101,64 @@ describe('mapToClientOrder', () => {
     expect(order.pickupCode).toBe('0000')
     expect(order.status).toBe('PENDING')
   })
+
+  it('completedAt 없고 cancelledAt 있으면 cancelledAt 을 completedAt 으로 흡수', () => {
+    const res: TossConfirmResponse = {
+      ...mockOrderResponse,
+      status: 'CANCELLED',
+      completedAt: undefined,
+      cancelledAt: '2026-06-10T11:00:00.000Z',
+    }
+    const order = mapToClientOrder(res)
+    expect(order.completedAt).toBe('2026-06-10T11:00:00.000Z')
+  })
+
+  it('completedAt 과 cancelledAt 둘 다 있으면 completedAt 우선', () => {
+    const res: TossConfirmResponse = {
+      ...mockOrderResponse,
+      completedAt: '2026-06-10T10:30:00.000Z',
+      cancelledAt: '2026-06-10T11:00:00.000Z',
+    }
+    const order = mapToClientOrder(res)
+    expect(order.completedAt).toBe('2026-06-10T10:30:00.000Z')
+  })
+
+  it('refund 있으면 도메인 Refund 로 매핑한다', () => {
+    const res: TossConfirmResponse = {
+      ...mockOrderResponse,
+      status: 'COMPLETED',
+      refund: {
+        status: 'REQUESTED',
+        reason: '상품 상태가 설명과 달라요.',
+        requestedAt: '2026-06-09T12:00:00.000Z',
+      },
+    }
+    const order = mapToClientOrder(res)
+    expect(order.refund?.status).toBe('REQUESTED')
+    expect(order.refund?.reason).toBe('상품 상태가 설명과 달라요.')
+    expect(order.refund?.requestedAt).toBe('2026-06-09T12:00:00.000Z')
+  })
+
+  it('refund REJECTED 이면 rejectReason 포함', () => {
+    const res: TossConfirmResponse = {
+      ...mockOrderResponse,
+      status: 'COMPLETED',
+      refund: {
+        status: 'REJECTED',
+        reason: '단순 변심이에요.',
+        requestedAt: '2026-06-08T12:00:00.000Z',
+        rejectReason: '이미 수령한 상품이에요.',
+        resolvedAt: '2026-06-09T09:00:00.000Z',
+      },
+    }
+    const order = mapToClientOrder(res)
+    expect(order.refund?.status).toBe('REJECTED')
+    expect(order.refund?.rejectReason).toBe('이미 수령한 상품이에요.')
+    expect(order.refund?.resolvedAt).toBe('2026-06-09T09:00:00.000Z')
+  })
+
+  it('refund 없으면 도메인 Order 의 refund 가 undefined', () => {
+    const order = mapToClientOrder(mockOrderResponse)
+    expect(order.refund).toBeUndefined()
+  })
 })

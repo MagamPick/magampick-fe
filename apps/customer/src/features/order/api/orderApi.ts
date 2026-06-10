@@ -1,8 +1,9 @@
 import { z } from 'zod'
-import { orderSchema, type Order, type OrderAmounts, type OrderStatus } from '../types'
+import { orderSchema, type Order, type OrderAmounts } from '../types'
 import { refundDeadline } from '../lib/refundPolicy'
 import type { CartItem, CartStoreInfo, Pickup } from '@/features/cart/types'
 import { apiClient } from '@/shared/lib/axios'
+import { orderResponseSchema, mapToClientOrder } from './paymentApi'
 
 /**
  * ⚠️ Mock 스텁 — 주문 BE(order 도메인 미구현)가 아직이라 클라이언트에서 가짜 생성/저장.
@@ -389,28 +390,35 @@ export const orderApi = {
     return prepareOrderResponseSchema.parse(data)
   },
 
+  /**
+   * 내 주문 목록 — 실 BE GET /api/v1/orders.
+   * OrderResponse[] Zod 검증 → mapToClientOrder → 최신순 정렬.
+   */
   async listOrders(): Promise<Order[]> {
-    await delay(300)
-    return [...ORDERS.values()].sort(
+    const { data } = await apiClient.get('/orders')
+    const list = z.array(orderResponseSchema).parse(data)
+    const mapped = list.map(mapToClientOrder)
+    return mapped.sort(
       (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
     )
   },
 
+  /**
+   * 주문 상세 단건 — 실 BE GET /api/v1/orders/{id}.
+   * 404 등 에러는 apiClient interceptor 가 ApiError 로 정규화 후 throw.
+   */
   async getOrder(id: string): Promise<Order> {
-    await delay(200)
-    const order = ORDERS.get(id)
-    if (!order) throw new Error(`주문을 찾을 수 없어요. (id=${id})`)
-    return order
+    const { data } = await apiClient.get(`/orders/${id}`)
+    return mapToClientOrder(orderResponseSchema.parse(data))
   },
 
+  /**
+   * 주문 취소 — 실 BE POST /api/v1/orders/{id}/cancel.
+   * PENDING 상태 검증은 BE 담당 — 실패 시 ApiError throw (interceptor 정규화).
+   */
   async cancelOrder(id: string): Promise<Order> {
-    await delay(300)
-    const order = ORDERS.get(id)
-    if (!order) throw new Error('주문을 찾을 수 없어요.')
-    if (order.status !== 'PENDING') throw new Error('사장님이 수락하기 전에만 취소할 수 있어요.')
-    const updated: Order = { ...order, status: 'CANCELLED' as OrderStatus }
-    ORDERS.set(id, updated)
-    return updated
+    const { data } = await apiClient.post(`/orders/${id}/cancel`)
+    return mapToClientOrder(orderResponseSchema.parse(data))
   },
 
   /**
