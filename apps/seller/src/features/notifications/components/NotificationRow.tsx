@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router'
+import { ShoppingBag, RotateCcw, MessageSquare, Wallet, Megaphone, Bell } from 'lucide-react'
 import { cn } from '@/shared/lib/utils'
 import { formatRelativeTime } from '../lib/formatRelativeTime'
 import { useMarkNotificationRead } from '../hooks/useMarkNotificationRead'
@@ -7,7 +8,29 @@ import type { Notification } from '../types'
 /**
  * 알림 1건 행 (프로토타입 51-notifications `.noti-row`) — 아이콘 + 제목/본문/상대시각 + 미읽음 dot.
  * 클릭 = 읽음 처리 + (link 있으면) 관련 화면 딥링크.
+ * 아이콘은 category 값(소문자 매칭)을 lucide JSX 로 파생. 알 수 없는 category → Bell 기본.
  */
+
+const ICON_CLASS = 'size-[18px] text-muted-foreground'
+
+/** category → lucide JSX (컴포넌트 타입이 아닌 요소를 직접 반환해 React Compiler 경고 회피) */
+function renderCategoryIcon(category: string) {
+  switch (category.toLowerCase()) {
+    case 'order':
+      return <ShoppingBag className={ICON_CLASS} aria-hidden />
+    case 'refund':
+      return <RotateCcw className={ICON_CLASS} aria-hidden />
+    case 'review':
+      return <MessageSquare className={ICON_CLASS} aria-hidden />
+    case 'settlement':
+      return <Wallet className={ICON_CLASS} aria-hidden />
+    case 'notice':
+      return <Megaphone className={ICON_CLASS} aria-hidden />
+    default:
+      return <Bell className={ICON_CLASS} aria-hidden />
+  }
+}
+
 export function NotificationRow({ notification }: { notification: Notification }) {
   const navigate = useNavigate()
   const markRead = useMarkNotificationRead()
@@ -28,9 +51,9 @@ export function NotificationRow({ notification }: { notification: Notification }
     >
       <span
         aria-hidden
-        className="flex size-10 shrink-0 items-center justify-center rounded-full bg-muted text-[18px]"
+        className="flex size-10 shrink-0 items-center justify-center rounded-full bg-muted"
       >
-        {notification.icon}
+        {renderCategoryIcon(notification.category)}
       </span>
       <span className="flex min-w-0 flex-1 flex-col gap-0.5">
         <span className="text-sm font-bold text-foreground">{notification.title}</span>
