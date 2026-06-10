@@ -132,6 +132,9 @@ importers:
       '@tanstack/react-query':
         specifier: ^5.100.14
         version: 5.100.14(react@19.2.6)
+      '@tosspayments/tosspayments-sdk':
+        specifier: ^2.7.0
+        version: 2.7.0
       axios:
         specifier: ^1.16.1
         version: 1.16.1
@@ -2461,6 +2464,9 @@ packages:
     engines: {node: '>=12', npm: '>=6'}
     peerDependencies:
       '@testing-library/dom': '>=7.21.4'
+
+  '@tosspayments/tosspayments-sdk@2.7.0':
+    resolution: {integrity: sha512-qpVIMpxdmKNOKwOZuSbkyGO5CpbF3+kqJcHLjGsTdyOsNex8ai+ceQc7zyCJhq+qZf9jglJpx9Q0bGVWwGjcbQ==}
 
   '@trickfilm400/rollup-plugin-off-main-thread@3.0.0-pre1':
     resolution: {integrity: sha512-/67zpWDBLV+oYAEL682s1ktXL0HgqX76f6gaVGkGnVZlBbm1zd0v4Bz8MFF2GGhoX9rvfq3KSQHubFHwa6w6/Q==}
@@ -6720,6 +6726,8 @@ snapshots:
   '@testing-library/user-event@14.6.1(@testing-library/dom@10.4.1)':
     dependencies:
       '@testing-library/dom': 10.4.1
+
+  '@tosspayments/tosspayments-sdk@2.7.0': {}
 
   '@trickfilm400/rollup-plugin-off-main-thread@3.0.0-pre1':
     dependencies:
