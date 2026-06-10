@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router'
 import { Thumbnail } from '@/shared/components/Thumbnail'
 import { ROUTES } from '@/shared/lib/routes'
+import { formatDistance } from '@/shared/lib/formatDistance'
 // 단골 카드는 favorites 도메인 canonical 타입(id: number) 사용 — home/types의 로컬 FavoriteStore 대체
 import type { FavoriteStore } from '@/features/favorites/types'
 
@@ -16,7 +17,9 @@ export function FavoriteStoreCard({ store }: { store: FavoriteStore }) {
       <Thumbnail src={store.imageUrl} className="h-[86px] w-full" iconClassName="size-8" />
       <span className="block px-4 pb-[15px] pt-[13px]">
         <span className="block text-[13px] font-bold">{store.name}</span>
-        <span className="mt-[3px] block text-[11px] text-muted-foreground">{store.distanceKm}km</span>
+        <span className="mt-[3px] block text-[11px] text-muted-foreground">
+          {formatDistance(store.distanceKm)}
+        </span>
         {store.activeDealCount > 0 && (
           <span className="mt-[5px] block text-[11px] font-bold text-secondary-foreground">
             진행 중 마감 할인 {store.activeDealCount}건

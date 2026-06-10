@@ -1,4 +1,5 @@
 import { cn } from '@/shared/lib/utils'
+import { formatDistance } from '@/shared/lib/formatDistance'
 import type { StoreDetail } from '../types'
 import { businessStatusLabel, businessStatusTone } from '../lib/businessStatus'
 
@@ -22,7 +23,7 @@ export function StoreHeadMeta({ store }: { store: StoreDetail }) {
           ★ {store.rating} ({store.reviewCount})
         </span>
         <Dot />
-        <span>{store.distanceKm}km</span>
+        <span>{formatDistance(store.distanceKm)}</span>
       </div>
     </div>
   )

@@ -93,11 +93,14 @@ export function CustomerOrderCard({ order, onClick, onReviewClick }: Props) {
             {won(order.amounts.payTotal)}
           </span>
           {isWaiting && (
-            <span className="flex items-center gap-2 text-[12px] text-muted-foreground">
-              <span className="font-mono text-[13px] font-bold tracking-widest text-primary">
-                {order.pickupCode}
+            <span className="flex flex-col items-end gap-0.5 text-[12px] text-muted-foreground">
+              <span>{pickupLabel} 픽업</span>
+              <span className="flex items-center gap-1">
+                픽업코드
+                <span className="font-mono text-[13px] font-bold tracking-widest text-primary">
+                  {order.pickupCode}
+                </span>
               </span>
-              <span>픽업 {pickupLabel}</span>
             </span>
           )}
           {/* COMPLETED 는 아래 리뷰 행에서 날짜 표시 — 여기선 나머지 DONE 상태만 */}
