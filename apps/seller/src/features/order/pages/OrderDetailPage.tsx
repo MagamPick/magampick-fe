@@ -46,7 +46,7 @@ export function OrderDetailPage() {
   const parsed = orderParamsSchema.safeParse(params)
   const id = parsed.success ? parsed.data.id : ''
   const _storeIdNum = useCurrentStoreStore((s) => s.selectedStoreId)
-  // mock hook(string storeId) 전달용 변환 — Step 2 실연동 시 이전
+  // 매장 ID(number)를 URL 보간용 string 으로 변환 (실연동 완료)
   const storeId = _storeIdNum != null ? String(_storeIdNum) : ''
 
   const { data: order, isLoading, isError, refetch } = useOrder(id)
