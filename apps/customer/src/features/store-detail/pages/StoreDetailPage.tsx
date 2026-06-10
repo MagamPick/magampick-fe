@@ -10,8 +10,6 @@ import { ROUTES } from '@/shared/lib/routes'
 import { storeDetailParamsSchema } from '../types'
 import { useStoreDetail } from '../hooks/useStoreDetail'
 import { useStoreDetailRefresh } from '../hooks/useStoreDetailRefresh'
-import { useToggleFavorite } from '@/features/favorites/hooks/useToggleFavorite'
-import { favoriteErrorMessage } from '@/features/favorites/lib/favoriteErrorMessage'
 import { StoreHero } from '../components/StoreHero'
 import { StoreHeadMeta } from '../components/StoreHeadMeta'
 import { StoreActions } from '../components/StoreActions'
@@ -42,7 +40,6 @@ function StoreDetailView({ storeId }: { storeId: string }) {
   const { show } = useComingSoon()
   const { data: store, isPending, isError, refetch } = useStoreDetail(storeId)
   const refresh = useStoreDetailRefresh(storeId)
-  const toggleFavorite = useToggleFavorite()
   const [searchParams] = useSearchParams()
   // 상품 상세의 평점·리뷰 영역에서 ?tab=review 로 진입하면 리뷰 탭으로 시작
   const [activeTab, setActiveTab] = useState<StoreTabKey>(() =>
@@ -69,24 +66,9 @@ function StoreDetailView({ storeId }: { storeId: string }) {
     }
   }
 
+  // TODO(#6): 매장 상세 실연동(number storeId) 시 useToggleFavorite 재연결
   const handleToggleFavorite = () => {
-    if (!store) return
-    toggleFavorite.mutate(
-      {
-        storeId,
-        next: !store.isFavorite,
-        // 단골 목록 카드가 상세에서 본 매장과 일치하도록 카드 전달 (활성 떨이 수는 BE 전까지 0)
-        store: {
-          id: store.id,
-          name: store.name,
-          imageUrl: store.imageUrl,
-          distanceKm: store.distanceKm,
-          rating: store.rating,
-          activeDealCount: 0,
-        },
-      },
-      { onError: (err) => show(favoriteErrorMessage(err)) },
-    )
+    show('단골 등록은 매장 연동 후 제공돼요')
   }
 
   if (isPending) {
@@ -124,8 +106,8 @@ function StoreDetailView({ storeId }: { storeId: string }) {
         <ScreenContainer variant="bleed" className="pb-[96px]">
           <StoreHero
             imageUrl={store.imageUrl}
-            isFavorite={store.isFavorite}
-            favoritePending={toggleFavorite.isPending}
+            isFavorite={false}
+            favoritePending={false}
             onBack={handleBack}
             onShare={handleShare}
             onToggleFavorite={handleToggleFavorite}

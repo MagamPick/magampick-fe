@@ -1,4 +1,3 @@
-import { favoritesApi } from '@/features/favorites/api/favoritesApi'
 import {
   storeListPageSchema,
   type StoreListItem,
@@ -170,6 +169,7 @@ const COMPARATORS: Record<StoreSort, (a: MockStore, b: MockStore) => number> = {
   rating: (a, b) => b.rating - a.rating,
 }
 
+// 단골 isFavorite 은 #6 매장 목록 실연동 시 BE 응답 필드로. 전환적 false.
 const toItem = (s: MockStore): StoreListItem => ({
   id: s.id,
   name: s.name,
@@ -177,7 +177,7 @@ const toItem = (s: MockStore): StoreListItem => ({
   distanceKm: s.distanceKm,
   rating: s.rating,
   activeDealCount: s.activeDealCount,
-  isFavorite: favoritesApi.isFavorite(s.id),
+  isFavorite: false,
 })
 
 export const storeListApi = {

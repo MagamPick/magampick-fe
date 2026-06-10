@@ -1,5 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest'
-import { favoritesApi, __resetFavoritesStoreForTest } from '@/features/favorites/api/favoritesApi'
+import { describe, it, expect } from 'vitest'
 import { storeListApi } from './storeListApi'
 import type { StoreListItem, StoreSort } from '../types'
 
@@ -19,8 +18,6 @@ async function fetchAll(sort: StoreSort): Promise<StoreListItem[]> {
 }
 
 describe('storeListApi.getStores', () => {
-  beforeEach(() => __resetFavoritesStoreForTest([]))
-
   it('cursor_페이징_total_dealStoreCount_노출', async () => {
     const page0 = await storeListApi.getStores({ sort: 'recommended', cursor: 0 })
     expect(page0.items).toHaveLength(PAGE_SIZE)
@@ -71,23 +68,12 @@ describe('storeListApi.getStores', () => {
     expect(recommended.map((s) => s.id)).not.toEqual(distance.map((s) => s.id))
   })
 
-  it('단골_여부를_favorites_단일소스에서_join', async () => {
-    __resetFavoritesStoreForTest([
-      {
-        id: 'st-1',
-        name: '베이커리 브레드샵',
-        imageUrl: null,
-        distanceKm: 0.3,
-        rating: 4.6,
-        activeDealCount: 2,
-      },
-    ])
+  it('isFavorite_전환적_false_고정_매장목록_실연동_#6_에서_BE_응답_필드로', async () => {
+    // 단골 isFavorite 은 #6 매장 목록 실연동 시 BE join 응답 필드로 대체.
+    // 현재는 mock storeListApi 가 전환적으로 false 고정.
     const items = await fetchAll('distance')
-    expect(items.find((s) => s.id === 'st-1')!.isFavorite).toBe(true)
-    expect(items.find((s) => s.id === 'sl-1')!.isFavorite).toBe(false)
-    // 응답 전체가 단일 소스와 일치
     for (const item of items) {
-      expect(item.isFavorite).toBe(favoritesApi.isFavorite(item.id))
+      expect(item.isFavorite).toBe(false)
     }
   })
 })

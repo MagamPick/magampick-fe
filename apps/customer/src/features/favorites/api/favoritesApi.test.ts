@@ -1,80 +1,109 @@
-import { describe, it, expect, beforeEach } from 'vitest'
-import { favoritesApi, __resetFavoritesStoreForTest } from './favoritesApi'
-import { FAVORITE_ERROR, type FavoriteStore } from '../types'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { apiClient } from '@/shared/lib/axios'
+import { ApiError } from '@/shared/lib/apiError'
+import { favoritesApi } from './favoritesApi'
+import { FAVORITE_ERROR } from '../types'
 
-/** 테스트용 카드 팩토리 — 시드 배열의 순서가 곧 등록순(favoritedAt asc) */
-const card = (id: string, over: Partial<FavoriteStore> = {}): FavoriteStore => ({
-  id,
-  name: `매장 ${id}`,
-  imageUrl: null,
-  distanceKm: 1,
-  rating: 4,
-  activeDealCount: 0,
-  ...over,
-})
+vi.mock('@/shared/lib/axios', () => ({
+  apiClient: {
+    get: vi.fn(),
+    post: vi.fn(),
+    delete: vi.fn(),
+  },
+}))
+
+beforeEach(() => vi.clearAllMocks())
 
 describe('favoritesApi', () => {
-  beforeEach(() => {
-    __resetFavoritesStoreForTest([]) // 빈 상태에서 시작
-  })
+  describe('list', () => {
+    it('GET /customers/me/favorites 호출 후 favoriteListSchema 파싱 반환', async () => {
+      vi.mocked(apiClient.get).mockResolvedValue({
+        data: {
+          stores: [
+            { id: 1, name: '브레드샵', distanceKm: 0.3, rating: 4.8, activeDealCount: 2 },
+            { id: 2, name: '북카페 무드', distanceKm: 0.6, rating: 4.6, activeDealCount: 0 },
+          ],
+          totalCount: 2,
+          totalActiveDealCount: 2,
+        },
+      })
 
-  it('추가_성공_및_목록_isFavorite_반영', async () => {
-    await favoritesApi.add('s1', card('s1', { activeDealCount: 2 }))
-    const list = await favoritesApi.list()
-    expect(list.totalCount).toBe(1)
-    expect(list.stores[0].id).toBe('s1')
-    expect(favoritesApi.isFavorite('s1')).toBe(true)
-  })
+      const result = await favoritesApi.list()
 
-  it('중복_추가_idempotent_상한_미소진', async () => {
-    await favoritesApi.add('s1', card('s1'))
-    await favoritesApi.add('s1', card('s1'))
-    expect((await favoritesApi.list()).totalCount).toBe(1)
-  })
-
-  it('해제_성공_및_없는것_해제도_안전', async () => {
-    await favoritesApi.add('s1', card('s1'))
-    await favoritesApi.remove('s1')
-    await favoritesApi.remove('s1')
-    expect(favoritesApi.isFavorite('s1')).toBe(false)
-    expect((await favoritesApi.list()).totalCount).toBe(0)
-  })
-
-  it('상한_50_초과시_FAVORITE_LIMIT_REACHED_거부', async () => {
-    __resetFavoritesStoreForTest(Array.from({ length: 50 }, (_, i) => card(`s${i}`)))
-    await expect(favoritesApi.add('extra', card('extra'))).rejects.toMatchObject({
-      code: FAVORITE_ERROR.LIMIT_REACHED,
+      expect(apiClient.get).toHaveBeenCalledWith('/customers/me/favorites')
+      expect(result.stores).toHaveLength(2)
+      expect(result.stores[0].id).toBe(1)
+      expect(result.totalCount).toBe(2)
+      expect(result.totalActiveDealCount).toBe(2)
     })
-    // 이미 단골인 매장 재추가는 상한과 무관(idempotent)
-    await expect(favoritesApi.add('s0', card('s0'))).resolves.toBeUndefined()
+
+    it('BE stores 필드 absent 시 빈 배열·0 기본값 반환', async () => {
+      vi.mocked(apiClient.get).mockResolvedValue({ data: {} })
+
+      const result = await favoritesApi.list()
+
+      expect(result.stores).toEqual([])
+      expect(result.totalCount).toBe(0)
+      expect(result.totalActiveDealCount).toBe(0)
+    })
+
+    it('store.imageUrl absent → null 변환', async () => {
+      vi.mocked(apiClient.get).mockResolvedValue({
+        data: {
+          stores: [{ id: 3, name: '매장A' }], // imageUrl 필드 없음
+        },
+      })
+
+      const result = await favoritesApi.list()
+
+      expect(result.stores[0].imageUrl).toBeNull()
+    })
   })
 
-  it('정렬_떨이활성_우선_후_등록순', async () => {
-    // 등록순(=시드 인덱스): old-nodeal, old-deal, new-nodeal, new-deal
-    __resetFavoritesStoreForTest([
-      card('old-nodeal', { activeDealCount: 0 }),
-      card('old-deal', { activeDealCount: 1 }),
-      card('new-nodeal', { activeDealCount: 0 }),
-      card('new-deal', { activeDealCount: 2 }),
-    ])
-    const list = await favoritesApi.list()
-    // 활성 우선(등록순) → 비활성(등록순)
-    expect(list.stores.map((s) => s.id)).toEqual([
-      'old-deal',
-      'new-deal',
-      'old-nodeal',
-      'new-nodeal',
-    ])
+  describe('add', () => {
+    it('POST /customers/me/favorites body { storeId: number } 호출', async () => {
+      vi.mocked(apiClient.post).mockResolvedValue({ data: { storeId: 42, createdAt: '2024-01-01T00:00:00Z' } })
+
+      await favoritesApi.add(42)
+
+      expect(apiClient.post).toHaveBeenCalledWith('/customers/me/favorites', { storeId: 42 })
+    })
+
+    it('void 반환 (응답 body 미사용)', async () => {
+      vi.mocked(apiClient.post).mockResolvedValue({ data: { storeId: 1 } })
+
+      const result = await favoritesApi.add(1)
+
+      expect(result).toBeUndefined()
+    })
+
+    it('409 FAVORITE_LIMIT_REACHED — ApiError 그대로 throw 전파', async () => {
+      vi.mocked(apiClient.post).mockRejectedValue(
+        new ApiError(409, FAVORITE_ERROR.LIMIT_REACHED, '단골매장은 최대 50개까지 등록할 수 있어요'),
+      )
+
+      await expect(favoritesApi.add(99)).rejects.toMatchObject({
+        status: 409,
+        code: FAVORITE_ERROR.LIMIT_REACHED,
+      })
+    })
   })
 
-  it('통계_총개수와_활성떨이_합산', async () => {
-    __resetFavoritesStoreForTest([
-      card('a', { activeDealCount: 2 }),
-      card('b', { activeDealCount: 3 }),
-      card('c', { activeDealCount: 0 }),
-    ])
-    const list = await favoritesApi.list()
-    expect(list.totalCount).toBe(3)
-    expect(list.totalActiveDealCount).toBe(5)
+  describe('remove', () => {
+    it('DELETE /customers/me/favorites/{storeId} 호출', async () => {
+      vi.mocked(apiClient.delete).mockResolvedValue({ data: null })
+
+      await favoritesApi.remove(7)
+
+      expect(apiClient.delete).toHaveBeenCalledWith('/customers/me/favorites/7')
+    })
+
+    it('void 반환', async () => {
+      vi.mocked(apiClient.delete).mockResolvedValue({ data: null })
+
+      const result = await favoritesApi.remove(1)
+
+      expect(result).toBeUndefined()
+    })
   })
 })

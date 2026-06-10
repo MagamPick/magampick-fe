@@ -13,7 +13,7 @@ export function FavoriteListCard({ store }: { store: FavoriteStore }) {
   return (
     <button
       type="button"
-      onClick={() => navigate(ROUTES.STORE_DETAIL(store.id))}
+      onClick={() => navigate(ROUTES.STORE_DETAIL(String(store.id)))}
       className="flex w-full items-center gap-3 border-b border-border py-[13px] text-left last:border-b-0"
     >
       <Thumbnail

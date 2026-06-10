@@ -1,6 +1,5 @@
 import { describe, it, expect } from 'vitest'
 import { storeDetailApi } from './storeDetailApi'
-import { favoritesApi, __resetFavoritesStoreForTest } from '@/features/favorites/api/favoritesApi'
 
 describe('storeDetailApi (mock)', () => {
   it('매장상세_id별_영업상태_반환_그리고_요일별영업시간_7개', async () => {
@@ -75,10 +74,11 @@ describe('storeDetailApi (mock)', () => {
     expect(empty.nextCursor).toBeNull()
   })
 
-  it('isFavorite_단골_소스에서_반영', async () => {
-    __resetFavoritesStoreForTest([])
+  it('isFavorite_전환적_false_고정_매장상세_실연동_#6_에서_BE_응답_필드로', async () => {
+    // 단골 isFavorite 은 #6 매장 상세 실연동 시 BE 응답 필드로 대체.
+    // 현재는 mock storeDetailApi 가 전환적으로 false 고정.
+    expect((await storeDetailApi.getStoreDetail('st-1')).isFavorite).toBe(false)
+    expect((await storeDetailApi.getStoreDetail('st-break')).isFavorite).toBe(false)
     expect((await storeDetailApi.getStoreDetail('zzz')).isFavorite).toBe(false)
-    await favoritesApi.add('zzz')
-    expect((await storeDetailApi.getStoreDetail('zzz')).isFavorite).toBe(true)
   })
 })

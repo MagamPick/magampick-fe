@@ -85,7 +85,8 @@ describe('FavoriteStoresSection', () => {
       data: {
         stores: [
           {
-            id: 'fv-1',
+            // id 는 number — BE FavoriteStoreResponse.id (int64)
+            id: 1,
             name: '단골집',
             imageUrl: null,
             distanceKm: 0.3,

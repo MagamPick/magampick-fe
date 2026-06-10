@@ -4,7 +4,8 @@ import { favoriteKeys } from './favoriteKeys'
 import type { FavoriteList, FavoriteStore } from '../types'
 
 export interface ToggleFavoriteVars {
-  storeId: string
+  /** BE number storeId (#6 매장 상세 실연동 시 storeId 출처) */
+  storeId: number
   /** true=추가, false=해제 */
   next: boolean
   /** 추가 시 목록 optimistic 삽입용 카드. 없으면 invalidate refetch 로 반영. */
@@ -23,8 +24,8 @@ type StoreFavoriteCache = { isFavorite: boolean }
 export function useToggleFavorite() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: ({ storeId, next, store }: ToggleFavoriteVars) =>
-      next ? favoritesApi.add(storeId, store) : favoritesApi.remove(storeId),
+    mutationFn: ({ storeId, next }: ToggleFavoriteVars) =>
+      next ? favoritesApi.add(storeId) : favoritesApi.remove(storeId),
     onMutate: async ({ storeId, next, store }) => {
       await queryClient.cancelQueries({ queryKey: favoriteKeys.list() })
       await queryClient.cancelQueries({ queryKey: ['store', storeId] })
