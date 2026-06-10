@@ -21,8 +21,8 @@ const result: SearchResult = {
   products: [
     {
       kind: 'deal',
-      id: 'p-9',
-      storeId: 'st-7',
+      id: 1009,
+      storeId: 107,
       storeName: '베이글 브라더스',
       name: '플레인 베이글',
       imageUrl: null,

@@ -60,8 +60,8 @@ describe('SearchPage', () => {
       products: [
         {
           kind: 'deal',
-          id: 'p-1',
-          storeId: 'st-1',
+          id: 1001,
+          storeId: 101,
           storeName: '베이커리 브레드샵',
           name: '크루아상',
           imageUrl: null,
@@ -103,8 +103,8 @@ describe('SearchPage', () => {
       products: [
         {
           kind: 'deal',
-          id: 'p-7',
-          storeId: 'st-2',
+          id: 1007,
+          storeId: 102,
           storeName: '카페 모리',
           name: '라떼',
           imageUrl: null,
