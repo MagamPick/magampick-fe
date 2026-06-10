@@ -3,6 +3,7 @@ import { Navigate, useNavigate, useParams } from 'react-router'
 import { ROUTES } from '@/shared/lib/routes'
 import { ScreenContainer } from '@/shared/components/ScreenContainer'
 import { useGeolocation } from '@/shared/hooks/useGeolocation'
+import { useAddresses } from '@/features/addresses/hooks/useAddresses'
 import { storeDetailParamsSchema } from '../types'
 import { useStoreDetail } from '../hooks/useStoreDetail'
 import { walkAndDistanceLabel } from '../lib/walkTime'
@@ -18,7 +19,13 @@ export function StoreLocationPage() {
   const navigate = useNavigate()
   const parsed = storeDetailParamsSchema.safeParse(params)
   const { data: store } = useStoreDetail(parsed.success ? Number(parsed.data.id) : 0)
-  const { position } = useGeolocation()
+
+  // GPS 거부/실패 시 기본 주소지 좌표로 fallback (내 위치 파란 점)
+  const { data: addresses } = useAddresses()
+  const defaultAddress = addresses?.find((a) => a.isDefault)
+  const { position } = useGeolocation(
+    defaultAddress ? { latitude: defaultAddress.latitude, longitude: defaultAddress.longitude } : null,
+  )
 
   if (!parsed.success) return <Navigate to={ROUTES.HOME} replace />
 
