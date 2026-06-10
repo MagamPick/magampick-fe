@@ -29,12 +29,11 @@ export async function requestTossPaymentSdk(params: TossSdkPaymentParams): Promi
   }
 
   const toss = await loadTossPayments(clientKey)
-  // TODO(실연동): 로그인 유저 id 를 customerKey 에 전달할 것 (현재 ANONYMOUS 고정)
+  // 후속: 로그인 유저 id 를 customerKey 에 전달할 것 (현재 ANONYMOUS 고정)
   const payment = toss.payment({ customerKey: ANONYMOUS })
 
-  // TODO(실연동): 토스페이 단독 노출 easyPay 옵션 확정
-  //   현재: method='CARD' 통합결제창 (카드+간편결제 전체 노출)
-  //   명세 목표: 토스페이 단독 → card.flowMode='DIRECT', card.easyPay='토스페이' 가 유력하나 미확인
+  // 토스페이 단독 결제창: method='CARD' + card.flowMode='DIRECT' + card.easyPay='토스페이'
+  // (토스 SDK v2 CardPaymentRequest — card.flowMode·easyPay 타입 확인됨)
   await payment.requestPayment({
     method: 'CARD',
     amount: { currency: 'KRW', value: params.amount },
@@ -42,5 +41,6 @@ export async function requestTossPaymentSdk(params: TossSdkPaymentParams): Promi
     orderName: params.orderName,
     successUrl: params.successUrl,
     failUrl: params.failUrl,
+    card: { flowMode: 'DIRECT', easyPay: '토스페이' },
   })
 }
