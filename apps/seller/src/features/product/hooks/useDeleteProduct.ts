@@ -5,8 +5,8 @@ import { productKeys } from './productKeys'
 
 /**
  * 상품 삭제(soft delete) — 상품을 삭제한다.
- * BE가 cascade로 진행중 떨이를 자동마감하므로 FE에서 별도 마감 호출 불필요.
- * 성공 시 매장 상품 목록 + 떨이 목록 무효화.
+ * 진행 중(OPEN) 떨이가 있으면 BE가 409("진행 중인 떨이 존재")로 차단한다. cascade 마감 없음.
+ * 성공 시 매장 상품 목록 + 떨이 목록 무효화(방어적 무효화).
  */
 export function useDeleteProduct(id: number, storeId: number | null) {
   const queryClient = useQueryClient()

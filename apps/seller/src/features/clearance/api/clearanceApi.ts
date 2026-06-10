@@ -6,7 +6,7 @@
  */
 import { z } from 'zod'
 import { apiClient } from '@/shared/lib/axios'
-import { clearanceStatusSchema } from '../types'
+import { clearanceStatusSchema, clearanceCloseReasonSchema } from '../types'
 import type { ClearanceView, CreateClearancePayload, UpdateClearancePayload } from '../types'
 
 // ─── 날짜 유틸 ────────────────────────────────────────────────────────────────
@@ -45,6 +45,8 @@ const clearanceItemResponseSchema = z.object({
   pickupEndAt: z.string().optional(),
   status: clearanceStatusSchema.optional(),
   createdAt: z.string().optional(),
+  /** 마감 사유 — OPEN 이면 null/미존재 */
+  closeReason: clearanceCloseReasonSchema.optional(),
 })
 
 /** PageResponseClearanceItemResponse (목록) */
@@ -71,6 +73,7 @@ function toClearanceView(raw: z.infer<typeof clearanceItemResponseSchema>): Clea
     productImageUrl: raw.imageUrl,
     originalPrice: raw.regularPrice ?? 0,
     remainingQty,
+    closeReason: raw.closeReason,
   }
 }
 

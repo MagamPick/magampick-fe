@@ -9,6 +9,15 @@ export const CLEARANCE_STATUSES = ['OPEN', 'SOLD_OUT', 'CLOSED'] as const
 export const clearanceStatusSchema = z.enum(CLEARANCE_STATUSES)
 export type ClearanceStatus = z.infer<typeof clearanceStatusSchema>
 
+/**
+ * 떨이 마감 사유 — BE `closeReason` 필드 (OPEN 상태이면 null/미존재).
+ * EXPIRED: 픽업 마감 시각 경과 자동마감
+ * SOLD_OUT: 수량 소진
+ * MANUAL: 사장 직접 마감
+ */
+export const clearanceCloseReasonSchema = z.enum(['EXPIRED', 'SOLD_OUT', 'MANUAL'])
+export type ClearanceCloseReason = z.infer<typeof clearanceCloseReasonSchema>
+
 /** "HH:MM" (24시간) — 픽업 마감 시각 */
 export const clearanceTimeSchema = z
   .string()
@@ -47,6 +56,8 @@ export interface ClearanceView extends Clearance {
   originalPrice: number
   /** 남은 수량 = totalQty - soldQty */
   remainingQty: number
+  /** 마감 사유 — OPEN 상태이면 없음(optional). EXPIRED/SOLD_OUT/MANUAL */
+  closeReason?: ClearanceCloseReason
 }
 
 /**

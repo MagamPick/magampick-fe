@@ -105,4 +105,25 @@ describe('ClearanceDetailPage', () => {
     expect(screen.getByText(/정상가.*보다 낮은 금액/)).toBeInTheDocument()
     expect(screen.getByRole('button', { name: '변경 저장' })).toBeDisabled()
   })
+
+  it('closeReason=EXPIRED 이면 픽업 마감 시각 경과 문구를 보여준다', () => {
+    setup({ ...active, status: 'CLOSED', closeReason: 'EXPIRED' })
+    expect(screen.getByText(/픽업 마감 시각이 지나 마감됐어요/)).toBeInTheDocument()
+    expect(screen.getByText(/마감된 마감 할인은 수정하거나 다시 시작할 수 없어요/)).toBeInTheDocument()
+  })
+
+  it('closeReason=SOLD_OUT 이면 수량 소진 문구를 보여준다', () => {
+    setup({ ...active, status: 'SOLD_OUT', closeReason: 'SOLD_OUT' })
+    expect(screen.getByText(/수량이 모두 소진되어 마감됐어요/)).toBeInTheDocument()
+  })
+
+  it('closeReason=MANUAL 이면 사장 직접 마감 문구를 보여준다', () => {
+    setup({ ...active, status: 'CLOSED', closeReason: 'MANUAL' })
+    expect(screen.getByText(/사장님이 직접 마감했어요/)).toBeInTheDocument()
+  })
+
+  it('closeReason 이 없으면 폴백 문구를 보여준다', () => {
+    setup({ ...active, status: 'CLOSED' })
+    expect(screen.getByText(/마감된 마감 할인이에요/)).toBeInTheDocument()
+  })
 })

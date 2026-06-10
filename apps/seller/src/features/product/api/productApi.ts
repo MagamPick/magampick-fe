@@ -116,7 +116,7 @@ export const productApi = {
 
   /**
    * DELETE /seller/stores/{storeId}/products/{productId} — soft delete.
-   * BE가 cascade로 진행중 떨이 자동마감 처리.
+   * 진행 중(OPEN) 떨이가 있으면 BE가 409("진행 중인 떨이 존재")로 차단. cascade 마감 없음.
    */
   async deleteProduct(storeId: number, id: number): Promise<void> {
     await apiClient.delete(`/seller/stores/${storeId}/products/${id}`)

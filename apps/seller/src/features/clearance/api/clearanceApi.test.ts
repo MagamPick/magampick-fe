@@ -126,4 +126,26 @@ describe('clearanceApi', () => {
       expect(result.status).toBe('CLOSED')
     })
   })
+
+  describe('closeReason 매핑', () => {
+    it('CLOSED 응답에 closeReason 이 있으면 ClearanceView 에 closeReason 이 매핑된다', async () => {
+      vi.mocked(apiClient.get).mockResolvedValue({
+        data: { ...mockItem, status: 'CLOSED', closeReason: 'MANUAL' },
+      })
+
+      const result = await clearanceApi.getClearance(1, 1)
+
+      expect(result.status).toBe('CLOSED')
+      expect(result.closeReason).toBe('MANUAL')
+    })
+
+    it('OPEN 응답에 closeReason 이 없으면 closeReason 이 undefined 이다', async () => {
+      vi.mocked(apiClient.get).mockResolvedValue({ data: mockItem })
+
+      const result = await clearanceApi.getClearance(1, 1)
+
+      expect(result.status).toBe('OPEN')
+      expect(result.closeReason).toBeUndefined()
+    })
+  })
 })
