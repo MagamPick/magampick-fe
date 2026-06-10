@@ -14,9 +14,65 @@ firebase.initializeApp({
 
 const messaging = firebase.messaging()
 
+/**
+ * category → 이동 경로. 번들을 안 타므로(plain JS) 소스의
+ * src/features/notifications/constants.ts `resolveNotificationRoute` 와 수동 동기화할 것.
+ * 미매칭(system/settlement/미지)은 null → 이동 없음.
+ */
+function routeForCategory(category) {
+  switch (category) {
+    case 'deal':
+      return '/'
+    case 'order':
+    case 'refund':
+      return '/orders'
+    case 'review':
+      return '/reviews/my'
+    case 'benefit':
+      return '/mypage/coupons'
+    case 'notice':
+      return '/notices'
+    case 'inquiry':
+      return '/support'
+    default:
+      return null
+  }
+}
+
+// BE 는 data-only 로 발송(notification 블록 없음) — 표시·클릭을 SW 가 단독 제어해 중복 표시를 막는다.
 messaging.onBackgroundMessage((payload) => {
-  self.registration.showNotification(payload.notification.title, {
-    body: payload.notification.body,
+  const data = payload.data || {}
+  self.registration.showNotification(data.title || '마감픽 알림', {
+    body: data.body || '',
     icon: '/icons/icon-192.png',
+    data: { category: data.category, notificationId: data.notificationId, link: data.link },
   })
+})
+
+// 알림 클릭 → category 기반 앱 내 화면 이동. 열린 탭 있으면 focus(+best-effort navigate), 없으면 새 창.
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close()
+  const data = event.notification.data || {}
+  const route = routeForCategory(data.category)
+  if (!route) return
+  const url = new URL(route, self.location.origin).href
+  event.waitUntil(
+    (async () => {
+      const clientList = await self.clients.matchAll({ type: 'window', includeUncontrolled: true })
+      const existing = clientList.find((c) => new URL(c.url).origin === self.location.origin)
+      if (existing) {
+        await existing.focus()
+        // navigate 는 이 SW 가 제어하지 않는 클라이언트(Workbox SW scope '/')에선 reject 될 수 있어 best-effort.
+        if ('navigate' in existing) {
+          try {
+            await existing.navigate(url)
+          } catch {
+            /* 제어 밖 클라이언트 — focus 까지만 */
+          }
+        }
+        return
+      }
+      await self.clients.openWindow(url)
+    })(),
+  )
 })
