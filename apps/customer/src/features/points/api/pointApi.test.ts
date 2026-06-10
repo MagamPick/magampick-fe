@@ -1,47 +1,64 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { pointApi } from './pointApi'
-import { pointDirection } from '../types'
+import { apiClient } from '@/shared/lib/axios'
+import type { PointTransaction } from '../types'
 
-// 모듈 상태 공유 → before/after 델타로 검증(절대값·실행순서 의존 최소화).
+vi.mock('@/shared/lib/axios', () => ({
+  apiClient: { get: vi.fn() },
+}))
+const mockedGet = vi.mocked(apiClient.get)
+
+const txn = (over: Partial<PointTransaction> = {}): PointTransaction => ({
+  id: 1,
+  reason: 'EARN',
+  amount: 120,
+  storeName: '브레드샵',
+  occurredAt: '2026-05-28T10:00:00+09:00',
+  ...over,
+})
+
 describe('pointApi', () => {
-  it('getSummary — 잔액(0 이상 숫자) 반환', async () => {
+  beforeEach(() => vi.clearAllMocks())
+
+  it('getSummary — BE 잔액 반환 + Zod 검증', async () => {
+    mockedGet.mockResolvedValueOnce({ data: { balance: 2450 } })
     const s = await pointApi.getSummary()
-    expect(typeof s.balance).toBe('number')
-    expect(s.balance).toBeGreaterThanOrEqual(0)
+    expect(s.balance).toBe(2450)
+    expect(mockedGet).toHaveBeenCalledWith('/customers/me/points/summary')
   })
 
-  it('listHistory(all) — 최신순 정렬', async () => {
-    const list = await pointApi.listHistory('all')
-    expect(list.length).toBeGreaterThan(0)
-    for (let i = 1; i < list.length; i++) {
-      expect(list[i - 1].date >= list[i].date).toBe(true)
-    }
+  it('listHistory — filter 파라미터를 BE로 전달', async () => {
+    mockedGet.mockResolvedValueOnce({
+      data: [txn({ reason: 'EARN', amount: 120 })],
+    })
+    const list = await pointApi.listHistory('EARN')
+    expect(list).toHaveLength(1)
+    expect(list[0].reason).toBe('EARN')
+    expect(mockedGet).toHaveBeenCalledWith('/customers/me/points/history', {
+      params: { filter: 'EARN' },
+    })
   })
 
-  it('listHistory(earn) — 적립 방향만', async () => {
-    const list = await pointApi.listHistory('earn')
-    expect(list.length).toBeGreaterThan(0)
-    expect(list.every((t) => pointDirection(t.reason) === 'earn')).toBe(true)
+  it('listHistory(ALL) — 모든 사유 포함', async () => {
+    mockedGet.mockResolvedValueOnce({
+      data: [
+        txn({ id: 1, reason: 'EARN' }),
+        txn({ id: 2, reason: 'USE' }),
+        txn({ id: 3, reason: 'EXPIRE' }),
+        txn({ id: 4, reason: 'RESTORE' }),
+        txn({ id: 5, reason: 'CLAWBACK' }),
+      ],
+    })
+    const list = await pointApi.listHistory('ALL')
+    expect(list).toHaveLength(5)
   })
 
-  it('listHistory(use) — 사용 방향만', async () => {
-    const list = await pointApi.listHistory('use')
-    expect(list.every((t) => pointDirection(t.reason) === 'use')).toBe(true)
-  })
-
-  it('use — 잔액 차감 + 결제 사용 내역 추가', async () => {
-    const before = (await pointApi.getSummary()).balance
-    const beforeUse = (await pointApi.listHistory('use')).length
-    const after = await pointApi.use(100, '테스트 매장')
-    expect(after.balance).toBe(before - 100)
-    const useList = await pointApi.listHistory('use')
-    expect(useList.length).toBe(beforeUse + 1)
-    expect(useList[0].reason).toBe('use')
-    expect(useList[0].amount).toBe(100)
-  })
-
-  it('use — 잔액 초과 시 거부', async () => {
-    const current = (await pointApi.getSummary()).balance
-    await expect(pointApi.use(current + 1)).rejects.toThrow()
+  it('Zod 스키마 — id=number, occurredAt 포함, date 없음', async () => {
+    mockedGet.mockResolvedValueOnce({
+      data: [txn({ id: 10, occurredAt: '2026-05-28T10:00:00+09:00' })],
+    })
+    const list = await pointApi.listHistory('ALL')
+    expect(typeof list[0].id).toBe('number')
+    expect(list[0].occurredAt).toBe('2026-05-28T10:00:00+09:00')
   })
 })

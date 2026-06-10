@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import { Navigate, useNavigate } from 'react-router'
 import { ChevronLeft } from 'lucide-react'
 import { ScreenContainer } from '@/shared/components/ScreenContainer'
@@ -34,7 +34,7 @@ export function CheckoutPage() {
   const pickup = useCartStore((s) => s.pickup)
   const [memo, setMemo] = useState('')
   const [agreed, setAgreed] = useState(false)
-  const [selectedCouponId, setSelectedCouponId] = useState<string | null>(null)
+  const [selectedCouponId, setSelectedCouponId] = useState<number | null>(null)
   const [pointInput, setPointInput] = useState(0)
   const [couponSheetOpen, setCouponSheetOpen] = useState(false)
   const createOrder = useCreateOrder()
@@ -44,8 +44,6 @@ export function CheckoutPage() {
 
   const { data: pointSummary } = usePointSummary()
   const { data: coupons } = useCoupons()
-  // 만료/사용가능 판정 기준 시각 — 마운트 시 1회 고정
-  const now = useMemo(() => new Date(), [])
 
   // 빈 장바구니 결제 진입 불가 (노션). 결제 성공 시엔 장바구니를 비우지 않고 완료 화면으로
   // 이동하므로(클리어는 OrderSuccessPage), 이동 전까지 이 가드가 오작동하지 않는다.
@@ -58,7 +56,6 @@ export function CheckoutPage() {
     coupon: selectedCoupon,
     pointInput,
     pointBalance,
-    now,
   })
 
   const handlePointChange = (value: number) =>
@@ -180,7 +177,6 @@ export function CheckoutPage() {
         onOpenChange={setCouponSheetOpen}
         coupons={coupons ?? []}
         menuSubtotal={amounts.menuSubtotal}
-        now={now}
         selectedCouponId={selectedCouponId}
         onSelect={setSelectedCouponId}
       />

@@ -1,40 +1,83 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { couponApi } from './couponApi'
+import { apiClient } from '@/shared/lib/axios'
+import type { Coupon, CouponEvent } from '../types'
 
-const NOW = new Date('2026-06-01T09:00:00+09:00')
+vi.mock('@/shared/lib/axios', () => ({
+  apiClient: { get: vi.fn(), post: vi.fn() },
+}))
+const mockedGet = vi.mocked(apiClient.get)
+const mockedPost = vi.mocked(apiClient.post)
 
-// 파일 내 테스트는 순차 실행 — cp1 usable 검증을 use 변환보다 먼저 둔다.
+const coupon = (over: Partial<Coupon> = {}): Coupon => ({
+  id: 1,
+  status: 'USABLE',
+  discountType: 'RATE',
+  value: 30,
+  minOrder: 5000,
+  label: '신규 가입 축하 쿠폰',
+  expiresAt: '2026-06-30',
+  ...over,
+})
+
+const event = (over: Partial<CouponEvent> = {}): CouponEvent => ({
+  couponId: 1,
+  discountType: 'RATE',
+  value: 30,
+  minOrder: 5000,
+  label: '신규 가입 축하 쿠폰',
+  expiresAt: '2026-06-30',
+  claimed: false,
+  ...over,
+})
+
 describe('couponApi', () => {
-  it('listCoupons — 만료일 경과분은 expired 로 보정', async () => {
-    const list = await couponApi.listCoupons(NOW)
-    expect(list.find((c) => c.id === 'cp6')?.status).toBe('expired') // 만료 2026-03-31
-    expect(list.find((c) => c.id === 'cp1')?.status).toBe('usable') // 2026-06-30
-    expect(list.find((c) => c.id === 'cp4')?.status).toBe('used')
+  beforeEach(() => vi.clearAllMocks())
+
+  it('listCoupons — BE 응답을 Zod 검증해 반환(BE status 신뢰)', async () => {
+    mockedGet.mockResolvedValueOnce({
+      data: [
+        coupon({ id: 1, status: 'USABLE' }),
+        coupon({ id: 2, status: 'USED' }),
+        coupon({ id: 3, status: 'EXPIRED' }),
+      ],
+    })
+    const list = await couponApi.listCoupons()
+    expect(list).toHaveLength(3)
+    expect(list[0].status).toBe('USABLE')
+    expect(list[1].status).toBe('USED')
+    expect(list[2].status).toBe('EXPIRED')
+    expect(mockedGet).toHaveBeenCalledWith('/customers/me/coupons')
   })
 
-  it('listEvents — 받음 여부(claimed) 포함', async () => {
+  it('listCoupons — id는 number 타입', async () => {
+    mockedGet.mockResolvedValueOnce({ data: [coupon({ id: 42 })] })
+    const list = await couponApi.listCoupons()
+    expect(typeof list[0].id).toBe('number')
+    expect(list[0].id).toBe(42)
+  })
+
+  it('listEvents — claimed 필드 포함, couponId number', async () => {
+    mockedGet.mockResolvedValueOnce({
+      data: [
+        event({ couponId: 10, claimed: false }),
+        event({ couponId: 20, claimed: true }),
+      ],
+    })
     const events = await couponApi.listEvents()
-    expect(events.length).toBeGreaterThan(0)
-    expect(events.every((e) => typeof e.claimed === 'boolean')).toBe(true)
+    expect(events).toHaveLength(2)
+    expect(events[0].couponId).toBe(10)
+    expect(events[0].claimed).toBe(false)
+    expect(events[1].claimed).toBe(true)
+    expect(mockedGet).toHaveBeenCalledWith('/customers/me/coupons/events')
   })
 
-  it('claim — 쿠폰함에 usable 추가 + 1인 1회(재요청 거부)', async () => {
-    const before = (await couponApi.listCoupons(NOW)).length
-    const claimed = await couponApi.claim('ev5')
-    expect(claimed.status).toBe('usable')
-    expect(claimed.label).toBe('첫 주문 1천원 할인')
-    expect((await couponApi.listCoupons(NOW)).length).toBe(before + 1)
-    expect((await couponApi.listEvents()).find((e) => e.id === 'ev5')?.claimed).toBe(true)
-    await expect(couponApi.claim('ev5')).rejects.toThrow()
-  })
-
-  it('use — usable 쿠폰을 used 로 전환', async () => {
-    await couponApi.use('cp1', NOW)
-    const list = await couponApi.listCoupons(NOW)
-    expect(list.find((c) => c.id === 'cp1')?.status).toBe('used')
-  })
-
-  it('use — 없는 쿠폰 거부', async () => {
-    await expect(couponApi.use('nope', NOW)).rejects.toThrow()
+  it('claim — POST 엔드포인트 호출 후 CouponResponse Zod 검증', async () => {
+    const newCoupon = coupon({ id: 99, status: 'USABLE', label: '새 쿠폰' })
+    mockedPost.mockResolvedValueOnce({ data: newCoupon })
+    const claimed = await couponApi.claim(10)
+    expect(claimed.id).toBe(99)
+    expect(claimed.status).toBe('USABLE')
+    expect(mockedPost).toHaveBeenCalledWith('/customers/me/coupons/events/10/claim')
   })
 })

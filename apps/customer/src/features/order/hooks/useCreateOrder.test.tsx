@@ -4,18 +4,12 @@ import { useCreateOrder, type CreateOrderVars } from './useCreateOrder'
 import { useCartStore } from '@/features/cart/stores/cartStore'
 import { createQueryWrapper } from '@/shared/test/queryWrapper'
 import { ROUTES } from '@/shared/lib/routes'
-import { couponApi } from '@/features/coupons/api/couponApi'
-import { pointApi } from '@/features/points/api/pointApi'
 
 const mockNavigate = vi.fn()
 vi.mock('react-router', async (importOriginal) => {
   const actual = await importOriginal<typeof import('react-router')>()
   return { ...actual, useNavigate: () => mockNavigate }
 })
-
-// 혜택 차감 api 는 mock — 결제 후 호출 여부만 검증 (주문 mock·결제 stub 은 실제 사용)
-vi.mock('@/features/coupons/api/couponApi')
-vi.mock('@/features/points/api/pointApi')
 
 const vars: CreateOrderVars = {
   store: { id: 'st-1', name: '브레드샵' },
@@ -62,24 +56,12 @@ describe('useCreateOrder', () => {
     expect(opts.state.order.pickupCode).toMatch(/^\d{4}$/)
   })
 
-  it('쿠폰·포인트 사용 시 결제 성공 후 차감 api 를 호출한다', async () => {
-    vi.mocked(couponApi.use).mockResolvedValue({
-      id: 'cp1',
-      status: 'used',
-      discountType: 'rate',
-      value: 30,
-      minOrder: 5000,
-      label: '쿠폰',
-      expiresAt: '2026-06-30',
-    })
-    vi.mocked(pointApi.use).mockResolvedValue({ balance: 1950 })
-
+  it('couponId(number)·pointUsed가 있어도 완료화면으로 이동(실 BE 차감은 결제에 통합)', async () => {
     const { result } = renderHook(() => useCreateOrder(), { wrapper: createQueryWrapper() })
 
-    result.current.mutate({ ...vars, couponId: 'cp1', pointUsed: 500 })
+    result.current.mutate({ ...vars, couponId: 1, pointUsed: 500 })
 
     await waitFor(() => expect(mockNavigate).toHaveBeenCalled(), { timeout: 3000 })
-    expect(couponApi.use).toHaveBeenCalledWith('cp1')
-    expect(pointApi.use).toHaveBeenCalledWith(500, '브레드샵')
+    expect(mockNavigate.mock.calls[0][0]).toBe(ROUTES.ORDER_SUCCESS)
   })
 })

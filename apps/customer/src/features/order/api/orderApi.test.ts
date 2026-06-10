@@ -234,7 +234,7 @@ describe('buildCreateOrderRequest', () => {
   })
 
   it('couponId 있으면 userCouponId 포함', () => {
-    const body = buildCreateOrderRequest({ ...prepareInput, couponId: '5' })
+    const body = buildCreateOrderRequest({ ...prepareInput, couponId: 5 })
     expect(body.userCouponId).toBe(5)
   })
 

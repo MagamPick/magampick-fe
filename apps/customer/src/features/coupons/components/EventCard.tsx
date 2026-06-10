@@ -1,10 +1,10 @@
 import { cn } from '@/shared/lib/utils'
-import type { CouponEventView } from '../api/couponApi'
+import type { CouponEvent } from '../types'
 import { couponConditionText, couponValueText } from '../lib/couponCalc'
 
 interface Props {
-  event: CouponEventView
-  onClaim: (id: string) => void
+  event: CouponEvent
+  onClaim: (couponId: number) => void
   claiming?: boolean
 }
 
@@ -47,7 +47,7 @@ export function EventCard({ event, onClaim, claiming = false }: Props) {
         <button
           type="button"
           disabled={claimed || claiming}
-          onClick={() => onClaim(event.id)}
+          onClick={() => onClaim(event.couponId)}
           aria-label={claimed ? '이미 받은 쿠폰' : '쿠폰 받기'}
           className={cn(
             'min-h-11 w-full rounded-md text-[13px] font-extrabold transition active:scale-[0.96]',

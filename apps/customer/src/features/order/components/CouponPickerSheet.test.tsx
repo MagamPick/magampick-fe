@@ -4,12 +4,10 @@ import { describe, it, expect, vi } from 'vitest'
 import { CouponPickerSheet } from './CouponPickerSheet'
 import type { Coupon } from '@/features/coupons/types'
 
-const NOW = new Date('2026-06-01T09:00:00+09:00')
-
 const coupon = (over: Partial<Coupon>): Coupon => ({
-  id: 'cp1',
-  status: 'usable',
-  discountType: 'rate',
+  id: 1,
+  status: 'USABLE',
+  discountType: 'RATE',
   value: 30,
   minOrder: 5000,
   label: '쿠폰',
@@ -18,21 +16,20 @@ const coupon = (over: Partial<Coupon>): Coupon => ({
 })
 
 describe('CouponPickerSheet', () => {
-  it('적용 가능한 쿠폰 선택 시 onSelect(id)', async () => {
+  it('적용 가능한 쿠폰 선택 시 onSelect(number id)', async () => {
     const onSelect = vi.fn()
     render(
       <CouponPickerSheet
         open
         onOpenChange={() => {}}
-        coupons={[coupon({ id: 'cp1', label: '30% 쿠폰', minOrder: 5000 })]}
+        coupons={[coupon({ id: 1, label: '30% 쿠폰', minOrder: 5000 })]}
         menuSubtotal={6000}
-        now={NOW}
         selectedCouponId={null}
         onSelect={onSelect}
       />,
     )
     await userEvent.click(screen.getByText('30% 쿠폰'))
-    expect(onSelect).toHaveBeenCalledWith('cp1')
+    expect(onSelect).toHaveBeenCalledWith(1)
   })
 
   it('최소주문 미달 쿠폰은 사유와 함께 비활성', () => {
@@ -40,9 +37,8 @@ describe('CouponPickerSheet', () => {
       <CouponPickerSheet
         open
         onOpenChange={() => {}}
-        coupons={[coupon({ id: 'cp1', label: '1만원 쿠폰', minOrder: 10000 })]}
+        coupons={[coupon({ id: 2, label: '1만원 쿠폰', minOrder: 10000 })]}
         menuSubtotal={6000}
-        now={NOW}
         selectedCouponId={null}
         onSelect={() => {}}
       />,
@@ -58,8 +54,7 @@ describe('CouponPickerSheet', () => {
         onOpenChange={() => {}}
         coupons={[]}
         menuSubtotal={6000}
-        now={NOW}
-        selectedCouponId="cp1"
+        selectedCouponId={1}
         onSelect={onSelect}
       />,
     )

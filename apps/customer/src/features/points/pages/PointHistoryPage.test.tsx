@@ -22,7 +22,7 @@ describe('PointHistoryPage', () => {
   it('잔액과 내역을 표시', async () => {
     vi.mocked(pointApi.getSummary).mockResolvedValue({ balance: 2450 })
     vi.mocked(pointApi.listHistory).mockResolvedValue([
-      { id: 't1', reason: 'earn', amount: 120, storeName: '브레드샵', date: '2026-05-28' },
+      { id: 1, reason: 'EARN', amount: 120, storeName: '브레드샵', occurredAt: '2026-05-28T10:00:00+09:00' },
     ])
 
     renderPage()
