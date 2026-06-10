@@ -1,8 +1,11 @@
 import { useEffect, useRef } from 'react'
 import { getToken, isSupported, onMessage } from 'firebase/messaging'
+import { router } from '@/app/router'
 import { useAuthStore } from '@/features/auth/stores/authStore'
 import { getFirebaseMessaging, isFcmConfigured, VAPID_KEY } from '@/shared/lib/firebase'
 import { registerPushToken } from '../api/pushTokenApi'
+import { resolveNotificationRoute } from '../constants'
+import { notificationCategorySchema } from '../types'
 
 /**
  * SW 가 active 될 때까지 대기. getToken 의 pushManager.subscribe 는 active SW 를 요구하는데,
@@ -27,7 +30,8 @@ function waitForActiveServiceWorker(registration: ServiceWorkerRegistration): Pr
 /**
  * 로그인(인증) 후 FCM 토큰을 발급받아 BE 에 등록한다. 앱 로드당 한 번만 실행.
  * - FCM 미설정/미지원/권한 거부 시 조용히 skip (앱 정상 동작)
- * - 포그라운드 메시지는 FCM 이 자동 표시하지 않으므로 직접 Notification 으로 표시
+ * - BE 는 data-only 로 발송(notification 블록 없음) → 포그라운드는 payload.data 로 직접 Notification 표시,
+ *   클릭 시 category 기반 라우팅(resolveNotificationRoute). 백그라운드는 firebase-messaging-sw.js 가 처리.
  *
  * 권한 요청 시점: pwa-convention 은 "자연스러운 시점(버튼)"을 권장 — 현재는 로그인 직후(가장 단순).
  * 추후 명시적 "알림 켜기" 버튼으로 이동 가능(보류 항목).
@@ -64,8 +68,18 @@ export function useFcmRegister(): void {
         await registerPushToken(token)
 
         onMessage(messaging, (payload) => {
-          const title = payload.notification?.title
-          if (title) new Notification(title, { body: payload.notification?.body })
+          const data = payload.data
+          if (!data?.title) return
+          const notification = new Notification(data.title, {
+            body: data.body,
+            icon: '/icons/icon-192.png',
+          })
+          notification.onclick = () => {
+            window.focus()
+            notification.close()
+            const route = resolveNotificationRoute(notificationCategorySchema.parse(data.category))
+            if (route) void router.navigate(route)
+          }
         })
       } catch (error) {
         console.error('[FCM] 토큰 등록 실패', error)
