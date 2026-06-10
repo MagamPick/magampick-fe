@@ -13,8 +13,9 @@ import { DealCard } from '@/features/clearance/components/DealCard'
 import { toDealCardStatus } from '@/features/clearance/lib/clearanceStatus'
 import { useProduct } from '../hooks/useProduct'
 import { useDeleteProduct } from '../hooks/useDeleteProduct'
+import { CATEGORY_LABELS } from '../types'
 
-const paramsSchema = z.object({ id: z.string().min(1) })
+const paramsSchema = z.object({ id: z.coerce.number().int().positive() })
 const won = (n: number) => `₩${n.toLocaleString('ko-KR')}`
 
 /**
@@ -25,22 +26,20 @@ export function ProductDetailPage() {
   const navigate = useNavigate()
   const params = useParams()
   const parsed = paramsSchema.safeParse(params)
-  const id = parsed.success ? parsed.data.id : ''
+  const id = parsed.success ? parsed.data.id : 0
   const selectedStoreId = useCurrentStoreStore((s) => s.selectedStoreId)
-  // mock hook(string storeId) 전달용 변환 — Step 2 실연동 시 이전
-  const storeId = selectedStoreId != null ? String(selectedStoreId) : ''
 
-  const { data: product, isLoading, isError, refetch } = useProduct(id)
-  const { data: clearances } = useClearances(storeId)
+  const { data: product, isLoading, isError, refetch } = useProduct(selectedStoreId, id)
+  const { data: clearances } = useClearances(selectedStoreId)
   const { data: status } = useStoreStatus(selectedStoreId)
-  const del = useDeleteProduct(id, storeId)
+  const del = useDeleteProduct(id, selectedStoreId)
 
   const [sheetOpen, setSheetOpen] = useState(false)
 
   if (!parsed.success) return <Navigate to={ROUTES.HOME} replace />
 
   const productClearances = (clearances ?? []).filter((c) => c.productId === id)
-  const hasActiveClearance = productClearances.some((c) => c.status === 'ACTIVE')
+  const hasActiveClearance = productClearances.some((c) => c.status === 'OPEN')
 
   // 떨이 전환 CTA 게이팅 사유 (null = 활성)
   const dealReason = !product
@@ -112,7 +111,9 @@ export function ProductDetailPage() {
               <dl className="flex flex-col gap-2.5">
                 <div className="flex items-center justify-between">
                   <dt className="text-[13px] text-muted-foreground">카테고리</dt>
-                  <dd className="text-[14px] font-semibold text-foreground">{product.category}</dd>
+                  <dd className="text-[14px] font-semibold text-foreground">
+                    {CATEGORY_LABELS[product.category] ?? product.category}
+                  </dd>
                 </div>
                 <div className="flex items-center justify-between">
                   <dt className="text-[13px] text-muted-foreground">정상가</dt>
@@ -150,7 +151,7 @@ export function ProductDetailPage() {
                     <Link
                       key={c.id}
                       to={ROUTES.CLEARANCE_DETAIL(c.id)}
-                      className={cn('block', c.status !== 'ACTIVE' && 'opacity-60')}
+                      className={cn('block', c.status !== 'OPEN' && 'opacity-60')}
                     >
                       <DealCard
                         name={c.productName}

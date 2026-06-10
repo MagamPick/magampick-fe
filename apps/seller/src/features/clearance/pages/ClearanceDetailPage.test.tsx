@@ -16,14 +16,13 @@ import { ClearanceDetailPage } from './ClearanceDetailPage'
 import type { ClearanceView } from '../types'
 
 const active: ClearanceView = {
-  id: 'c1',
-  storeId: 's1',
-  productId: 'p1',
+  id: 1,
+  productId: 1,
   salePrice: 2400,
   totalQty: 20,
   soldQty: 8,
   closeTime: '21:00',
-  status: 'ACTIVE',
+  status: 'OPEN',
   createdAt: '2026-06-01T08:00:00.000Z',
   productName: '통밀 식빵',
   originalPrice: 4800,
@@ -40,7 +39,7 @@ function setup(clearance: ClearanceView) {
     isError: false,
   } as unknown as ReturnType<typeof useClearance>)
   vi.mocked(useStoreStatus).mockReturnValue({
-    data: { storeId: 's1', operationStatus: 'OPEN', canOpenToday: true, todayCloseTime: '21:00' },
+    data: { storeId: 1, operationStatus: 'OPEN', canOpenToday: true, todayCloseTime: '21:00' },
   } as unknown as ReturnType<typeof useStoreStatus>)
   vi.mocked(useUpdateClearance).mockReturnValue({
     mutate: updateMutate,
@@ -53,7 +52,7 @@ function setup(clearance: ClearanceView) {
   } as unknown as ReturnType<typeof useCloseClearance>)
 
   return render(
-    <MemoryRouter initialEntries={['/clearance/c1']}>
+    <MemoryRouter initialEntries={['/clearance/1']}>
       <Routes>
         <Route path="/clearance/:id" element={<ClearanceDetailPage />} />
       </Routes>
@@ -79,7 +78,7 @@ describe('ClearanceDetailPage', () => {
   })
 
   it('마감된 떨이는 읽기전용 — 수정·마감 버튼이 없다', () => {
-    setup({ ...active, status: 'CLOSED', closeReason: 'MANUAL' })
+    setup({ ...active, status: 'CLOSED' })
     expect(screen.getByText('마감된 마감 할인')).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: '변경 저장' })).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: '마감 할인 조기 마감' })).not.toBeInTheDocument()

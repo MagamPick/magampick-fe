@@ -12,7 +12,7 @@ import { DealCard } from '@/features/clearance/components/DealCard'
 import { toDealCardStatus } from '@/features/clearance/lib/clearanceStatus'
 import { useProducts } from '../hooks/useProducts'
 import { ProductCard } from '../components/ProductCard'
-import { PRODUCT_CATEGORIES } from '../types'
+import { PRODUCT_CATEGORIES, CATEGORY_LABELS } from '../types'
 import type { ProductCategory } from '../types'
 
 type CategoryFilter = ProductCategory | 'all'
@@ -20,7 +20,7 @@ type Tab = 'normal' | 'deal'
 
 const FILTERS: { value: CategoryFilter; label: string }[] = [
   { value: 'all', label: '전체' },
-  ...PRODUCT_CATEGORIES.map((c) => ({ value: c, label: c })),
+  ...PRODUCT_CATEGORIES.map((c) => ({ value: c, label: CATEGORY_LABELS[c] })),
 ]
 
 /**
@@ -30,9 +30,7 @@ const FILTERS: { value: CategoryFilter; label: string }[] = [
  * `?tab=deal` 로 마감 할인 탭을 바로 열 수 있다(홈 "모두 보기" 등).
  */
 export function ProductListPage() {
-  const _storeIdNum = useCurrentStoreStore((s) => s.selectedStoreId)
-  // mock hook(string storeId) 전달용 변환 — Step 2 실연동 시 이전
-  const storeId = _storeIdNum != null ? String(_storeIdNum) : ''
+  const storeId = useCurrentStoreStore((s) => s.selectedStoreId)
   const [searchParams, setSearchParams] = useSearchParams()
   const tab: Tab = searchParams.get('tab') === 'deal' ? 'deal' : 'normal'
   const setTab = (next: Tab) => setSearchParams(next === 'deal' ? { tab: 'deal' } : {}, { replace: true })
@@ -53,15 +51,15 @@ export function ProductListPage() {
   const [filter, setFilter] = useState<CategoryFilter>('all')
 
   const activeProductIds = new Set(
-    (clearances ?? []).filter((c) => c.status === 'ACTIVE').map((c) => c.productId),
+    (clearances ?? []).filter((c) => c.status === 'OPEN').map((c) => c.productId),
   )
   const visibleProducts = (products ?? []).filter(
     (p) => filter === 'all' || p.category === filter,
   )
   const productsEmpty = !loadingProducts && !productsError && visibleProducts.length === 0
 
-  const liveDeals = (clearances ?? []).filter((c) => c.status === 'ACTIVE')
-  const endedDeals = (clearances ?? []).filter((c) => c.status !== 'ACTIVE')
+  const liveDeals = (clearances ?? []).filter((c) => c.status === 'OPEN')
+  const endedDeals = (clearances ?? []).filter((c) => c.status !== 'OPEN')
 
   return (
     <ScreenContainer variant="tab">

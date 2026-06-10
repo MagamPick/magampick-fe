@@ -7,11 +7,9 @@ import { toDealCardStatus } from '@/features/clearance/lib/clearanceStatus'
 
 /** 진행중 마감 할인 요약 — 현재 매장의 활성 떨이 (탭 전체는 상품 관리 > 마감 할인) */
 export function HomeDealList() {
-  const _storeIdNum = useCurrentStoreStore((s) => s.selectedStoreId)
-  // mock hook(string storeId) 전달용 변환 — Step 2 실연동 시 이전
-  const storeId = _storeIdNum != null ? String(_storeIdNum) : ''
+  const storeId = useCurrentStoreStore((s) => s.selectedStoreId)
   const { data: clearances, isLoading } = useClearances(storeId)
-  const live = (clearances ?? []).filter((c) => c.status === 'ACTIVE')
+  const live = (clearances ?? []).filter((c) => c.status === 'OPEN')
 
   return (
     <section className="mx-5 mt-6">

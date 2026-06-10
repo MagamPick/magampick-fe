@@ -13,15 +13,7 @@ export function nowHHMM(date: Date = new Date()): string {
   return `${h}:${m}`
 }
 
-/**
- * 픽업 마감 시각 도달/초과 여부 (오늘 같은 날 가정).
- * 실연동은 BE 스케줄러가 마감 — mock 은 읽기 시 이 판정으로 EXPIRED 반영.
- */
-export function isExpired(closeTime: string, now: string = nowHHMM()): boolean {
-  return now >= closeTime
-}
-
 /** 떨이 도메인 상태 → DealCard 표시 상태 (presentational live/ended) */
 export function toDealCardStatus(status: ClearanceStatus): 'live' | 'ended' {
-  return status === 'ACTIVE' ? 'live' : 'ended'
+  return status === 'OPEN' ? 'live' : 'ended'
 }

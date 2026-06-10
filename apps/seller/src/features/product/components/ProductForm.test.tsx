@@ -24,10 +24,10 @@ function renderForm(props?: Parameters<typeof ProductForm>[0]) {
 }
 
 const product: Product = {
-  id: 'p1',
-  storeId: 's1',
+  id: 1,
+  storeId: 1,
   name: '통밀 식빵',
-  category: '베이커리',
+  category: 'BAKERY',
   price: 4800,
   onSale: true,
 }
@@ -69,7 +69,7 @@ describe('ProductForm — 등록', () => {
     await waitFor(() => expect(createMutate).toHaveBeenCalledTimes(1))
     expect(createMutate.mock.calls[0][0]).toMatchObject({
       name: '녹차 라떼',
-      category: '음료',
+      category: 'BEVERAGE',
       price: 5000,
       onSale: true,
     })

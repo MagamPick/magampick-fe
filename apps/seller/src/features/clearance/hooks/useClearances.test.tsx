@@ -12,9 +12,9 @@ describe('useClearances', () => {
 
   it('현재 매장 storeId 로 떨이 목록을 조회한다', async () => {
     vi.mocked(clearanceApi.listClearances).mockResolvedValue([] as ClearanceView[])
-    const { result } = renderHook(() => useClearances('s1'), { wrapper: createQueryWrapper() })
+    const { result } = renderHook(() => useClearances(1), { wrapper: createQueryWrapper() })
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true))
-    expect(clearanceApi.listClearances).toHaveBeenCalledWith('s1')
+    expect(clearanceApi.listClearances).toHaveBeenCalledWith(1)
   })
 })
