@@ -8,8 +8,8 @@ import type { DealProductDetail } from '../types'
 
 const activeDeal: DealProductDetail = {
   kind: 'deal',
-  id: 'sd-1',
-  storeId: 'st-1',
+  id: 1,
+  storeId: 1,
   storeName: '브레드샵',
   distanceKm: 0.3,
   businessStatus: 'OPEN',
@@ -18,6 +18,7 @@ const activeDeal: DealProductDetail = {
   description: null,
   rating: 4.8,
   reviewCount: 36,
+  closingTime: '21:00',
   originalPrice: 9000,
   salePrice: 4500,
   discountRate: 50,
@@ -78,9 +79,10 @@ describe('PurchaseBar', () => {
     await user.click(screen.getByRole('button', { name: '장바구니 담기' }))
 
     const cart = useCartStore.getState()
-    expect(cart.store?.id).toBe('st-1')
+    // cart store는 string id (PurchaseBar가 String(product.storeId) 변환)
+    expect(cart.store?.id).toBe('1')
     expect(cart.items).toHaveLength(1)
-    expect(cart.items[0]).toMatchObject({ id: 'sd-1', qty: 2, originalPrice: 9000, salePrice: 4500 })
+    expect(cart.items[0]).toMatchObject({ id: '1', qty: 2, originalPrice: 9000, salePrice: 4500 })
     expect(screen.getByText('CART PAGE')).toBeInTheDocument()
   })
 
@@ -94,16 +96,16 @@ describe('PurchaseBar', () => {
     renderBar(activeDeal)
 
     await user.click(screen.getByRole('button', { name: '장바구니 담기' }))
-    // 확인 시트 노출 (아직 미교체)
+    // 확인 시트 노출 (다른 매장 충돌)
     expect(screen.getByText('다른 매장 상품을 담을까요?')).toBeInTheDocument()
     expect(useCartStore.getState().store?.id).toBe('st-9')
 
     await user.click(screen.getByRole('button', { name: '비우고 담기' }))
 
     const cart = useCartStore.getState()
-    expect(cart.store?.id).toBe('st-1')
+    expect(cart.store?.id).toBe('1')
     expect(cart.items).toHaveLength(1)
-    expect(cart.items[0].id).toBe('sd-1')
+    expect(cart.items[0].id).toBe('1')
     expect(screen.getByText('CART PAGE')).toBeInTheDocument()
   })
 

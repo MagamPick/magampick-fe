@@ -9,8 +9,8 @@ vi.mock('../api/productDetailApi')
 
 const DEAL: DealProductDetail = {
   kind: 'deal',
-  id: 'sd-1',
-  storeId: 'st-1',
+  id: 1,
+  storeId: 1,
   storeName: '베이커리 브레드샵',
   distanceKm: 0.3,
   businessStatus: 'OPEN',
@@ -19,6 +19,7 @@ const DEAL: DealProductDetail = {
   description: null,
   rating: 4.8,
   reviewCount: 36,
+  closingTime: '21:00',
   originalPrice: 9000,
   salePrice: 4500,
   discountRate: 50,
@@ -31,13 +32,13 @@ describe('useProductDetail', () => {
   it('상품상세_떨이_조회_성공', async () => {
     vi.mocked(productDetailApi.getProductDetail).mockResolvedValue(DEAL)
 
-    const { result } = renderHook(() => useProductDetail('deal', 'sd-1'), {
+    const { result } = renderHook(() => useProductDetail('deal', 1), {
       wrapper: createQueryWrapper(),
     })
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true))
     expect(result.current.data?.kind).toBe('deal')
     expect(result.current.data?.name).toBe('크루아상 세트')
-    expect(productDetailApi.getProductDetail).toHaveBeenCalledWith('deal', 'sd-1')
+    expect(productDetailApi.getProductDetail).toHaveBeenCalledWith('deal', 1)
   })
 })

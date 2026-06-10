@@ -4,7 +4,7 @@ import { InfoTab } from './InfoTab'
 import type { StoreDetail } from '../types'
 
 const STORE: StoreDetail = {
-  id: 'st-1',
+  id: 1,
   name: '베이커리 브레드샵',
   imageUrl: null,
   businessStatus: 'OPEN',

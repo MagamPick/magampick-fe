@@ -5,8 +5,8 @@ import type { DealProductDetail, MenuProductDetail } from '../types'
 
 const menu: MenuProductDetail = {
   kind: 'menu',
-  id: 'mn-1',
-  storeId: 'st-1',
+  id: 1,
+  storeId: 1,
   storeName: '브레드샵',
   distanceKm: 0.3,
   businessStatus: 'OPEN',
@@ -15,14 +15,15 @@ const menu: MenuProductDetail = {
   description: null,
   rating: 4.5,
   reviewCount: 10,
+  closingTime: '21:00',
   price: 3500,
   isOnSale: true,
 }
 
 const deal: DealProductDetail = {
   kind: 'deal',
-  id: 'sd-1',
-  storeId: 'st-1',
+  id: 1,
+  storeId: 1,
   storeName: '브레드샵',
   distanceKm: 0.3,
   businessStatus: 'OPEN',
@@ -31,6 +32,7 @@ const deal: DealProductDetail = {
   description: null,
   rating: 4.8,
   reviewCount: 36,
+  closingTime: '21:00',
   originalPrice: 9000,
   salePrice: 4500,
   discountRate: 50,

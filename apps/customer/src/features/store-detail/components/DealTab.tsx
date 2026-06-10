@@ -9,7 +9,7 @@ export function DealTab({
   storeId,
   businessStatus,
 }: {
-  storeId: string
+  storeId: number
   businessStatus: BusinessStatus
 }) {
   const { data, isPending, isError } = useStoreDeals(storeId)

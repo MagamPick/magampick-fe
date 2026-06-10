@@ -10,9 +10,9 @@ import type { StoreMenuItem } from '../types'
 vi.mock('../hooks/useStoreMenu')
 
 const menu: StoreMenuItem[] = [
-  { id: 'm1', name: '소금빵', imageUrl: null, price: 3000, category: '베이커리' },
-  { id: 'm2', name: '통밀 캄파뉴', imageUrl: null, price: 8000, category: '베이커리' },
-  { id: 'm3', name: '아메리카노', imageUrl: null, price: 4000, category: '음료' },
+  { id: 1, name: '소금빵', imageUrl: null, price: 3000, category: '베이커리' },
+  { id: 2, name: '통밀 캄파뉴', imageUrl: null, price: 8000, category: '베이커리' },
+  { id: 3, name: '아메리카노', imageUrl: null, price: 4000, category: '음료' },
 ]
 
 function LocationDisplay() {
@@ -30,10 +30,10 @@ function mockMenu(items: StoreMenuItem[]) {
 
 function renderTab() {
   return render(
-    <MemoryRouter initialEntries={['/store/st-1']}>
+    <MemoryRouter initialEntries={['/store/1']}>
       <ComingSoonProvider>
         <Routes>
-          <Route path="/store/:id" element={<MenuTab storeId="st-1" businessStatus="OPEN" />} />
+          <Route path="/store/:id" element={<MenuTab storeId={1} businessStatus="OPEN" />} />
           <Route path="/product/:kind/:productId" element={<LocationDisplay />} />
         </Routes>
       </ComingSoonProvider>
@@ -63,6 +63,6 @@ describe('MenuTab', () => {
     renderTab()
 
     await user.click(screen.getByText('소금빵'))
-    expect(screen.getByTestId('loc')).toHaveTextContent('/product/menu/m1')
+    expect(screen.getByTestId('loc')).toHaveTextContent('/product/menu/1')
   })
 })

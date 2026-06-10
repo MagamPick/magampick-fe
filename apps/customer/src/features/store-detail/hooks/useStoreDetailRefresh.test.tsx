@@ -5,16 +5,16 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { useStoreDetailRefresh } from './useStoreDetailRefresh'
 
 describe('useStoreDetailRefresh', () => {
-  it('해당_매장_쿼리_무효화_호출', async () => {
+  it('해당_매장_쿼리_무효화_호출_number_key', async () => {
     const queryClient = new QueryClient()
     const spy = vi.spyOn(queryClient, 'invalidateQueries').mockResolvedValue()
     const wrapper = ({ children }: { children: ReactNode }) => (
       <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
     )
 
-    const { result } = renderHook(() => useStoreDetailRefresh('st-1'), { wrapper })
+    const { result } = renderHook(() => useStoreDetailRefresh(1), { wrapper })
     await result.current()
 
-    expect(spy).toHaveBeenCalledWith({ queryKey: ['store', 'st-1'] })
+    expect(spy).toHaveBeenCalledWith({ queryKey: ['store', 1] })
   })
 })
