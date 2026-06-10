@@ -7,5 +7,6 @@ export function useSettlementCycles(storeId: string) {
   return useQuery({
     queryKey: settlementKeys.list(storeId),
     queryFn: () => settlementApi.listSettlementCycles(storeId),
+    enabled: !!storeId,
   })
 }
