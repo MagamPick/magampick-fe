@@ -1,5 +1,6 @@
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
+import { Store } from 'lucide-react'
 import { Form, FormControl, FormField, FormItem, FormMessage } from '@/shared/components/ui/form'
 import { Textarea } from '@/shared/components/ui/textarea'
 import { RatingInput } from './RatingInput'
@@ -13,7 +14,6 @@ const SECTION = 'mt-3.5 rounded-[14px] border border-border bg-card p-4'
 
 interface Props {
   /** 리뷰 대상 매장 — 헤더 표시 */
-  storeEmoji: string
   storeName: string
   /** 주문 상품들 — 어떤 상품에 대한 리뷰인지 표시 */
   items: OrderItem[]
@@ -30,7 +30,6 @@ interface Props {
  * 별점만 필수(미선택 시 제출 비활성), 나머지 선택. 각 섹션은 흰 박스. 프로토타입 52-review-write.
  */
 export function ReviewForm({
-  storeEmoji,
   storeName,
   items,
   defaultValues,
@@ -54,8 +53,8 @@ export function ReviewForm({
           {/* 매장 + 주문 상품 */}
           <div className={`${SECTION} mt-4`}>
             <div className="flex items-center gap-[11px]">
-              <span className="flex size-[52px] items-center justify-center rounded-[11px] bg-cream text-[22px]">
-                {storeEmoji}
+              <span className="flex size-[52px] items-center justify-center rounded-[11px] bg-cream">
+                <Store className="size-[22px] text-secondary-foreground" />
               </span>
               <p className="min-w-0 flex-1 truncate text-[14px] font-extrabold">{storeName}</p>
             </div>

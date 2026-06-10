@@ -1,3 +1,4 @@
+import { Store } from 'lucide-react'
 import type { ReviewableOrder } from '../types'
 
 function formatDate(iso: string) {
@@ -22,8 +23,8 @@ export function ReviewableOrderCard({ order, onWrite, onView }: Props) {
   return (
     <div className="mb-2.5 rounded-[14px] border border-border bg-card p-4">
       <div className="flex items-center gap-[11px]">
-        <span className="flex size-[46px] items-center justify-center rounded-[11px] bg-cream text-[20px]">
-          {order.storeEmoji}
+        <span className="flex size-[46px] items-center justify-center rounded-[11px] bg-cream">
+          <Store className="size-[22px] text-secondary-foreground" />
         </span>
         <div className="min-w-0 flex-1">
           <p className="truncate text-[14px] font-extrabold">{order.storeName}</p>

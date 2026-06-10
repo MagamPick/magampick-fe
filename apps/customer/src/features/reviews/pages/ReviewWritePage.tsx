@@ -62,7 +62,6 @@ export function ReviewWritePage() {
 
       {source ? (
         <ReviewForm
-          storeEmoji={source.storeEmoji}
           storeName={source.storeName}
           items={source.items}
           defaultValues={

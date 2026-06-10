@@ -18,6 +18,20 @@ export const QUICK_TAGS = [
 ] as const
 export type QuickTag = (typeof QUICK_TAGS)[number]
 
+/**
+ * FE 한국어 태그 라벨 → BE enum 코드 매핑 (CreateReviewRequest/UpdateReviewRequest.tags).
+ * BE 응답(MyReviewResponse.tags)은 한국어 라벨로 오므로 변환 불필요.
+ */
+export const REVIEW_TAG_CODE: Record<QuickTag, string> = {
+  맛있어요: 'DELICIOUS',
+  신선해요: 'FRESH',
+  재구매: 'REORDER',
+  '픽업 빨라요': 'FAST_PICKUP',
+  '양 많아요': 'GENEROUS',
+  가성비: 'GOOD_VALUE',
+  친절해요: 'KIND',
+}
+
 /** 후기 상한 — 노션: 하한 없음·최대 300자(프로토타입 "10자/500자"는 교정) */
 export const REVIEW_CONTENT_MAX = 300
 /** 사진 최대 장수 — 노션: 최대 3장 */
@@ -60,16 +74,14 @@ export interface MyReview {
   /** 리뷰 대상 매장 */
   storeId: string
   storeName: string
-  /** 매장 썸네일 이모지 (mock — 실연동 시 매장 대표 이미지) */
-  storeEmoji: string
   /** 주문에 포함된 상품들 — 각 상품 상세로 링크 */
   items: OrderItem[]
   /** 별점 1~5 */
   rating: number
   content: string
-  /** 빠른평가 태그 */
+  /** 빠른평가 태그 (BE 응답 한국어 라벨 그대로) */
   tags: string[]
-  /** 첨부 사진 dataURL/URL */
+  /** 첨부 사진 URL */
   photos: string[]
   /** 작성일 (ISO) */
   createdAt: string
@@ -78,14 +90,13 @@ export interface MyReview {
 }
 
 /**
- * 리뷰 작성 대상 — 픽업 완료 주문(주문 탭에 mock 으로 노출).
+ * 리뷰 작성 대상 — 픽업 완료 주문.
  * `reviewed=true` 면 이미 작성 → '리뷰 보기/수정' 진입, false 면 '리뷰 작성'.
  */
 export interface ReviewableOrder {
   orderId: string
   storeId: string
   storeName: string
-  storeEmoji: string
   /** 주문에 포함된 상품들 */
   items: OrderItem[]
   /** 픽업 완료 일시 (ISO) */

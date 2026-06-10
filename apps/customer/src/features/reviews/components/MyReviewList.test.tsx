@@ -9,7 +9,6 @@ const review = (id: string, rating: number): MyReview => ({
   id,
   storeId: 's',
   storeName: '가게',
-  storeEmoji: '🥐',
   items: [{ productId: 'p1', kind: 'menu', name: '빵' }],
   rating,
   content: '',
