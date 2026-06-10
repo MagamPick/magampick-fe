@@ -25,7 +25,7 @@ import { useClearance } from '../hooks/useClearance'
 import { useUpdateClearance } from '../hooks/useUpdateClearance'
 import { useCloseClearance } from '../hooks/useCloseClearance'
 import { updateClearanceInputSchema } from '../types'
-import type { ClearanceStatus, UpdateClearanceInput } from '../types'
+import type { ClearanceCloseReason, ClearanceStatus, UpdateClearanceInput } from '../types'
 import { discountRate } from '../lib/clearanceStatus'
 
 const paramsSchema = z.object({ id: z.coerce.number().int().positive() })
@@ -37,9 +37,11 @@ const STATUS_BADGE: Record<ClearanceStatus, { label: string; className: string }
   SOLD_OUT: { label: '품절', className: 'bg-muted text-muted-foreground' },
 }
 
-const STATUS_CLOSE_TEXT: Partial<Record<ClearanceStatus, string>> = {
+/** closeReason 별 마감 사유 문구 */
+const CLOSE_REASON_TEXT: Record<ClearanceCloseReason, string> = {
+  EXPIRED: '픽업 마감 시각이 지나 마감됐어요.',
   SOLD_OUT: '수량이 모두 소진되어 마감됐어요.',
-  CLOSED: '마감된 마감 할인이에요.',
+  MANUAL: '사장님이 직접 마감했어요.',
 }
 
 /**
@@ -296,7 +298,8 @@ export function ClearanceDetailPage() {
             <section className="rounded-[14px] border border-border bg-card p-4">
               <p className="text-[13px] font-bold text-foreground">마감된 마감 할인</p>
               <p className="mt-1.5 text-[13px] leading-relaxed text-muted-foreground">
-                {STATUS_CLOSE_TEXT[clearance.status] ?? '마감된 마감 할인이에요.'}{' '}
+                {(clearance.closeReason ? CLOSE_REASON_TEXT[clearance.closeReason] : null) ??
+                  '마감된 마감 할인이에요.'}{' '}
                 마감된 마감 할인은 수정하거나 다시 시작할 수 없어요.
               </p>
             </section>

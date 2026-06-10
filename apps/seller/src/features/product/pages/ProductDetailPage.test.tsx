@@ -2,6 +2,7 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Routes, Route } from 'react-router'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { ApiError } from '@/shared/lib/apiError'
 
 vi.mock('../hooks/useProduct')
 vi.mock('../hooks/useDeleteProduct')
@@ -115,5 +116,36 @@ describe('ProductDetailPage', () => {
     expect(await screen.findByText('이 상품을 삭제할까요?')).toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: '삭제' }))
     expect(delMutate).toHaveBeenCalled()
+  })
+
+  it('진행 중인 떨이가 있으면 상품 삭제 버튼이 비활성화되고 사유를 보여준다', async () => {
+    const user = userEvent.setup()
+    setup({ clearances: [activeClearance] })
+
+    const deleteBtn = screen.getByRole('button', { name: /상품 삭제/ })
+    expect(deleteBtn).toBeDisabled()
+    expect(
+      screen.getByText('진행 중인 마감 할인이 있어 삭제할 수 없어요. 먼저 마감 할인을 마감해 주세요.'),
+    ).toBeInTheDocument()
+
+    // 비활성 버튼 클릭 시 확인 시트가 열리지 않음
+    await user.click(deleteBtn)
+    expect(screen.queryByText('이 상품을 삭제할까요?')).not.toBeInTheDocument()
+  })
+
+  it('삭제 중 409가 오면 차단 사유 메시지를 보여준다', async () => {
+    const user = userEvent.setup()
+    delMutate.mockImplementation((_: unknown, opts: { onError: (e: unknown) => void }) => {
+      opts.onError(new ApiError(409, 'CONFLICT', '진행 중인 떨이 존재'))
+    })
+    setup()
+
+    await user.click(screen.getByRole('button', { name: /상품 삭제/ }))
+    expect(await screen.findByText('이 상품을 삭제할까요?')).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: '삭제' }))
+
+    expect(
+      await screen.findByRole('alert'),
+    ).toHaveTextContent('진행 중인 마감 할인이 있어 삭제할 수 없어요. 먼저 마감 할인을 마감해 주세요.')
   })
 })
