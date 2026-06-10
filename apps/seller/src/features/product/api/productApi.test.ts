@@ -41,6 +41,17 @@ describe('productApi', () => {
       const result = await productApi.listProducts(1)
       expect(result).toEqual([])
     })
+
+    it('imageUrl 이 null 이어도 throw 없이 undefined 로 정규화한다 (BE imageUrl: null)', async () => {
+      vi.mocked(apiClient.get).mockResolvedValue({
+        data: { content: [{ ...mockProduct, imageUrl: null }] },
+      })
+
+      const result = await productApi.listProducts(1)
+
+      expect(result).toHaveLength(1)
+      expect(result[0]?.imageUrl).toBeUndefined()
+    })
   })
 
   describe('getProduct', () => {

@@ -294,6 +294,14 @@ describe('storeApi.getStore — BE 실연동', () => {
     expect(detail.imageUrl).toBeUndefined()
   })
 
+  it('imageUrl 이 null 이어도 throw 없이 undefined 로 정규화한다 (BE imageUrl: null)', async () => {
+    vi.mocked(apiClient.get).mockResolvedValue({
+      data: { ...baseStoreDetailData, imageUrl: null },
+    })
+    const detail = await storeApi.getStore(1)
+    expect(detail.imageUrl).toBeUndefined()
+  })
+
   it('선택 필드 있을 때 StoreDetail 에 포함', async () => {
     vi.mocked(apiClient.get).mockResolvedValue({
       data: {
