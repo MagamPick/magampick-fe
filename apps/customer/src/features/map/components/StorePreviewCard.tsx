@@ -1,5 +1,6 @@
 import { ChevronRight } from 'lucide-react'
 import { Thumbnail } from '@/shared/components/Thumbnail'
+import { formatDistance } from '@/shared/lib/formatDistance'
 import type { MapStore } from '../types'
 
 /**
@@ -8,7 +9,7 @@ import type { MapStore } from '../types'
  * 바텀네비(플로팅) 위 14px 에 띄운다.
  */
 export function StorePreviewCard({ store, onClick }: { store: MapStore; onClick: () => void }) {
-  const meta = `${store.distanceKm}km${store.rating > 0 ? ` · ★ ${store.rating}` : ''}`
+  const meta = `${formatDistance(store.distanceKm)}${store.rating > 0 ? ` · ★ ${store.rating}` : ''}`
   return (
     <button
       type="button"

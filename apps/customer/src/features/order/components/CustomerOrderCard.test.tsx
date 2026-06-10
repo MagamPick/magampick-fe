@@ -51,6 +51,18 @@ describe('CustomerOrderCard', () => {
     expect(screen.getByText(/18:30/)).toBeInTheDocument()
   })
 
+  it('슬롯 픽업이면 "오늘 HH:mm 픽업" 어순으로 표시한다', () => {
+    render(<CustomerOrderCard order={base} onClick={() => {}} />)
+    expect(screen.getByText('오늘 18:30 픽업')).toBeInTheDocument()
+    expect(screen.getByText('픽업코드')).toBeInTheDocument()
+  })
+
+  it('ASAP 픽업이면 "가능한 빨리 픽업" 으로 표시한다 (깨진 "픽업 가능한 빨리" 회귀 방지)', () => {
+    render(<CustomerOrderCard order={{ ...base, pickup: { type: 'asap' } }} onClick={() => {}} />)
+    expect(screen.getByText('가능한 빨리 픽업')).toBeInTheDocument()
+    expect(screen.queryByText('픽업 가능한 빨리')).not.toBeInTheDocument()
+  })
+
   it('COMPLETED 상태면 리뷰 버튼을 표시한다', () => {
     render(<CustomerOrderCard order={{ ...base, status: 'COMPLETED' }} onClick={() => {}} />)
     expect(screen.getByRole('button', { name: /리뷰/ })).toBeInTheDocument()
