@@ -67,16 +67,28 @@ describe('profileApi', () => {
   })
 
   describe('getStats', () => {
-    it('통계_mock_데이터를_반환한다', async () => {
-      const stats = await profileApi.getStats()
-      expect(stats.monthlySavings).toBeGreaterThanOrEqual(0)
-      expect(stats.rescuedCount).toBeGreaterThanOrEqual(0)
-      expect(stats.favoriteCount).toBeGreaterThanOrEqual(0)
+    const STATS_DTO = { monthlySavings: 14300, rescuedCount: 4, favoriteCount: 4 }
+
+    it('GET_/customers/me/stats_엔드포인트를_호출한다', async () => {
+      vi.mocked(apiClient.get).mockResolvedValue({ data: STATS_DTO })
+      await profileApi.getStats()
+      expect(apiClient.get).toHaveBeenCalledWith('/customers/me/stats')
     })
 
-    it('apiClient를_호출하지_않는다_mock_유지', async () => {
-      await profileApi.getStats()
-      expect(apiClient.get).not.toHaveBeenCalled()
+    it('BE_DTO를_FE_ProfileStats로_매핑한다_절약·구출·단골', async () => {
+      vi.mocked(apiClient.get).mockResolvedValue({ data: STATS_DTO })
+      const stats = await profileApi.getStats()
+      expect(stats.monthlySavings).toBe(14300)
+      expect(stats.rescuedCount).toBe(4)
+      expect(stats.favoriteCount).toBe(4)
+    })
+
+    it('필드_누락·null이면_0으로_매핑한다', async () => {
+      vi.mocked(apiClient.get).mockResolvedValue({ data: { monthlySavings: null } })
+      const stats = await profileApi.getStats()
+      expect(stats.monthlySavings).toBe(0)
+      expect(stats.rescuedCount).toBe(0)
+      expect(stats.favoriteCount).toBe(0)
     })
   })
 })
