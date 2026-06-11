@@ -78,8 +78,9 @@ const storeDetailResponseSchema = z
     businessNumber: z.string().optional(),
     name: z.string(),
     roadAddress: z.string(),
-    jibunAddress: z.string().optional(),
-    detailAddress: z.string().optional(),
+    // BE 가 jibunAddress/detailAddress 를 null 로 내려줄 수 있어 nullish 로 수용 (.optional() 은 null 거부)
+    jibunAddress: z.string().nullish(),
+    detailAddress: z.string().nullish(),
     zonecode: z.string(),
     phone: z.string(),
     // BE 가 imageUrl 을 null 로 내려줄 수 있어 nullish 로 수용 (소비자 앱 패턴 미러)
@@ -113,8 +114,8 @@ function toStoreDetail(parsed: z.infer<typeof storeDetailResponseSchema>): Store
     businessNumber: parsed.businessNumber,
     name: parsed.name,
     roadAddress: parsed.roadAddress,
-    jibunAddress: parsed.jibunAddress,
-    detailAddress: parsed.detailAddress,
+    jibunAddress: parsed.jibunAddress ?? undefined,
+    detailAddress: parsed.detailAddress ?? undefined,
     zonecode: parsed.zonecode,
     phone: parsed.phone,
     imageUrl: parsed.imageUrl ?? undefined,

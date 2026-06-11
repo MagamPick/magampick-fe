@@ -8,9 +8,13 @@ import {
   type UpdateAddressInput,
 } from '../types'
 
-/** BE AddressResponse → 정규화된 Address (detailAddress 없으면 '' 로 채움) */
+/** BE AddressResponse → 정규화된 Address (null/누락 정규화: jibunAddress→undefined, detailAddress→'') */
 function toAddress(raw: z.infer<typeof addressResponseSchema>): Address {
-  return { ...raw, detailAddress: raw.detailAddress ?? '' }
+  return {
+    ...raw,
+    jibunAddress: raw.jibunAddress ?? undefined,
+    detailAddress: raw.detailAddress ?? '',
+  }
 }
 
 /**

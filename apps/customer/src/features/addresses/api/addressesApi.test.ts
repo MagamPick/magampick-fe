@@ -47,6 +47,13 @@ describe('addressesApi (실 BE 연동)', () => {
       expect(result[0].detailAddress).toBe('')
     })
 
+    it('jibunAddress 가 null 이어도 throw 없이 undefined 로 정규화 (BE jibunAddress: null)', async () => {
+      const nullJibun = { ...addressFixture, jibunAddress: null }
+      vi.mocked(apiClient.get).mockResolvedValue({ data: [nullJibun] })
+      const result = await addressesApi.list()
+      expect(result[0].jibunAddress).toBeUndefined()
+    })
+
     it('isDefault 가 boolean 으로 파싱됨', async () => {
       vi.mocked(apiClient.get).mockResolvedValue({ data: [addressFixture] })
       const result = await addressesApi.list()
