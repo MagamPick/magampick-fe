@@ -37,8 +37,9 @@ export const addressResponseSchema = z.object({
   id: z.number(),
   label: z.string(),
   roadAddress: z.string(),
-  jibunAddress: z.string().optional(),
-  detailAddress: z.string().optional(),
+  // BE 가 jibunAddress/detailAddress 를 null 로 내려줄 수 있어 nullish 로 수용 (.optional() 은 null 거부)
+  jibunAddress: z.string().nullish(),
+  detailAddress: z.string().nullish(),
   zonecode: z.string().optional(),
   latitude: z.number(),
   longitude: z.number(),
