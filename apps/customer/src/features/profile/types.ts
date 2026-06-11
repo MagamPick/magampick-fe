@@ -36,13 +36,24 @@ export const profileSchema = z.object({
 })
 export type Profile = z.infer<typeof profileSchema>
 
-/** 마이페이지 통계 (mock — 주문/단골 도메인 연동 시 교체) */
+/** 마이페이지 통계 (GET /customers/me/stats 매핑 결과) */
 export const profileStatsSchema = z.object({
-  monthlySavings: z.number(), // 이번 달 절약 (원)
-  rescuedCount: z.number(), // 구한 음식 (개)
+  monthlySavings: z.number(), // 이번 달 절약 (원) — BE: 마감할인 합
+  rescuedCount: z.number(), // 구한 음식 (개) — BE: 누적
   favoriteCount: z.number(), // 단골 가게 (곳)
 })
 export type ProfileStats = z.infer<typeof profileStatsSchema>
+
+/**
+ * BE CustomerStatsResponse DTO (GET /customers/me/stats).
+ * 세 값 모두 BE 가 0 보장하나, 생성 스펙상 optional + 과거 null 사례가 있어 nullish 로 받고 매핑 시 ?? 0.
+ */
+export const customerStatsResponseSchema = z.object({
+  monthlySavings: z.number().nullish(),
+  rescuedCount: z.number().nullish(),
+  favoriteCount: z.number().nullish(),
+})
+export type CustomerStatsResponse = z.infer<typeof customerStatsResponseSchema>
 
 /** 닉네임 수정 폼 (react-hook-form) */
 export const nicknameFormSchema = z.object({
