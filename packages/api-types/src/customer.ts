@@ -1082,6 +1082,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/customers/me/stats": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 소비자 마이페이지 통계 조회
+         * @description 이번 달 절약 금액(마감할인 합), 구한 음식 수(누적), 단골 가게 수를 반환한다. 데이터 없으면 0.
+         */
+        get: operations["getStats"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/customers/me/reviews": {
         parameters: {
             query?: never;
@@ -3047,6 +3067,14 @@ export interface components {
             question?: string;
             /** @description 답변 */
             answer?: string;
+        };
+        CustomerStatsResponse: {
+            /** Format: int64 */
+            monthlySavings?: number;
+            /** Format: int32 */
+            rescuedCount?: number;
+            /** Format: int32 */
+            favoriteCount?: number;
         };
         PointSummaryResponse: {
             /**
@@ -5848,6 +5876,44 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["FaqResponse"][];
+                };
+            };
+        };
+    };
+    getStats: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 조회 성공 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["CustomerStatsResponse"];
+                };
+            };
+            /** @description 미인증 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["CustomerStatsResponse"];
+                };
+            };
+            /** @description 소비자 역할 아님 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["CustomerStatsResponse"];
                 };
             };
         };
