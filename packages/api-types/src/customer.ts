@@ -29,6 +29,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/customers/me/location": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * 소비자 현재 위치 갱신
+         * @description 프론트엔드가 주기적으로 호출해 소비자의 현재 위치를 저장한다. 저장된 위치가 신선(1시간 이내)한 소비자는 떨이 등록·마감임박 알림의 ② 현재위치 반경 3km 대상에 포함된다.
+         */
+        put: operations["updateLocation"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/push-tokens": {
         parameters: {
             query?: never;
@@ -1418,6 +1438,41 @@ export interface components {
             kind?: string;
             /** @description 상품명 */
             name?: string;
+        };
+        /** @description 소비자 현재 위치 갱신 요청 */
+        CustomerLocationUpdateRequest: {
+            /**
+             * Format: double
+             * @description 위도
+             * @example 37.5665
+             */
+            latitude: number;
+            /**
+             * Format: double
+             * @description 경도
+             * @example 126.978
+             */
+            longitude: number;
+        };
+        /** @description 소비자 현재 위치 갱신 응답 */
+        CustomerLocationResponse: {
+            /**
+             * Format: double
+             * @description 위도
+             * @example 37.5665
+             */
+            latitude?: number;
+            /**
+             * Format: double
+             * @description 경도
+             * @example 126.978
+             */
+            longitude?: number;
+            /**
+             * Format: date-time
+             * @description 위치 갱신 시각 (KST)
+             */
+            locationUpdatedAt?: string;
         };
         /** @description FCM 토큰 등록 요청 */
         PushTokenRegisterRequest: {
@@ -3418,6 +3473,57 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    updateLocation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CustomerLocationUpdateRequest"];
+            };
+        };
+        responses: {
+            /** @description 위치 갱신 성공 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["CustomerLocationResponse"];
+                };
+            };
+            /** @description 입력 검증 실패 (위경도 범위 오류) */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["CustomerLocationResponse"];
+                };
+            };
+            /** @description 미인증 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["CustomerLocationResponse"];
+                };
+            };
+            /** @description 소비자 역할 아님 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["CustomerLocationResponse"];
+                };
             };
         };
     };
