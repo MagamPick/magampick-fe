@@ -46,8 +46,9 @@ const clearanceItemResponseSchema = z.object({
   pickupEndAt: z.string().optional(),
   status: clearanceStatusSchema.optional(),
   createdAt: z.string().optional(),
-  /** 마감 사유 — OPEN 이면 null/미존재 */
-  closeReason: clearanceCloseReasonSchema.optional(),
+  // 마감 사유 — BE 가 OPEN 떨이는 closeReason 을 명시적 null 로 내려줌.
+  // .optional() 은 null 을 거부해 목록 전체 파싱이 throw(진행중 떨이 1개만 있어도 리스트 전체 실패) → imageUrl 과 동일하게 nullish 로 수용.
+  closeReason: clearanceCloseReasonSchema.nullish(),
 })
 
 /** PageResponseClearanceItemResponse (목록) */
@@ -74,7 +75,7 @@ function toClearanceView(raw: z.infer<typeof clearanceItemResponseSchema>): Clea
     productImageUrl: raw.imageUrl ?? undefined,
     originalPrice: raw.regularPrice ?? 0,
     remainingQty,
-    closeReason: raw.closeReason,
+    closeReason: raw.closeReason ?? undefined,
   }
 }
 
