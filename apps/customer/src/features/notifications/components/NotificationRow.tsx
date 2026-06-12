@@ -2,12 +2,13 @@ import { useNavigate } from 'react-router'
 import { cn } from '@/shared/lib/utils'
 import { formatRelativeTime } from '../lib/formatRelativeTime'
 import { useMarkNotificationRead } from '../hooks/useMarkNotificationRead'
-import { CATEGORY_ICON, resolveNotificationRoute } from '../constants'
+import { CATEGORY_ICON } from '../constants'
+import { resolveNotificationLink } from '../lib/resolveNotificationLink'
 import type { Notification } from '../types'
 
 /**
  * 알림 1건 행 (프로토타입 `.notif-row`) — 아이콘 원형 + 제목/본문/상대시각 + 미읽음 dot.
- * 클릭 = 읽음 처리 + category 기반 라우팅 (link 필드 무시).
+ * 클릭 = 읽음 처리 + 하이브리드 라우팅 (BE link 우선 → category fallback, [[resolveNotificationLink]]).
  * icon 필드는 BE 응답에 없음 — CATEGORY_ICON[category] 로 파생.
  */
 export function NotificationRow({ notification }: { notification: Notification }) {
@@ -16,7 +17,7 @@ export function NotificationRow({ notification }: { notification: Notification }
 
   const handleClick = () => {
     if (!notification.read) markRead.mutate(notification.id)
-    const route = resolveNotificationRoute(notification.category)
+    const route = resolveNotificationLink(notification)
     if (route) navigate(route)
   }
 

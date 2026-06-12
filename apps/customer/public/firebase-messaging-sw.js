@@ -39,6 +39,20 @@ function routeForCategory(category) {
   }
 }
 
+/** 앱 내부 절대경로 여부 — '/'로 시작(단 '//'·'/\' 외부 URL 제외). 소스 lib/resolveNotificationLink.ts 와 동기화 */
+function isInternalPath(link) {
+  return typeof link === 'string' && /^\/(?![/\\])/.test(link)
+}
+
+/**
+ * 알림 클릭 시 이동할 경로 (하이브리드) — BE link(건별 딥링크) 우선 → category fallback.
+ * 소스 lib/resolveNotificationLink.ts 와 수동 동기화할 것.
+ */
+function resolveNotificationLink(data) {
+  if (isInternalPath(data.link)) return data.link
+  return routeForCategory(data.category)
+}
+
 // BE 는 data-only 로 발송(notification 블록 없음) — 표시·클릭을 SW 가 단독 제어해 중복 표시를 막는다.
 messaging.onBackgroundMessage((payload) => {
   const data = payload.data || {}
@@ -49,11 +63,11 @@ messaging.onBackgroundMessage((payload) => {
   })
 })
 
-// 알림 클릭 → category 기반 앱 내 화면 이동. 열린 탭 있으면 focus(+best-effort navigate), 없으면 새 창.
+// 알림 클릭 → 하이브리드 라우팅(link 우선→category) 앱 내 화면 이동. 열린 탭 있으면 focus(+best-effort navigate), 없으면 새 창.
 self.addEventListener('notificationclick', (event) => {
   event.notification.close()
   const data = event.notification.data || {}
-  const route = routeForCategory(data.category)
+  const route = resolveNotificationLink(data)
   if (!route) return
   const url = new URL(route, self.location.origin).href
   event.waitUntil(

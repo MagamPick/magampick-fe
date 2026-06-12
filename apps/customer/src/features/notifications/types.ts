@@ -7,7 +7,8 @@ import { z } from 'zod'
  * - id: number (BE int64)
  * - category: 소문자 9종 (deal/order/review/benefit/system/refund/settlement/notice/inquiry)
  * - icon 필드 없음 — FE 에서 category 기반으로 파생
- * - link: string | null (FE는 사용하지 않고 category 로 라우팅)
+ * - link: string | null — 하이브리드 라우팅: 내부 절대경로면 우선 사용(건별 딥링크),
+ *   없거나 외부 URL 이면 category fallback (lib/resolveNotificationLink.ts)
  */
 
 /** 알림 종류 — BE 9종 소문자. 미지 값은 'system' 으로 방어. */
