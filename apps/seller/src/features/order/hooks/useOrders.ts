@@ -7,5 +7,6 @@ export function useOrders(storeId: string) {
   return useQuery({
     queryKey: orderKeys.list(storeId),
     queryFn: () => orderApi.listOrders(storeId),
+    enabled: !!storeId,
   })
 }

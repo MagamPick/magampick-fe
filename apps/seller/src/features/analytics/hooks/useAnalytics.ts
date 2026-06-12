@@ -8,5 +8,6 @@ export function useAnalytics(storeId: string, period: AnalyticsPeriod) {
   return useQuery({
     queryKey: analyticsKeys.detail(storeId, period),
     queryFn: () => analyticsApi.getAnalytics(storeId, period),
+    enabled: !!storeId,
   })
 }
