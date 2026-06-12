@@ -62,6 +62,19 @@ describe('clearanceApi', () => {
       expect(result).toHaveLength(1)
       expect(result[0]?.productImageUrl).toBeUndefined()
     })
+
+    it('OPEN 아이템의 closeReason 이 null 이어도 throw 없이 목록을 반환한다 (BE OPEN: closeReason null)', async () => {
+      // BE 는 OPEN 떨이의 closeReason 을 명시적 null 로 내려준다 → .optional() 은 null 거부 → 목록 전체 파싱 throw
+      vi.mocked(apiClient.get).mockResolvedValue({
+        data: { content: [{ ...mockItem, status: 'OPEN', closeReason: null }] },
+      })
+
+      const result = await clearanceApi.listClearances(1)
+
+      expect(result).toHaveLength(1)
+      expect(result[0]?.status).toBe('OPEN')
+      expect(result[0]?.closeReason).toBeUndefined()
+    })
   })
 
   describe('getClearance', () => {
@@ -152,6 +165,17 @@ describe('clearanceApi', () => {
 
     it('OPEN 응답에 closeReason 이 없으면 closeReason 이 undefined 이다', async () => {
       vi.mocked(apiClient.get).mockResolvedValue({ data: mockItem })
+
+      const result = await clearanceApi.getClearance(1, 1)
+
+      expect(result.status).toBe('OPEN')
+      expect(result.closeReason).toBeUndefined()
+    })
+
+    it('OPEN 응답에 closeReason 이 명시적 null 이어도 throw 없이 undefined 로 정규화한다', async () => {
+      vi.mocked(apiClient.get).mockResolvedValue({
+        data: { ...mockItem, status: 'OPEN', closeReason: null },
+      })
 
       const result = await clearanceApi.getClearance(1, 1)
 
