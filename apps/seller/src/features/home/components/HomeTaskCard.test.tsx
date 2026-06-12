@@ -1,10 +1,13 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen } from '@testing-library/react'
+import { MemoryRouter } from 'react-router'
 import { HomeTaskCard } from './HomeTaskCard'
 import { useOrders } from '@/features/order/hooks/useOrders'
 import type { Order, OrderStatus } from '@/features/order/types'
 
 vi.mock('@/features/order/hooks/useOrders')
+
+const renderCard = () => render(<HomeTaskCard />, { wrapper: MemoryRouter })
 
 const makeOrder = (status: OrderStatus): Order => ({
   id: `o-${status}-${Math.round(status.length)}`,
@@ -39,7 +42,7 @@ describe('HomeTaskCard', () => {
       data: orders,
     } as unknown as ReturnType<typeof useOrders>)
 
-    render(<HomeTaskCard />)
+    renderCard()
 
     expect(screen.getByText('2건')).toBeInTheDocument() // 신규 주문
     expect(screen.getByText('1건')).toBeInTheDocument() // 준비 완료 대기
@@ -51,9 +54,30 @@ describe('HomeTaskCard', () => {
       data: [],
     } as unknown as ReturnType<typeof useOrders>)
 
-    render(<HomeTaskCard />)
+    renderCard()
 
     expect(screen.getByText('픽업 대기')).toBeInTheDocument()
     expect(screen.queryByText('픽업 임박')).toBeNull()
+  })
+
+  it('각_행은_주문_관리_해당_세그먼트로_이동하는_링크다', () => {
+    vi.mocked(useOrders).mockReturnValue({
+      data: [],
+    } as unknown as ReturnType<typeof useOrders>)
+
+    renderCard()
+
+    expect(screen.getByRole('link', { name: /신규 주문/ })).toHaveAttribute(
+      'href',
+      '/orders?seg=new',
+    )
+    expect(screen.getByRole('link', { name: /준비 완료 대기/ })).toHaveAttribute(
+      'href',
+      '/orders?seg=prep',
+    )
+    expect(screen.getByRole('link', { name: /픽업 대기/ })).toHaveAttribute(
+      'href',
+      '/orders?seg=ready',
+    )
   })
 })
