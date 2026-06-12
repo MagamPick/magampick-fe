@@ -118,24 +118,30 @@ export function ClearanceCreatePage() {
   const rate = selected && /^\d+$/.test(v.salePrice) ? discountRate(original, saleNum) : null
   const todayClose = status?.todayCloseTime
 
+  // 각 스텝 유효성을 독립 계산 (RHF form.formState.isValid 비의존).
+  // isValid 는 지연 구독·검증 이벤트에서만 갱신돼, 입력 없는 확인(step4) 화면에선
+  // 초기 false 로 고착돼 등록 버튼이 영구 비활성화되던 버그를 피한다.
+  const step1Valid = !!v.productId
+  const step2Valid =
+    /^\d+$/.test(v.totalQty) &&
+    Number(v.totalQty) >= 1 &&
+    /^\d+$/.test(v.salePrice) &&
+    (!selected || (saleNum >= 0 && saleNum < original))
+  const step3Valid =
+    TIME_RE.test(v.closeTime) &&
+    v.closeTime > nowHHMM() &&
+    (!todayClose || v.closeTime <= todayClose)
+
   const stepValid = ((): boolean => {
     switch (step) {
       case 1:
-        return !!v.productId
-      case 2: {
-        const qtyOk = /^\d+$/.test(v.totalQty) && Number(v.totalQty) >= 1
-        const priceOk =
-          /^\d+$/.test(v.salePrice) && (!selected || (saleNum >= 0 && saleNum < original))
-        return qtyOk && priceOk
-      }
+        return step1Valid
+      case 2:
+        return step2Valid
       case 3:
-        return (
-          TIME_RE.test(v.closeTime) &&
-          v.closeTime > nowHHMM() &&
-          (!todayClose || v.closeTime <= todayClose)
-        )
+        return step3Valid
       case 4:
-        return !!selected && form.formState.isValid
+        return !!selected && step1Valid && step2Valid && step3Valid
       default:
         return false
     }

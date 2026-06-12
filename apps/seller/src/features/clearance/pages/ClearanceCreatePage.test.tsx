@@ -8,6 +8,12 @@ vi.mock('../hooks/useClearances')
 vi.mock('@/features/store/hooks/useStoreStatus')
 vi.mock('../hooks/useCreateClearance')
 
+// nowHHMM 고정 → step3 픽업 마감 시간 게이트를 결정적으로 통과 (기본 '21:00' > '08:00')
+vi.mock('../lib/clearanceStatus', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../lib/clearanceStatus')>()
+  return { ...actual, nowHHMM: () => '08:00' }
+})
+
 import { useProducts } from '@/features/product/hooks/useProducts'
 import { useClearances } from '../hooks/useClearances'
 import { useStoreStatus } from '@/features/store/hooks/useStoreStatus'
@@ -98,5 +104,22 @@ describe('ClearanceCreatePage', () => {
     // step2 의 "선택 상품" 표기 + 상품명
     expect(screen.getByText('선택 상품')).toBeInTheDocument()
     expect(screen.getByText('아메리카노')).toBeInTheDocument()
+  })
+
+  it('모든 단계를 유효하게 채우면 확인(step4)에서 등록 버튼이 활성화된다', async () => {
+    const user = userEvent.setup()
+    setup()
+
+    // STEP 1 — 상품 선택
+    await user.click(screen.getByRole('button', { name: /아메리카노/ }))
+    await user.click(screen.getByRole('button', { name: '다음' }))
+    // STEP 2 — 수량·할인가
+    await user.type(screen.getByLabelText(/마감 할인 수량/), '10')
+    await user.type(screen.getByLabelText(/마감 할인가/), '1500')
+    await user.click(screen.getByRole('button', { name: '다음' }))
+    // STEP 3 — 기본 픽업 마감 '21:00' 은 nowHHMM('08:00')~todayClose('21:00') 범위라 유효
+    await user.click(screen.getByRole('button', { name: '다음' }))
+    // STEP 4 — 확인. 모든 값이 유효하므로 등록 버튼이 활성이어야 한다
+    expect(screen.getByRole('button', { name: '마감 할인 등록' })).toBeEnabled()
   })
 })
