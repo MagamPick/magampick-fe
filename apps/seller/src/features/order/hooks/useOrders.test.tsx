@@ -34,4 +34,11 @@ describe('useOrders', () => {
     expect(orderApi.listOrders).toHaveBeenCalledWith('s1')
     expect(result.current.data).toEqual([sample])
   })
+
+  it('storeId가 비면 조회하지 않는다', () => {
+    const { result } = renderHook(() => useOrders(''), { wrapper: createQueryWrapper() })
+
+    expect(orderApi.listOrders).not.toHaveBeenCalled()
+    expect(result.current.fetchStatus).toBe('idle')
+  })
 })

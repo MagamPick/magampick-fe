@@ -41,4 +41,12 @@ describe('useAnalytics', () => {
     await waitFor(() => expect(result.current.isSuccess).toBe(true))
     expect(analyticsApi.getAnalytics).toHaveBeenCalledWith('s1', 'month')
   })
+
+  it('storeId가 비면 조회하지 않는다', () => {
+    const { result } = renderHook(() => useAnalytics('', 'today'), {
+      wrapper: createQueryWrapper(),
+    })
+    expect(analyticsApi.getAnalytics).not.toHaveBeenCalled()
+    expect(result.current.fetchStatus).toBe('idle')
+  })
 })

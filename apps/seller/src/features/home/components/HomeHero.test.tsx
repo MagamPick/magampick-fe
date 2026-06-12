@@ -3,6 +3,7 @@ import { render, screen, within } from '@testing-library/react'
 import { MemoryRouter } from 'react-router'
 import { HomeHero } from './HomeHero'
 import { useUnreadCount } from '@/features/notifications/hooks/useUnreadCount'
+import { useReviewSummary } from '@/features/reviews/hooks/useReviewSummary'
 import { ROUTES } from '@/shared/lib/routes'
 
 // StoreSwitcher 는 매장 스토어/쿼리 의존 — 히어로 테스트는 종/마이 진입만 검증하므로 스텁
@@ -10,11 +11,15 @@ vi.mock('@/features/store/components/StoreSwitcher', () => ({
   StoreSwitcher: () => <div>매장 선택기</div>,
 }))
 vi.mock('@/features/notifications/hooks/useUnreadCount')
+vi.mock('@/features/reviews/hooks/useReviewSummary')
 
 beforeEach(() => {
   vi.mocked(useUnreadCount).mockReturnValue({
     data: 3,
   } as unknown as ReturnType<typeof useUnreadCount>)
+  vi.mocked(useReviewSummary).mockReturnValue({
+    data: { average: 4.6, total: 128, replyRate: 0 },
+  } as unknown as ReturnType<typeof useReviewSummary>)
 })
 
 const renderHero = () =>
@@ -48,5 +53,11 @@ describe('HomeHero', () => {
   it('마이_탭하면_마이로_연결', () => {
     renderHero()
     expect(screen.getByRole('link', { name: '마이' })).toHaveAttribute('href', ROUTES.MYPAGE)
+  })
+
+  it('평점과_리뷰수를_리뷰요약에서_표시', () => {
+    renderHero()
+    expect(screen.getByText('4.6')).toBeInTheDocument()
+    expect(screen.getByText('128 리뷰')).toBeInTheDocument()
   })
 })
