@@ -73,6 +73,33 @@ describe('CustomerOrderCard', () => {
     expect(screen.queryByText('4728')).not.toBeInTheDocument()
   })
 
+  it('혜택 적용 주문이면 카드 금액을 실청구액(finalAmount)으로 표시한다 (A4-2)', () => {
+    render(
+      <CustomerOrderCard
+        order={{
+          ...base,
+          amounts: {
+            normalTotal: 11500,
+            discountTotal: 1600,
+            payTotal: 9900,
+            couponDiscount: 2000,
+            pointUsed: 500,
+            finalAmount: 7400,
+          },
+        }}
+        onClick={() => {}}
+      />,
+    )
+    expect(screen.getByText('7,400원')).toBeInTheDocument()
+    expect(screen.queryByText('9,900원')).not.toBeInTheDocument()
+  })
+
+  it('혜택 없는 주문이면 결제액(payTotal)을 그대로 표시한다 (하위호환)', () => {
+    // base.amounts: finalAmount 미지정 → payTotal 9,900원 그대로
+    render(<CustomerOrderCard order={base} onClick={() => {}} />)
+    expect(screen.getByText('9,900원')).toBeInTheDocument()
+  })
+
   it('완료 주문에 환불 정보가 있으면 환불 상태 칩을 표시한다', () => {
     render(
       <CustomerOrderCard

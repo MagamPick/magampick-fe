@@ -57,7 +57,8 @@ export function OrderSuccessPage() {
         <div className="mt-[22px] rounded-[14px] border border-border bg-card px-[18px] py-4 text-left">
           <InfoRow label="매장" value={order.storeName} />
           <InfoRow label="픽업 시간" value={pickupLabel(order.pickup)} highlight />
-          <InfoRow label="결제 금액" value={won(order.amounts.payTotal)} />
+          {/* 실청구액(finalAmount) — 실 결제 경로의 매핑 주문은 payTotal=혜택 전. 목/구주문은 payTotal 폴백(A4-2) */}
+          <InfoRow label="결제 금액" value={won(order.amounts.finalAmount ?? order.amounts.payTotal)} />
           {(order.amounts.earnedPoints ?? 0) > 0 && (
             <InfoRow
               label="적립 예정"

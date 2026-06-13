@@ -183,7 +183,10 @@ export function OrderDetailPage() {
                   )}
                   <div className="flex justify-between pt-1 text-[14px] font-extrabold">
                     <span>결제 금액</span>
-                    <span className="text-primary">{won(order.amounts.payTotal)}</span>
+                    {/* 실청구액(finalAmount) — 쿠폰·포인트 차감 반영. 혜택 미적용/구주문은 payTotal 폴백(A4-2) */}
+                    <span className="text-primary">
+                      {won(order.amounts.finalAmount ?? order.amounts.payTotal)}
+                    </span>
                   </div>
                 </div>
               </section>

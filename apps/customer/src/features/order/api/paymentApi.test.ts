@@ -85,6 +85,31 @@ describe('mapToClientOrder', () => {
     expect(order.amounts.payTotal).toBe(12000)
   })
 
+  it('amounts 혜택 필드(couponDiscount·pointUsed·finalAmount) 를 매핑한다 (X1-BE 응답)', () => {
+    const res: TossConfirmResponse = {
+      ...mockOrderResponse,
+      amounts: {
+        normalTotal: 20000,
+        discountTotal: 8000,
+        payTotal: 12000,
+        couponDiscount: 2000,
+        pointUsed: 500,
+        finalAmount: 9500,
+      },
+    }
+    const order = mapToClientOrder(res)
+    expect(order.amounts.couponDiscount).toBe(2000)
+    expect(order.amounts.pointUsed).toBe(500)
+    expect(order.amounts.finalAmount).toBe(9500)
+  })
+
+  it('혜택 없는 응답이면 혜택 금액 필드는 undefined (하위호환)', () => {
+    const order = mapToClientOrder(mockOrderResponse)
+    expect(order.amounts.couponDiscount).toBeUndefined()
+    expect(order.amounts.pointUsed).toBeUndefined()
+    expect(order.amounts.finalAmount).toBeUndefined()
+  })
+
   it('qty 범위 초과 시 1~10 클램핑', () => {
     const res: TossConfirmResponse = {
       ...mockOrderResponse,
