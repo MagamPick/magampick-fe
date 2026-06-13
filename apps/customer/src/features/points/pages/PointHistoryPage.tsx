@@ -43,7 +43,7 @@ export function PointHistoryPage() {
       </header>
 
       <main className="flex-1 pb-6">
-        <PointHero balance={summary?.balance ?? 0} />
+        <PointHero balance={summary?.balance ?? 0} pendingPoints={summary?.pendingPoints ?? 0} />
         <div className="mt-4">
           <SegTabs ariaLabel="포인트 내역 필터" tabs={TABS} value={filter} onChange={setFilter} />
         </div>

@@ -58,6 +58,18 @@ describe('OrderSuccessPage', () => {
     expect(screen.getByText('HOME PAGE')).toBeInTheDocument()
   })
 
+  it('적립 예정 포인트가 있으면 "3일 후 사용 가능" 안내와 함께 표시한다 (D1)', () => {
+    renderSuccess(true, { ...order, amounts: { ...order.amounts, earnedPoints: 120 } })
+    expect(screen.getByText('적립 예정')).toBeInTheDocument()
+    expect(screen.getByText('120P')).toBeInTheDocument()
+    expect(screen.getByText(/픽업 완료 3일 후 사용 가능/)).toBeInTheDocument()
+  })
+
+  it('적립 예정 포인트가 없으면 "적립 예정" 행을 표시하지 않는다', () => {
+    renderSuccess(true)
+    expect(screen.queryByText('적립 예정')).not.toBeInTheDocument()
+  })
+
   it('실 결제 경로(혜택 적용)면 결제 금액을 실청구액(finalAmount)으로 표시한다 (A4-2)', () => {
     // mapToClientOrder 결과: payTotal=혜택 전(12,000) / finalAmount=실청구(9,500)
     renderSuccess(true, {

@@ -66,6 +66,12 @@ export function OrderSuccessPage() {
             />
           )}
           <InfoRow label="결제 수단" value="토스페이" />
+          {/* 적립은 픽업완료 즉시가 아니라 환불 윈도우(3일) 종료 후 확정·사용 가능(D1) */}
+          {(order.amounts.earnedPoints ?? 0) > 0 && (
+            <p className="mt-1.5 border-t border-border pt-2 text-[11.5px] leading-[1.5] text-muted-foreground">
+              적립 예정 포인트는 픽업 완료 3일 후 사용 가능해요.
+            </p>
+          )}
         </div>
 
         <div className="mt-[18px] rounded-[11px] bg-warning-subtle px-[14px] py-[13px] text-left text-[12.5px] leading-[1.6] text-[#8b5a00]">
