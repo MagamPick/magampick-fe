@@ -71,10 +71,10 @@ export const authApi = {
 
   /**
    * POST /auth/seller/login — 사장 로그인 (access 바디 + refresh HttpOnly 쿠키).
-   * 사장 앱은 로그인 상태 유지 토글이 없어 항상 keepSignedIn:true (auth.md §6).
+   * 로그인 상태 유지 토글 값(keepSignedIn)을 그대로 전송 — ON=장기 refresh, OFF=세션 (소비자와 동일).
    */
   async login(input: LoginInput): Promise<{ accessToken: string }> {
-    const res = await apiClient.post('/auth/seller/login', { ...input, keepSignedIn: true })
+    const res = await apiClient.post('/auth/seller/login', { ...input })
     return tokenResponseSchema.parse(res.data)
   },
 
