@@ -15,7 +15,7 @@ export interface paths {
         get?: never;
         /**
          * 리뷰 수정
-         * @description 본인 리뷰, 사장 답글 없는 경우만 수정 가능. 200 + 수정된 리뷰 반환.
+         * @description 본인 리뷰, 사장 답글 없는 경우만 수정 가능. request JSON 파트의 keepImageUrls 로 유지할 기존 사진을 지정하고, 새 사진은 photos File 파트로 전송. 최종 사진 = 유지 URL + 새 업로드 URL(합 최대 3장). 200 + 수정된 리뷰 반환.
          */
         put: operations["updateReview"];
         post?: never;
@@ -128,7 +128,7 @@ export interface paths {
         put?: never;
         /**
          * 리뷰 작성
-         * @description 픽업 완료(COMPLETED) 주문에만 작성 가능. 201 + 생성된 리뷰 반환.
+         * @description 픽업 완료(COMPLETED) 주문에만 작성 가능. 텍스트는 request JSON 파트, 사진은 photos File 파트(최대 3장)로 전송하면 OCI 업로드 후 URL 저장. 201 + 생성된 리뷰 반환.
          */
         post: operations["createReview"];
         delete?: never;
@@ -1390,7 +1390,7 @@ export interface components {
             rating: number;
             content?: string;
             tags?: ("DELICIOUS" | "FRESH" | "REORDER" | "FAST_PICKUP" | "GENEROUS" | "GOOD_VALUE" | "KIND")[];
-            photos?: string[];
+            keepImageUrls?: string[];
         };
         /** @description 소비자 본인 리뷰 아이템 */
         MyReviewResponse: {
@@ -1520,10 +1520,26 @@ export interface components {
              */
             discountTotal?: number;
             /**
-             * @description 결제액
+             * @description 결제액 (혜택 적용 전)
              * @example 6000
              */
             payTotal?: number;
+            /**
+             * @description 쿠폰 할인액
+             * @example 1000
+             */
+            couponDiscount?: number;
+            /**
+             * Format: int64
+             * @description 포인트 사용액
+             * @example 500
+             */
+            pointUsed?: number;
+            /**
+             * @description 실결제액 (최종 토스 청구액)
+             * @example 4500
+             */
+            finalAmount?: number;
         };
         /** @description 주문 항목 */
         OrderItemResponse: {
@@ -1815,7 +1831,6 @@ export interface components {
             rating: number;
             content?: string;
             tags?: ("DELICIOUS" | "FRESH" | "REORDER" | "FAST_PICKUP" | "GENEROUS" | "GOOD_VALUE" | "KIND")[];
-            photos?: string[];
         };
         /** @description 환불 요청 */
         RefundRequestRequest: {
@@ -2052,15 +2067,28 @@ export interface components {
              */
             zonecode?: string;
             /**
-             * @description 시군구코드 (다음 위젯 sigunguCode, 5자리)
+             * @description 시군구코드 (검색 경로: 다음 위젯 sigunguCode, 5자리. GPS 경로는 생략)
              * @example 11680
              */
             sigunguCode?: string;
             /**
-             * @description 도로명번호 (다음 위젯 roadnameCode, 최대 7자리)
+             * @description 도로명번호 (검색 경로: 다음 위젯 roadnameCode, 최대 7자리. GPS 경로는 생략)
              * @example 3179999
              */
             roadnameCode?: string;
+            /**
+             * Format: double
+             * @description 위도 (GPS 경로: 현재 위치 좌표 직접 저장. 검색 경로는 생략)
+             * @example 37.5066
+             */
+            latitude?: number;
+            /**
+             * Format: double
+             * @description 경도 (GPS 경로: 현재 위치 좌표 직접 저장. 검색 경로는 생략)
+             * @example 127.0535
+             */
+            longitude?: number;
+            locationSourceValid?: boolean;
         };
         /** @description 주소지 응답 */
         AddressResponse: {
@@ -3137,6 +3165,11 @@ export interface components {
              * @description 사용 가능 포인트 잔액
              */
             balance?: number;
+            /**
+             * Format: int64
+             * @description 적립 예정 포인트 — 환불 윈도우(3일) 종료 후 사용 가능
+             */
+            pendingPoints?: number;
         };
         /** @description 포인트 내역 응답 */
         PointTransactionResponse: {
@@ -3422,14 +3455,26 @@ export interface operations {
             };
             cookie?: never;
         };
-        requestBody: {
+        requestBody?: {
             content: {
-                "application/json": components["schemas"]["UpdateReviewRequest"];
+                "multipart/form-data": {
+                    request: components["schemas"]["UpdateReviewRequest"];
+                    photos?: string[];
+                };
             };
         };
         responses: {
             /** @description 수정 성공 */
             200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["MyReviewResponse"];
+                };
+            };
+            /** @description 입력 검증 실패 / 사진 3장 초과 / 이미지 규격 위반 */
+            400: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -3802,14 +3847,26 @@ export interface operations {
             };
             cookie?: never;
         };
-        requestBody: {
+        requestBody?: {
             content: {
-                "application/json": components["schemas"]["CreateReviewRequest"];
+                "multipart/form-data": {
+                    request: components["schemas"]["CreateReviewRequest"];
+                    photos?: string[];
+                };
             };
         };
         responses: {
             /** @description 리뷰 작성 성공 */
             201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["MyReviewResponse"];
+                };
+            };
+            /** @description 입력 검증 실패 / 사진 3장 초과 / 이미지 규격 위반 */
+            400: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -4225,6 +4282,15 @@ export interface operations {
             };
             /** @description 매장 없음 */
             404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["FavoriteAddResponse"];
+                };
+            };
+            /** @description 단골 한도 초과 (FAVORITE_LIMIT_REACHED) */
+            409: {
                 headers: {
                     [name: string]: unknown;
                 };

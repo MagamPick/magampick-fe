@@ -1,9 +1,7 @@
 /**
  * 정산(settlement) 도메인 타입 — 노션 「정산 처리」(시스템 배치)·「정산 내역 조회」(사장), Phase 6.
  * 정산 = 픽업 완료 주문을 반월 회차로 집계 → 수수료(6.5%) 뗀 정산액 산출(real) → 송금(stub) → 입금완료.
- * 백엔드 settlement 도메인 미구현 → 자체 in-memory mock(refund/review 와 동일, 단일 사장 가정).
- * grossAmount(집계 결과)만 mock — 수수료/정산액 계산은 settlementCalc 의 real 로직.
- * 실연동 시 apiClient + Zod 응답 검증으로 교체(api-client-convention).
+ * BE settlement 도메인 실연동 — apiClient + Zod 응답 검증(settlementApi). 금액 계산은 settlementCalc 순수 로직.
  */
 
 /** 수수료율 — 중개 5.0% + 결제 1.5% = 합 6.5% (노션 「정산 처리」, 금액 계산 real) */

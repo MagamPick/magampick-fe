@@ -3,7 +3,7 @@ import { z } from 'zod'
 /**
  * 공지사항 도메인 (노션 「공지사항 조회」, Phase 11).
  * 발행된 공지를 핀 우선·최신순 아코디언으로 조회(읽기 전용). 작성·발행은 관리자(별도 기능).
- * 백엔드 support 도메인 미구현 → mock(in-memory + Zod).
+ * BE 실연동 — 공지 조회 GET /announcements (apiClient + Zod 응답 검증, noticeApi).
  */
 
 /** 태그 — 공지 / 이벤트 / 업데이트 (분류 라벨) */

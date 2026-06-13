@@ -4,7 +4,7 @@ import { cartItemSchema, pickupSchema } from '@/features/cart/types'
 /**
  * 주문 도메인 타입 (노션: 주문 생성 · 주문 결제, Phase 5).
  * 결제 성공 = 주문접수(PENDING) 확정 + 픽업 코드 4자리 발급.
- * 백엔드 order 도메인 미구현 → 클라이언트 mock/stub 으로 생성(노션 "stub 우선").
+ * BE order 도메인 실연동 — apiClient + Zod 응답 검증(orderApi), 결제는 Toss 결제창(always-real).
  */
 
 /** 결제 수단 — 토스페이 단일 (노션) */

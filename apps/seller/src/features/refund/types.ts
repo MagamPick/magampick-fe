@@ -1,7 +1,7 @@
 /**
  * 환불 도메인 타입 (노션 「환불 승인/거부」, Phase 6) — 사장 환불 요청 inbox.
  * 환불 요청 = 픽업 완료(주문) 위에 얹힌 별도 라이프사이클. 주문 7-상태 머신과 분리.
- * 백엔드 refund 도메인 미구현 → 자체 in-memory mock (소비자앱 mock 과도 분리, BE 연동 시 통합).
+ * BE refund 도메인 실연동 — apiClient + Zod 응답 검증(refundApi). 이 파일은 BE 응답이 매핑되는 화면용 도메인 모델.
  */
 
 /** 사장 처리 기한 — 요청 후 N일 미처리 시 자동 승인(노션). FE 는 표시만, 타이머 실행 X */
@@ -20,9 +20,8 @@ export interface RefundRequestItem {
 }
 
 /**
- * 환불 요청 — 주문 요약 + 환불 상세 (mock row).
- * 실연동 시 apiClient + Zod 응답 검증으로 교체(api-client-convention).
- * 권한(본인 소유 매장만)은 BE/연동 책임 — mock 은 단일 사장 가정.
+ * 환불 요청 — 주문 요약 + 환불 상세 (BE 응답 매핑 도메인 모델).
+ * 권한(본인 소유 매장만)은 BE 책임.
  */
 export interface RefundRequest {
   /** 환불 요청 id */
