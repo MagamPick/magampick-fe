@@ -78,9 +78,14 @@ describe('addressesApi (실 BE 연동)', () => {
       expect(typeof result.id).toBe('number')
     })
 
-    it('GPS 역지오코딩 경로: roadAddress 만 전송(코드 undefined), 201 반환', async () => {
+    it('GPS 경로: roadAddress + 좌표(latitude/longitude) 전송(코드 미전송), 201 반환', async () => {
       vi.mocked(apiClient.post).mockResolvedValue({ data: { ...addressFixture, id: 3 } })
-      const input = { label: '현재위치', roadAddress: '서울 마포구 양화로 45' }
+      const input = {
+        label: '현재위치',
+        roadAddress: '서울 마포구 양화로 45',
+        latitude: 37.5571,
+        longitude: 126.925,
+      }
       await addressesApi.create(input)
       expect(apiClient.post).toHaveBeenCalledWith('/customers/me/addresses', input)
     })
