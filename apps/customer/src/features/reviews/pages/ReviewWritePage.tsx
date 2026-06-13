@@ -70,7 +70,8 @@ export function ReviewWritePage() {
                   rating: review.rating,
                   content: review.content,
                   tags: review.tags as QuickTag[],
-                  photos: review.photos,
+                  // 기존 사진(http URL)은 existing 으로 — 수정 시 keepImageUrls 로 유지
+                  photos: review.photos.map((url) => ({ kind: 'existing' as const, url })),
                 }
               : undefined
           }

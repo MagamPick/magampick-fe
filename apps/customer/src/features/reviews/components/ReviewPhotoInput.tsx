@@ -1,33 +1,56 @@
-import { useRef } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
 import { REVIEW_PHOTO_MAX } from '../types'
+import type { ReviewPhoto } from '../types'
 
 interface Props {
-  /** dataURL 배열 (mock — 실연동 시 업로드 URL) */
-  value: string[]
-  onChange: (photos: string[]) => void
+  /** 기존 URL + 새 File 혼합 (ReviewPhoto) */
+  value: ReviewPhoto[]
+  onChange: (photos: ReviewPhoto[]) => void
 }
 
-/** 사진 첨부 — 최대 3장, File→dataURL 변환(mock). 프로토타입 52-review-write(rw-photo-grid) */
+/**
+ * 사진 첨부 — 최대 3장. 새 사진은 File 그대로 보유(업로드는 multipart, BE 가 OCI 처리).
+ * 미리보기: 기존 사진은 http URL, 새 File 은 objectURL — useMemo 로 파생 + cleanup effect 로 revoke
+ * (dataURL/FileReader 폐기, React Compiler 호환). 프로토타입 52-review-write(rw-photo-grid).
+ */
 export function ReviewPhotoInput({ value, onChange }: Props) {
   const inputRef = useRef<HTMLInputElement>(null)
   const canAdd = value.length < REVIEW_PHOTO_MAX
 
-  async function handleFiles(files: FileList | null) {
+  // 미리보기 src — 새 File 만 objectURL 생성(revoke 대상), 기존 사진은 url 그대로
+  const previews = useMemo(
+    () =>
+      value.map((photo) =>
+        photo.kind === 'new'
+          ? { src: URL.createObjectURL(photo.file), revoke: true }
+          : { src: photo.url, revoke: false },
+      ),
+    [value],
+  )
+  useEffect(() => {
+    return () => {
+      for (const pv of previews) {
+        if (pv.revoke) URL.revokeObjectURL(pv.src)
+      }
+    }
+  }, [previews])
+
+  function handleFiles(files: FileList | null) {
     if (!files || files.length === 0) return
     const room = REVIEW_PHOTO_MAX - value.length
     const picked = Array.from(files).slice(0, room)
-    const dataUrls = await Promise.all(picked.map(readAsDataUrl))
-    onChange([...value, ...dataUrls])
+    const next: ReviewPhoto[] = picked.map((file) => ({ kind: 'new', file }))
+    onChange([...value, ...next])
   }
 
   return (
     <div className="flex flex-wrap gap-2">
-      {value.map((src, i) => (
+      {previews.map((pv, i) => (
         <div
           key={i}
           className="relative size-[72px] overflow-hidden rounded-xl border border-border"
         >
-          <img src={src} alt={`첨부 사진 ${i + 1}`} className="size-full object-cover" />
+          <img src={pv.src} alt={`첨부 사진 ${i + 1}`} className="size-full object-cover" />
           <button
             type="button"
             aria-label={`사진 ${i + 1} 삭제`}
@@ -57,19 +80,10 @@ export function ReviewPhotoInput({ value, onChange }: Props) {
         multiple
         hidden
         onChange={(e) => {
-          void handleFiles(e.target.files)
+          handleFiles(e.target.files)
           e.target.value = ''
         }}
       />
     </div>
   )
-}
-
-function readAsDataUrl(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader()
-    reader.onload = () => resolve(reader.result as string)
-    reader.onerror = reject
-    reader.readAsDataURL(file)
-  })
 }

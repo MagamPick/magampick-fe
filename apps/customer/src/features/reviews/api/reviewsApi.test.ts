@@ -104,10 +104,24 @@ describe('reviewsApi.getReviewByOrder', () => {
   })
 })
 
+// ─── multipart 헬퍼 ───────────────────────────────────────────────────────────
+
+/** mock 호출 인자 [url, FormData, config] 에서 request JSON 파트와 photos File 파트를 추출 */
+async function readMultipart(call: unknown[]) {
+  const form = call[1] as FormData
+  const request = JSON.parse(await (form.get('request') as Blob).text())
+  const photos = form.getAll('photos') as File[]
+  const config = call[2] as { headers?: Record<string, string> }
+  return { form, request, photos, config }
+}
+
+const fileA = new File(['a'], 'a.png', { type: 'image/png' })
+const fileB = new File(['b'], 'b.png', { type: 'image/png' })
+
 describe('reviewsApi.createReview', () => {
   beforeEach(() => vi.clearAllMocks())
 
-  it('POST /orders/:orderId/reviews 를 호출하고 태그를 enum 코드로 변환한다', async () => {
+  it('multipart 로 POST 하고 request 파트에 별점·후기·태그(enum 코드)를 담는다', async () => {
     mockedPost.mockResolvedValueOnce({ data: beReview })
     const result = await reviewsApi.createReview({
       orderId: '42',
@@ -116,20 +130,40 @@ describe('reviewsApi.createReview', () => {
       tags: ['맛있어요', '재구매'],
       photos: [],
     })
-    expect(mockedPost).toHaveBeenCalledWith('/orders/42/reviews', {
-      rating: 5,
-      content: '맛있어요!',
-      tags: ['DELICIOUS', 'REORDER'], // 한국어 → enum 코드
-      photos: [],
-    })
+
+    const [url] = mockedPost.mock.calls[0]
+    expect(url).toBe('/orders/42/reviews')
+    const { request, photos, config } = await readMultipart(mockedPost.mock.calls[0])
+    expect(config.headers).toEqual({ 'Content-Type': 'multipart/form-data' })
+    expect(request).toEqual({ rating: 5, content: '맛있어요!', tags: ['DELICIOUS', 'REORDER'] })
+    expect(photos).toHaveLength(0) // 새 사진 없음
     expect(result.id).toBe('1')
     expect(result.storeName).toBe('브레드샵')
+  })
+
+  it('새로 고른 File 은 photos 파트로 전송', async () => {
+    mockedPost.mockResolvedValueOnce({ data: beReview })
+    await reviewsApi.createReview({
+      orderId: '42',
+      rating: 5,
+      content: '',
+      tags: [],
+      photos: [
+        { kind: 'new', file: fileA },
+        { kind: 'new', file: fileB },
+      ],
+    })
+    const { photos } = await readMultipart(mockedPost.mock.calls[0])
+    expect(photos).toHaveLength(2)
+    expect(photos[0].name).toBe('a.png')
+    expect(photos[1].name).toBe('b.png')
   })
 
   it('content 는 trim 해서 전송', async () => {
     mockedPost.mockResolvedValueOnce({ data: beReview })
     await reviewsApi.createReview({ orderId: '42', rating: 4, content: '  후기  ', tags: [], photos: [] })
-    expect(mockedPost).toHaveBeenCalledWith('/orders/42/reviews', expect.objectContaining({ content: '후기' }))
+    const { request } = await readMultipart(mockedPost.mock.calls[0])
+    expect(request.content).toBe('후기')
   })
 
   it('알 수 없는 태그 라벨은 필터', async () => {
@@ -141,9 +175,8 @@ describe('reviewsApi.createReview', () => {
       tags: ['맛있어요', '존재안함'],
       photos: [],
     })
-    expect(mockedPost).toHaveBeenCalledWith('/orders/42/reviews', expect.objectContaining({
-      tags: ['DELICIOUS'],
-    }))
+    const { request } = await readMultipart(mockedPost.mock.calls[0])
+    expect(request.tags).toEqual(['DELICIOUS'])
   })
 
   it('응답 MyReviewResponse 스키마 불일치 시 Zod 에러', async () => {
@@ -157,21 +190,44 @@ describe('reviewsApi.createReview', () => {
 describe('reviewsApi.updateReview', () => {
   beforeEach(() => vi.clearAllMocks())
 
-  it('PUT /reviews/:reviewId 를 호출하고 태그를 enum 코드로 변환한다', async () => {
+  it('multipart 로 PUT 하고 기존 URL 은 keepImageUrls·새 File 은 photos 파트로 분리한다', async () => {
     mockedPut.mockResolvedValueOnce({ data: beReview })
     const result = await reviewsApi.updateReview('1', {
       rating: 4,
       content: '수정된 후기',
       tags: ['신선해요', '친절해요'],
-      photos: [],
+      photos: [
+        { kind: 'existing', url: 'https://cdn.example.com/old1.jpg' },
+        { kind: 'new', file: fileA },
+      ],
     })
-    expect(mockedPut).toHaveBeenCalledWith('/reviews/1', {
+
+    const [url] = mockedPut.mock.calls[0]
+    expect(url).toBe('/reviews/1')
+    const { request, photos, config } = await readMultipart(mockedPut.mock.calls[0])
+    expect(config.headers).toEqual({ 'Content-Type': 'multipart/form-data' })
+    expect(request).toEqual({
       rating: 4,
       content: '수정된 후기',
       tags: ['FRESH', 'KIND'],
-      photos: [],
+      keepImageUrls: ['https://cdn.example.com/old1.jpg'], // 기존 사진만
     })
+    expect(photos).toHaveLength(1) // 새 File 만
+    expect(photos[0].name).toBe('a.png')
     expect(result.id).toBe('1')
+  })
+
+  it('새 사진이 없으면 photos 파트는 비고 keepImageUrls 만 전송', async () => {
+    mockedPut.mockResolvedValueOnce({ data: beReview })
+    await reviewsApi.updateReview('1', {
+      rating: 5,
+      content: '',
+      tags: [],
+      photos: [{ kind: 'existing', url: 'https://cdn.example.com/old1.jpg' }],
+    })
+    const { request, photos } = await readMultipart(mockedPut.mock.calls[0])
+    expect(request.keepImageUrls).toEqual(['https://cdn.example.com/old1.jpg'])
+    expect(photos).toHaveLength(0)
   })
 
   it('409 (답글잠금) 은 apiClient interceptor 가 ApiError 로 throw', async () => {
