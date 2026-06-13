@@ -3,6 +3,7 @@ import { ShoppingBag, RotateCcw, MessageSquare, Wallet, Megaphone, Bell } from '
 import { cn } from '@/shared/lib/utils'
 import { formatRelativeTime } from '../lib/formatRelativeTime'
 import { useMarkNotificationRead } from '../hooks/useMarkNotificationRead'
+import { resolveNotificationLink } from '../lib/resolveNotificationLink'
 import type { Notification } from '../types'
 
 /**
@@ -37,7 +38,8 @@ export function NotificationRow({ notification }: { notification: Notification }
 
   const handleClick = () => {
     if (!notification.read) markRead.mutate(notification.id)
-    if (notification.link) navigate(notification.link)
+    const route = resolveNotificationLink(notification)
+    if (route) navigate(route)
   }
 
   return (

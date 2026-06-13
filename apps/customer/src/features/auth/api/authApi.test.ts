@@ -7,6 +7,7 @@ import { PASSWORD_RESET_ERROR, PASSWORD_CHANGE_ERROR } from '../types'
 vi.mock('@/shared/lib/axios', () => ({
   apiClient: {
     post: vi.fn(),
+    patch: vi.fn(),
   },
 }))
 
@@ -98,25 +99,32 @@ describe('authApi 비밀번호 재설정 (실연동)', () => {
 })
 
 /**
- * 비밀번호 변경 (로그인 상태) mock — 현재 비번 검증 + 새 비번 정책.
- * 성공 시 현재 기기 세션 유지(자동 로그아웃 X — 노션 「비밀번호 변경」 명세).
+ * 비밀번호 변경 (로그인 상태) 실연동 — PATCH /auth/me/password.
+ * 현재 비번 검증·정책 판정은 BE 권위. 현재 기기 세션 유지(자동 로그아웃 X — 노션 「비밀번호 변경」 명세).
  */
-describe('authApi 비밀번호 변경 (mock)', () => {
-  it('현재 비번이 맞고 새 비번이 정책을 충족하면 성공한다', async () => {
+describe('authApi 비밀번호 변경 (실연동)', () => {
+  beforeEach(() => vi.clearAllMocks())
+
+  it('PATCH /auth/me/password 를 호출하고 void 를 반환한다', async () => {
+    vi.mocked(apiClient.patch).mockResolvedValue({ data: undefined })
+
     await expect(
       authApi.changePassword({ currentPassword: 'Magampick1!', newPassword: 'abcd1234!' }),
     ).resolves.toBeUndefined()
+
+    expect(apiClient.patch).toHaveBeenCalledWith('/auth/me/password', {
+      currentPassword: 'Magampick1!',
+      newPassword: 'abcd1234!',
+    })
   })
 
-  it('현재 비번이 틀리면 CURRENT_PASSWORD_MISMATCH', async () => {
+  it('BE 가 CURRENT_PASSWORD_MISMATCH 를 반환하면 ApiError 를 전파한다', async () => {
+    vi.mocked(apiClient.patch).mockRejectedValue(
+      new ApiError(400, PASSWORD_CHANGE_ERROR.CURRENT_PASSWORD_MISMATCH, '현재 비밀번호가 일치하지 않습니다'),
+    )
+
     await expect(
       authApi.changePassword({ currentPassword: 'wrongpass1!', newPassword: 'abcd1234!' }),
     ).rejects.toMatchObject({ code: PASSWORD_CHANGE_ERROR.CURRENT_PASSWORD_MISMATCH })
-  })
-
-  it('새 비번이 정책 미충족이면 PASSWORD_POLICY_VIOLATION', async () => {
-    await expect(
-      authApi.changePassword({ currentPassword: 'Magampick1!', newPassword: 'weak' }),
-    ).rejects.toMatchObject({ code: PASSWORD_CHANGE_ERROR.PASSWORD_POLICY_VIOLATION })
   })
 })

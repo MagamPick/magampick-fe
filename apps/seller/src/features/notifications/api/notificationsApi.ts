@@ -18,7 +18,8 @@ const notificationResponseSchema = z.object({
   body: z.string().optional(),
   createdAt: z.string().optional(),
   read: z.boolean().optional(),
-  link: z.string().optional(),
+  // BE 가 link 를 null 로 내려줄 수 있어 nullish 로 수용 — B3-3
+  link: z.string().nullish(),
 })
 
 /** BE NotificationListResponse */
