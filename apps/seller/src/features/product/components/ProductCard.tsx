@@ -5,13 +5,13 @@ import type { ProductSaleStatus } from '../types'
 /**
  * 일반 상품(product) 카드 — 프레젠테이션 컴포넌트 (프로토타입 product-card).
  * 상품 목록에서 사용. 조회/동작은 각 기능 PR(노션 명세)에서.
- * - `imageUrl`: 대표 사진(mock dataURL). 없으면 `thumbnail` 이모지 폴백.
+ * - `imageUrl`: 대표 사진 URL(OCI). 없으면 `thumbnail` 이모지 폴백.
  * - `status`: 일반 상품은 onSale/offSale (수량 없음), soldOut 은 떨이(수량 소진) 컨텍스트용.
  * - `showCategory`: 평면 리스트는 표시, 카테고리 그룹 뷰(홈)에선 false 로 숨김.
  */
 export interface ProductCardProps {
   name: string
-  /** mock 썸네일 이모지 (사진 없을 때 폴백) */
+  /** 썸네일 이모지 (사진 없을 때 폴백) */
   thumbnail?: string
   /** 대표 사진 URL — 있으면 이모지 대신 표시 */
   imageUrl?: string

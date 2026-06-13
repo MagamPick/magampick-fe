@@ -64,9 +64,9 @@ describe('useCreateStore', () => {
     await waitFor(() => expect(result.current.isError).toBe(true))
   })
 
-  it('ADDRESS_GEOCODING_FAILED 에러 시 isError 가 true', async () => {
+  it('GEOCODING_FAILED 에러 시 isError 가 true', async () => {
     vi.mocked(storeApi.createStore).mockRejectedValue(
-      new ApiError(400, 'ADDRESS_GEOCODING_FAILED', '주소 지오코딩에 실패했습니다'),
+      new ApiError(400, 'GEOCODING_FAILED', '주소 지오코딩에 실패했습니다'),
     )
     const { wrapper } = setup()
     const { result } = renderHook(() => useCreateStore(), { wrapper })

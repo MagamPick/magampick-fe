@@ -29,17 +29,7 @@ export const closingDealSchema = z.object({
 })
 export type ClosingDeal = z.infer<typeof closingDealSchema>
 
-/** ② 단골 가게 — 매장 단위 카드 */
-export const favoriteStoreSchema = z.object({
-  id: z.string(),
-  name: z.string(),
-  imageUrl: z.string().nullable(),
-  /** 직선거리(km) */
-  distanceKm: z.number(),
-  /** 진행 중 마감 할인 개수 (0이면 카드에 배지 생략) */
-  activeDealCount: z.number(),
-})
-export type FavoriteStore = z.infer<typeof favoriteStoreSchema>
+// ② 단골 가게 — 매장 단위 카드. 타입은 favorites 도메인 canonical(id: number) 을 재사용한다(@/features/favorites/types).
 
 /** ③ 우리 동네 마감픽 — 매장 단위 카드(+평점). 홈은 고정 상위 N 프리뷰. */
 export const neighborhoodStoreSchema = z.object({

@@ -210,7 +210,7 @@ export const storeApi = {
    * `request` JSON 파트(StoreCreateRequest) + 선택 `image` File 파트.
    * 응답: StoreRegisterResponse { storeId, operationStatus } → StoreSummary 매핑.
    * name 은 응답에 없으므로 제출한 input.name 으로 구성.
-   * 에러코드: BUSINESS_NUMBER_FORMAT_INVALID / ADDRESS_GEOCODING_FAILED / IMAGE_UPLOAD_FAILED
+   * 에러코드: BUSINESS_NUMBER_FORMAT_INVALID / GEOCODING_FAILED / STORE_IMAGE_UPLOAD_FAILED
    */
   async createStore(input: CreateStoreInput): Promise<StoreSummary> {
     const { imageFile, ...req } = input
@@ -232,7 +232,7 @@ export const storeApi = {
 
   /**
    * GET /seller/stores/{storeId} — 매장 상세 조회 (StoreDetailResponse → StoreDetail).
-   * 수정 폼 미리채움 source. 에러 시 BE 가 4xx 로 거부(STORE_NOT_OWNED 등).
+   * 수정 폼 미리채움 source. 에러 시 BE 가 4xx 로 거부(STORE_ACCESS_DENIED 등).
    */
   async getStore(storeId: number): Promise<StoreDetail> {
     const res = await apiClient.get(`/seller/stores/${storeId}`)
@@ -243,7 +243,7 @@ export const storeApi = {
    * PATCH /seller/stores/{storeId} — 매장 정보 수정 (multipart/form-data, 부분 수정).
    * `request` JSON 파트(StoreUpdateRequest — 변경 필드만) + 선택 `image` File 파트.
    * 주소 필드(road+코드들)는 호출 측이 변경 시에만 포함 → 미포함 시 지오코딩 재호출 없음.
-   * 에러코드: STORE_NOT_OWNED / ADDRESS_GEOCODING_FAILED / IMAGE_UPLOAD_FAILED
+   * 에러코드: STORE_ACCESS_DENIED / GEOCODING_FAILED / STORE_IMAGE_UPLOAD_FAILED
    */
   async updateStore(input: UpdateStoreInput): Promise<StoreDetail> {
     const { storeId, imageFile, ...req } = input
