@@ -38,7 +38,8 @@ const operationStatusResponseSchema = z.object({
   storeId: z.number(),
   operationStatus: operationStatusSchema,
   canOpenToday: z.boolean(),
-  todayCloseTime: z.string().optional(),
+  // BE 가 todayCloseTime 을 null 로 내려줄 수 있어 nullish 로 수용 (새 매장·휴무 요일 — A1-1)
+  todayCloseTime: z.string().nullish(),
 })
 
 /** BusinessHourPayload (L776) — 요일·시각 1행 */

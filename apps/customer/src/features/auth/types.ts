@@ -26,7 +26,8 @@ export const termsSchema = z.array(termSchema)
 export type SignupTerm = z.infer<typeof termSchema>
 
 export const signupAddressSchema = z.object({
-  label: z.string().min(1, '주소 라벨이 필요합니다'),
+  // 별칭 상한 20자 — addresses/types.ts aliasSchema 와 동일 기준 (B1-2)
+  label: z.string().min(1, '주소 라벨이 필요합니다').max(20, '별칭은 20자 이하여야 합니다'),
   roadAddress: z.string().min(1, '도로명 주소를 선택해주세요'),
   jibunAddress: z.string().optional(),
   detailAddress: z.string().optional(),

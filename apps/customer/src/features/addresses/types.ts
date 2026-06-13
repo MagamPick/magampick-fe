@@ -23,14 +23,11 @@ export const ADDRESS_ERROR = {
   NOT_FOUND: 'ADDRESS_NOT_FOUND',
 } as const
 
-/**
- * 별칭 1~10자.
- * 노션 AC 는 1~20자이나 FE 는 더 엄격한 10자 상한 적용 (별도 이슈로 조정 예정).
- */
+/** 별칭 1~20자 (노션 AC·BE 확정값 20, B1-2) */
 export const aliasSchema = z
   .string()
   .min(1, '별칭을 입력해주세요')
-  .max(10, '별칭은 10자 이하여야 합니다')
+  .max(20, '별칭은 20자 이하여야 합니다')
 
 /** BE AddressResponse Zod 파싱 스키마 (id: number, detailAddress optional) */
 export const addressResponseSchema = z.object({
