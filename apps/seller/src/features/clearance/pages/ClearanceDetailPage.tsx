@@ -96,7 +96,7 @@ export function ClearanceDetailPage() {
     update.mutate(
       {
         salePrice: saleNum,
-        totalQuantity: clearance.soldQty + Number(v.remainingQty),
+        remainingQuantity: Number(v.remainingQty),
         closeTime: v.closeTime,
       },
       {
@@ -259,7 +259,7 @@ export function ClearanceDetailPage() {
                   </div>
                 </div>
                 <p className="-mt-2 mb-4 text-[12px] text-muted-foreground">
-                  남은 수량을 0으로 저장하면 품절로 마감돼요. 등록 수량 = 판매 + 남은 수량.
+                  등록 수량 = 판매 + 남은 수량이에요. 다 팔렸으면 아래 ‘마감 할인 조기 마감’으로 마감해 주세요.
                 </p>
 
                 <FormField

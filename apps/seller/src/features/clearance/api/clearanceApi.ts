@@ -117,7 +117,7 @@ export const clearanceApi = {
 
   /**
    * PATCH /seller/stores/{storeId}/clearance-items/{clearanceItemId} — JSON.
-   * null 필드는 변경 없음(BE spec). closeTime → pickupEndAt 변환.
+   * null 필드는 변경 없음(BE spec). remainingQuantity = 새 남은 수량(BE 가 sold 보존). closeTime → pickupEndAt 변환.
    * 409 OPEN 상태가 아님: apiClient interceptor 처리.
    */
   async updateClearance(
@@ -127,7 +127,7 @@ export const clearanceApi = {
   ): Promise<ClearanceView> {
     const body: Record<string, unknown> = {}
     if (payload.salePrice !== undefined) body.salePrice = payload.salePrice
-    if (payload.totalQuantity !== undefined) body.totalQuantity = payload.totalQuantity
+    if (payload.remainingQuantity !== undefined) body.remainingQuantity = payload.remainingQuantity
     if (payload.closeTime !== undefined) body.pickupEndAt = toPickupEndAt(payload.closeTime)
     const res = await apiClient.patch(`/seller/stores/${storeId}/clearance-items/${id}`, body)
     return toClearanceView(clearanceItemResponseSchema.parse(res.data))
