@@ -27,6 +27,18 @@ describe('pointApi', () => {
     expect(mockedGet).toHaveBeenCalledWith('/customers/me/points/summary')
   })
 
+  it('getSummary — pendingPoints(적립 예정) 파싱 + null/누락 허용 (BE additive·D1)', async () => {
+    // 적립 예정 합계 노출 — 환불 윈도우(3일) 종료 후 확정·사용 가능
+    mockedGet.mockResolvedValueOnce({ data: { balance: 2450, pendingPoints: 300 } })
+    expect((await pointApi.getSummary()).pendingPoints).toBe(300)
+
+    // BE 미적립 시 null 직렬화 / 구 응답 누락 — 둘 다 parse 통과 (표시단 ?? 0)
+    mockedGet.mockResolvedValueOnce({ data: { balance: 2450, pendingPoints: null } })
+    expect((await pointApi.getSummary()).pendingPoints ?? 0).toBe(0)
+    mockedGet.mockResolvedValueOnce({ data: { balance: 2450 } })
+    expect((await pointApi.getSummary()).pendingPoints ?? 0).toBe(0)
+  })
+
   it('listHistory — filter 파라미터를 BE로 전달', async () => {
     mockedGet.mockResolvedValueOnce({
       data: [txn({ reason: 'EARN', amount: 120 })],

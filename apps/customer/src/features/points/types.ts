@@ -42,9 +42,16 @@ export const pointTransactionSchema = z.object({
 })
 export type PointTransaction = z.infer<typeof pointTransactionSchema>
 
-/** 포인트 요약 — 사용 가능 잔액 (BE PointSummaryResponse) */
+/** 포인트 요약 — 사용 가능 잔액 + 적립 예정 (BE PointSummaryResponse) */
 export const pointSummarySchema = z.object({
+  /** 사용 가능 잔액 (확정·사용 가능) */
   balance: z.number(),
+  /**
+   * 적립 예정 합계 — 픽업완료 즉시가 아니라 환불 윈도우(3일) 종료 후 확정·사용 가능(D1).
+   * 그 전까지는 balance(사용 가능 잔액)에 미포함 = 아직 사용 불가.
+   * BE additive 필드 — 미적립 시 null 직렬화 / 구 응답 누락 대비 .nullish() (표시단 ?? 0).
+   */
+  pendingPoints: z.number().nullish(),
 })
 export type PointSummary = z.infer<typeof pointSummarySchema>
 

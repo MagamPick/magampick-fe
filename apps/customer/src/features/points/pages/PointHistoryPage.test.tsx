@@ -31,6 +31,16 @@ describe('PointHistoryPage', () => {
     expect(await screen.findByText('결제 적립 · 브레드샵')).toBeInTheDocument()
   })
 
+  it('적립 예정(pendingPoints)이 있으면 Hero에 함께 표시', async () => {
+    vi.mocked(pointApi.getSummary).mockResolvedValue({ balance: 2450, pendingPoints: 300 })
+    vi.mocked(pointApi.listHistory).mockResolvedValue([])
+
+    renderPage()
+
+    expect(await screen.findByText('적립 예정')).toBeInTheDocument()
+    expect(screen.getByText('+300 P')).toBeInTheDocument()
+  })
+
   it('내역이 없으면 빈 상태', async () => {
     vi.mocked(pointApi.getSummary).mockResolvedValue({ balance: 0 })
     vi.mocked(pointApi.listHistory).mockResolvedValue([])
