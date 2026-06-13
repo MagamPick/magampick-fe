@@ -21,7 +21,7 @@ export interface PrepareAndPayVars {
  * 결제창은 리다이렉트 방식이라 onSuccess 는 호출되지 않음 — 결과는 PaymentSuccessPage 에서 confirm.
  * 오류(사용자 취소·네트워크 등) 시 onError 로 전달됨.
  *
- * VITE_USE_REAL_PAYMENT=true + VITE_TOSS_CLIENT_KEY 설정 필요.
+ * VITE_TOSS_CLIENT_KEY 설정 필요 (미설정 시 결제창 호출 시점에 throw).
  */
 export function usePrepareAndPay() {
   return useMutation({

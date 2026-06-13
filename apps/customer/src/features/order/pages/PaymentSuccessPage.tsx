@@ -14,7 +14,7 @@ type ConfirmParams =
   | null
 
 /**
- * 토스 결제창 성공 리다이렉트 콜백 페이지 (VITE_USE_REAL_PAYMENT=true 경로).
+ * 토스 결제창 성공 리다이렉트 콜백 페이지.
  * URL 쿼리(paymentKey, orderId=tossOrderId, amount) + sessionStorage(orderId 숫자, amount) 복원
  * → amount 교차검증 → confirm API → 성공 시 OrderSuccessPage 로 이동.
  *
