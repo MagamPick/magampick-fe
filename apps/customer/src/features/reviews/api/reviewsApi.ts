@@ -1,7 +1,14 @@
 import { z } from 'zod'
 import { apiClient } from '@/shared/lib/axios'
 import { QUICK_TAGS, REVIEW_TAG_CODE } from '../types'
-import type { MyReview, ReviewableOrder, CreateReviewPayload, UpdateReviewPayload, QuickTag } from '../types'
+import type {
+  MyReview,
+  ReviewableOrder,
+  CreateReviewPayload,
+  UpdateReviewPayload,
+  QuickTag,
+  ReviewPhoto,
+} from '../types'
 
 // ─── BE 응답 Zod 스키마 ──────────────────────────────────────────────────────
 
@@ -95,6 +102,24 @@ function toTagCodes(labels: string[]): string[] {
     .filter((code): code is string => Boolean(code))
 }
 
+// ─── multipart 빌더 ───────────────────────────────────────────────────────────
+
+/**
+ * 리뷰 multipart FormData 조립 (X5-BE 계약).
+ * - request: 텍스트 메타(JSON Blob 파트) — rating·content·tags(+update 의 keepImageUrls)
+ * - photos: 새로 고른 File 들(File 파트). 기존 사진(http URL)은 업로드하지 않고 request 에만 남긴다.
+ */
+function buildReviewForm(request: object, photos: ReviewPhoto[]): FormData {
+  const form = new FormData()
+  form.append('request', new Blob([JSON.stringify(request)], { type: 'application/json' }))
+  for (const photo of photos) {
+    if (photo.kind === 'new') form.append('photos', photo.file)
+  }
+  return form
+}
+
+const MULTIPART_HEADERS = { headers: { 'Content-Type': 'multipart/form-data' } }
+
 // ─── API ─────────────────────────────────────────────────────────────────────
 
 export const reviewsApi = {
@@ -123,30 +148,43 @@ export const reviewsApi = {
   },
 
   /**
-   * POST /api/v1/orders/{orderId}/reviews — 리뷰 작성 (201).
+   * POST /api/v1/orders/{orderId}/reviews — 리뷰 작성 (201, multipart/form-data).
+   * 텍스트(별점·후기·태그)는 request JSON 파트, 새 사진은 photos File 파트로 전송 → BE 가 OCI 업로드.
    * tags: FE 한국어 라벨 → BE enum 코드 변환 후 전송.
    */
   async createReview(payload: CreateReviewPayload): Promise<MyReview> {
-    const { data } = await apiClient.post(`/orders/${payload.orderId}/reviews`, {
-      rating: payload.rating,
-      content: payload.content.trim(),
-      tags: toTagCodes(payload.tags),
-      photos: payload.photos,
-    })
+    const form = buildReviewForm(
+      {
+        rating: payload.rating,
+        content: payload.content.trim(),
+        tags: toTagCodes(payload.tags),
+      },
+      payload.photos,
+    )
+    const { data } = await apiClient.post(`/orders/${payload.orderId}/reviews`, form, MULTIPART_HEADERS)
     return mapToMyReview(myReviewResponseSchema.parse(data))
   },
 
   /**
-   * PUT /api/v1/reviews/{reviewId} — 리뷰 수정 (200 / 409=답글잠금).
+   * PUT /api/v1/reviews/{reviewId} — 리뷰 수정 (200 / 409=답글잠금, multipart/form-data).
+   * 유지할 기존 사진(http URL)은 request.keepImageUrls 로, 새 사진은 photos File 파트로 분리 전송.
+   * 최종 사진 = keepImageUrls + 새 업로드 URL (BE 가 현재 리뷰에 없는 keepUrl 은 무시).
    * tags: FE 한국어 라벨 → BE enum 코드 변환 후 전송.
    */
   async updateReview(reviewId: string, payload: UpdateReviewPayload): Promise<MyReview> {
-    const { data } = await apiClient.put(`/reviews/${reviewId}`, {
-      rating: payload.rating,
-      content: payload.content.trim(),
-      tags: toTagCodes(payload.tags),
-      photos: payload.photos,
-    })
+    const keepImageUrls = payload.photos
+      .filter((photo): photo is Extract<ReviewPhoto, { kind: 'existing' }> => photo.kind === 'existing')
+      .map((photo) => photo.url)
+    const form = buildReviewForm(
+      {
+        rating: payload.rating,
+        content: payload.content.trim(),
+        tags: toTagCodes(payload.tags),
+        keepImageUrls,
+      },
+      payload.photos,
+    )
+    const { data } = await apiClient.put(`/reviews/${reviewId}`, form, MULTIPART_HEADERS)
     return mapToMyReview(myReviewResponseSchema.parse(data))
   },
 
