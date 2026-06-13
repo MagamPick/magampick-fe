@@ -4,9 +4,11 @@ import { ROUTES } from '@/shared/lib/routes'
 import { ScreenContainer } from '@/shared/components/ScreenContainer'
 import { useGeolocation } from '@/shared/hooks/useGeolocation'
 import { useAddresses } from '@/features/addresses/hooks/useAddresses'
+import { formatDistance } from '@/shared/lib/formatDistance'
 import { storeDetailParamsSchema } from '../types'
 import { useStoreDetail } from '../hooks/useStoreDetail'
 import { walkAndDistanceLabel } from '../lib/walkTime'
+import { haversineKm } from '../lib/geoDistance'
 import { StoreLocationMap } from '../components/StoreLocationMap'
 
 /**
@@ -28,6 +30,12 @@ export function StoreLocationPage() {
   )
 
   if (!parsed.success) return <Navigate to={ROUTES.HOME} replace />
+
+  // 이 화면은 GPS 컨텍스트(내 위치 파란 점·점선)라 카드 거리/도보도 지도 점선과 같은 기준점(내 위치↔매장)으로 산출.
+  // BE store.distanceKm 는 기본 주소지 기준이라 GPS≠주소지면 점선과 어긋남 → GPS 기준으로 통일 (A3-6).
+  const gpsDistanceKm = store
+    ? haversineKm(position, { latitude: store.lat, longitude: store.lng })
+    : null
 
   return (
     <ScreenContainer variant="bleed" className="flex flex-col">
@@ -54,10 +62,10 @@ export function StoreLocationPage() {
         <div className="rounded-[16px] border border-border bg-card p-4 shadow-[0_4px_12px_rgb(15_15_15/0.06)]">
           <div className="text-base font-extrabold tracking-[-0.3px]">{store?.name ?? '매장'}</div>
           <div className="mt-1.5 text-[13px] font-semibold text-muted-foreground">
-            ★ {store?.rating ?? '-'} · {store?.distanceKm ?? '-'}km
+            ★ {store?.rating ?? '-'} · {gpsDistanceKm != null ? formatDistance(gpsDistanceKm) : '-'}
           </div>
           <div className="mt-2 text-[13px] font-bold text-secondary-foreground">
-            🚶 {store ? walkAndDistanceLabel(store.distanceKm) : '도보 정보 계산 중…'}
+            🚶 {gpsDistanceKm != null ? walkAndDistanceLabel(gpsDistanceKm) : '도보 정보 계산 중…'}
           </div>
         </div>
       </div>
