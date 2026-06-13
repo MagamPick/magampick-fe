@@ -89,13 +89,13 @@ export interface CreateClearancePayload {
 
 /**
  * 떨이 수정 페이로드 — 활성 떨이의 변경 필드만 (노션: 떨이 상품 수정).
- * totalQuantity = soldQty + remainingQty (ClearanceDetailPage 에서 계산 후 전달).
+ * remainingQuantity = 새 남은 수량(그대로 전송). BE 가 sold 를 보존하고 total=sold+remaining 으로 갱신(X2-BE PR#147).
  * closeTime 은 "HH:MM" — API 에서 ISO pickupEndAt 으로 변환.
  */
 export interface UpdateClearancePayload {
   salePrice?: number
-  /** 등록 수량 = soldQty + remainingQty (페이지에서 계산 후 전달) */
-  totalQuantity?: number
+  /** 새 남은 수량 — 그대로 전송 (BE 가 sold 보존). 마감은 별도 '조기 마감'으로 */
+  remainingQuantity?: number
   /** "HH:MM" — API 에서 ISO pickupEndAt 으로 변환 */
   closeTime?: string
 }
@@ -103,7 +103,11 @@ export interface UpdateClearancePayload {
 /** 떨이 수정 폼 검증 — 상세 화면 입력(문자열). salePrice < 정상가 는 화면/ API 에서 별도 검증 */
 export const updateClearanceInputSchema = z.object({
   salePrice: z.string().regex(/^\d+$/, '0 이상의 정수로 입력해 주세요'),
-  remainingQty: z.string().regex(/^\d+$/, '0 이상의 정수로 입력해 주세요'),
+  // 남은 수량 0 은 마감이 아님 — 마감은 '조기 마감' 버튼으로. 수정은 1 이상만 허용.
+  remainingQty: z
+    .string()
+    .regex(/^\d+$/, '1 이상의 정수로 입력해 주세요')
+    .refine((v) => Number(v) >= 1, '1개 이상이어야 해요'),
   closeTime: clearanceTimeSchema,
 })
 export type UpdateClearanceInput = z.infer<typeof updateClearanceInputSchema>

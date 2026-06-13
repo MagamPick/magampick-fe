@@ -29,10 +29,10 @@ describe('useUpdateClearance', () => {
     const invalidate = vi.spyOn(queryClient, 'invalidateQueries')
     const { result } = renderHook(() => useUpdateClearance(1, 1), { wrapper })
 
-    result.current.mutate({ totalQuantity: 13 })
+    result.current.mutate({ remainingQuantity: 5 })
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true))
-    expect(clearanceApi.updateClearance).toHaveBeenCalledWith(1, 1, { totalQuantity: 13 })
+    expect(clearanceApi.updateClearance).toHaveBeenCalledWith(1, 1, { remainingQuantity: 5 })
     expect(invalidate).toHaveBeenCalledWith({ queryKey: clearanceKeys.detail(1) })
     expect(invalidate).toHaveBeenCalledWith({ queryKey: clearanceKeys.list(1) })
     expect(invalidate).toHaveBeenCalledWith({ queryKey: productKeys.list(1) })

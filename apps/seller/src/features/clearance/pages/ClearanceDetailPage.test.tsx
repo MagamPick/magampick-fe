@@ -126,4 +126,38 @@ describe('ClearanceDetailPage', () => {
     setup({ ...active, status: 'CLOSED' })
     expect(screen.getByText(/마감된 마감 할인이에요/)).toBeInTheDocument()
   })
+
+  it('남은 수량을 수정하고 변경 저장하면 새 남은 수량(remainingQuantity)을 그대로 전송한다', async () => {
+    // sold=8, remaining=12 인 떨이의 남은 수량을 5 로 줄임 → sold 를 더하지 않고 5 를 그대로 보낸다.
+    const user = userEvent.setup()
+    setup(active)
+
+    const remainingInput = await screen.findByDisplayValue('12')
+    await user.clear(remainingInput)
+    await user.type(remainingInput, '5')
+
+    await user.click(screen.getByRole('button', { name: '변경 저장' }))
+
+    expect(updateMutate).toHaveBeenCalledWith(
+      { salePrice: 2400, remainingQuantity: 5, closeTime: '21:00' },
+      expect.anything(),
+    )
+  })
+
+  it('남은 수량을 0 으로 입력하면 변경 저장이 막힌다 (≥1)', async () => {
+    const user = userEvent.setup()
+    setup(active)
+
+    const remainingInput = await screen.findByDisplayValue('12')
+    await user.clear(remainingInput)
+    await user.type(remainingInput, '0')
+
+    expect(screen.getByRole('button', { name: '변경 저장' })).toBeDisabled()
+  })
+
+  it('"0 저장=품절" 문구는 없고 조기 마감으로 마감하라는 안내를 보여준다', () => {
+    setup(active)
+    expect(screen.queryByText(/0으로 저장하면 품절/)).not.toBeInTheDocument()
+    expect(screen.getByText(/다 팔렸으면.*마감해 주세요/)).toBeInTheDocument()
+  })
 })

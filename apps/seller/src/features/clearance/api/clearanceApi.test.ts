@@ -115,15 +115,16 @@ describe('clearanceApi', () => {
   })
 
   describe('updateClearance', () => {
-    it('totalQuantity/salePrice/pickupEndAt 을 PATCH 로 수정하고 갱신된 뷰를 반환한다', async () => {
+    it('remainingQuantity/salePrice/pickupEndAt 을 PATCH 로 수정하고 갱신된 뷰를 반환한다', async () => {
+      // BE 는 새 남은 수량(remainingQuantity)을 직접 받아 sold 를 보존한다(X2-BE PR#147).
       const updated = { ...mockItem, totalQuantity: 13, remainingQuantity: 5 }
       vi.mocked(apiClient.patch).mockResolvedValue({ data: updated })
 
-      const result = await clearanceApi.updateClearance(1, 1, { totalQuantity: 13 })
+      const result = await clearanceApi.updateClearance(1, 1, { remainingQuantity: 5 })
 
       expect(apiClient.patch).toHaveBeenCalledWith(
         '/seller/stores/1/clearance-items/1',
-        { totalQuantity: 13 },
+        { remainingQuantity: 5 },
       )
       expect(result).toMatchObject({ totalQty: 13, remainingQty: 5 })
     })
