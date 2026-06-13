@@ -180,7 +180,7 @@ export const router = createBrowserRouter([
       </ProtectedRoute>
     ),
   },
-  // 토스 결제창 리다이렉트 콜백 — 실 결제 연동 (VITE_USE_REAL_PAYMENT=true) 시 사용
+  // 토스 결제창 리다이렉트 콜백 (prepare→토스 결제창→confirm 경로)
   {
     path: ROUTES.PAYMENT_SUCCESS,
     element: (

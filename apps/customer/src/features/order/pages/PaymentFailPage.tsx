@@ -6,7 +6,7 @@ import { ROUTES } from '@/shared/lib/routes'
 import { clearPaymentSession } from '../lib/paymentSession'
 
 /**
- * 토스 결제창 실패/취소 리다이렉트 콜백 페이지 (VITE_USE_REAL_PAYMENT=true 경로).
+ * 토스 결제창 실패/취소 리다이렉트 콜백 페이지.
  * URL 쿼리: code=ERROR_CODE, message=ERROR_MESSAGE, orderId=tossOrderId
  * 코드·메시지를 표시하고 결제 화면으로 돌아가는 버튼 제공.
  */

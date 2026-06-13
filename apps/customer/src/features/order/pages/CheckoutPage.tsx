@@ -17,7 +17,6 @@ import { PayAgreement } from '../components/PayAgreement'
 import { CheckoutSummary } from '../components/CheckoutSummary'
 import { BenefitSection } from '../components/BenefitSection'
 import { CouponPickerSheet } from '../components/CouponPickerSheet'
-import { useCreateOrder } from '../hooks/useCreateOrder'
 import { usePrepareAndPay } from '../hooks/usePrepareAndPay'
 
 const won = (n: number) => `${n.toLocaleString('ko-KR')}원`
@@ -37,10 +36,7 @@ export function CheckoutPage() {
   const [selectedCouponId, setSelectedCouponId] = useState<number | null>(null)
   const [pointInput, setPointInput] = useState(0)
   const [couponSheetOpen, setCouponSheetOpen] = useState(false)
-  const createOrder = useCreateOrder()
   const prepareAndPay = usePrepareAndPay()
-  // 플래그 게이트 — 기본은 stub 경로. 'true' 일 때만 실 결제창 흐름 (prepare→confirm)
-  const isRealPayment = import.meta.env.VITE_USE_REAL_PAYMENT === 'true'
 
   const { data: pointSummary } = usePointSummary()
   const { data: coupons } = useCoupons()
@@ -81,15 +77,10 @@ export function CheckoutPage() {
 
   const handlePay = () => {
     if (!agreed) return
-    if (isRealPayment) {
-      // 실 결제 경로: prepare(AWAITING_PAYMENT) → stash → 토스 결제창(리다이렉트)
-      if (prepareAndPay.isPending) return
-      prepareAndPay.mutate(orderPayload)
-    } else {
-      // stub 경로 (기본): requestTossPayment(mock) → orderApi.create(mock) → 완료화면
-      if (createOrder.isPending) return
-      createOrder.mutate(orderPayload)
-    }
+    // 실 결제 경로: prepare(AWAITING_PAYMENT) → stash → 토스 결제창(리다이렉트)
+    // → 리다이렉트 콜백(PaymentSuccessPage)에서 confirm 후 완료화면.
+    if (prepareAndPay.isPending) return
+    prepareAndPay.mutate(orderPayload)
   }
 
   return (
@@ -159,16 +150,11 @@ export function CheckoutPage() {
       <div className="fixed bottom-0 left-1/2 z-40 w-full max-w-md -translate-x-1/2 border-t border-border bg-card px-5 pb-[calc(12px+env(safe-area-inset-bottom,24px))] pt-3">
         <Button
           type="button"
-          disabled={
-            !agreed ||
-            (isRealPayment ? prepareAndPay.isPending : createOrder.isPending)
-          }
+          disabled={!agreed || prepareAndPay.isPending}
           onClick={handlePay}
           className="h-[54px] w-full rounded-[12px] text-base font-bold"
         >
-          {(isRealPayment ? prepareAndPay.isPending : createOrder.isPending)
-            ? '결제 중…'
-            : `${won(amounts.payTotal)} 결제하기`}
+          {prepareAndPay.isPending ? '결제 중…' : `${won(amounts.payTotal)} 결제하기`}
         </Button>
       </div>
 

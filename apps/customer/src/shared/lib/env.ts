@@ -15,11 +15,9 @@ const envSchema = z.object({
   VITE_FIREBASE_MESSAGING_SENDER_ID: z.string().optional(),
   VITE_FIREBASE_APP_ID: z.string().optional(),
   VITE_FIREBASE_VAPID_KEY: z.string().optional(),
-  // 토스페이먼츠 API 개별 연동 클라이언트 키 (test_ck_* 형식). 미설정 시 결제 stub 모드 유지.
+  // 토스페이먼츠 API 개별 연동 클라이언트 키 (test_ck_* 형식). 결제창 흐름(prepare→토스→confirm)에 필수 —
+  // 미설정 시 결제 시도 시 requestTossPaymentSdk 가 throw (order/lib/tossPaymentSdk).
   VITE_TOSS_CLIENT_KEY: z.string().optional(),
-  // 'true' 로 설정하면 실 prepare/confirm 결제창 흐름 활성화. 비워두면 stub 경로(기본).
-  // ⚠️ 상품/매장/카트 실연동 완료 후에만 'true' 로 켜야 함(상류 mock → storeId·refId NaN).
-  VITE_USE_REAL_PAYMENT: z.string().optional(),
 })
 
 export const env = envSchema.parse(import.meta.env)
