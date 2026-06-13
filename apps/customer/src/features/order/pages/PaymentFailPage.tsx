@@ -3,6 +3,7 @@ import { XCircle } from 'lucide-react'
 import { ScreenContainer } from '@/shared/components/ScreenContainer'
 import { Button } from '@/shared/components/ui/button'
 import { ROUTES } from '@/shared/lib/routes'
+import { clearPaymentSession } from '../lib/paymentSession'
 
 /**
  * 토스 결제창 실패/취소 리다이렉트 콜백 페이지 (VITE_USE_REAL_PAYMENT=true 경로).
@@ -33,7 +34,10 @@ export function PaymentFailPage() {
         <div className="flex w-full max-w-xs flex-col gap-2">
           <Button
             type="button"
-            onClick={() => navigate(ROUTES.CHECKOUT, { replace: true })}
+            onClick={() => {
+              clearPaymentSession()
+              navigate(ROUTES.CHECKOUT, { replace: true })
+            }}
             className="h-[52px] rounded-[12px] text-base font-bold"
           >
             다시 결제하기
@@ -41,7 +45,10 @@ export function PaymentFailPage() {
           <Button
             type="button"
             variant="outline"
-            onClick={() => navigate(ROUTES.HOME, { replace: true })}
+            onClick={() => {
+              clearPaymentSession()
+              navigate(ROUTES.HOME, { replace: true })
+            }}
             className="h-[52px] rounded-[12px] text-base font-bold"
           >
             홈으로
