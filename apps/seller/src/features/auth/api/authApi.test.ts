@@ -130,13 +130,22 @@ describe('authApi 회원가입 (multipart)', () => {
 })
 
 describe('authApi 로그인·로그아웃', () => {
-  it('사장_로그인은_seller_엔드포인트로_keepSignedIn_true와_함께_호출한다', async () => {
+  it('사장_로그인은_seller_엔드포인트로_입력_keepSignedIn_값을_그대로_전송한다', async () => {
     vi.mocked(apiClient.post).mockResolvedValue({ data: { accessToken: 'access-token' } })
 
+    // 토글 OFF → false 그대로 전송
     await expect(
-      authApi.login({ email: 'demo@magampick.com', password: 'abcd1234!' }),
+      authApi.login({ email: 'demo@magampick.com', password: 'abcd1234!', keepSignedIn: false }),
     ).resolves.toEqual({ accessToken: 'access-token' })
     expect(apiClient.post).toHaveBeenCalledWith('/auth/seller/login', {
+      email: 'demo@magampick.com',
+      password: 'abcd1234!',
+      keepSignedIn: false,
+    })
+
+    // 토글 ON → true 그대로 전송
+    await authApi.login({ email: 'demo@magampick.com', password: 'abcd1234!', keepSignedIn: true })
+    expect(apiClient.post).toHaveBeenLastCalledWith('/auth/seller/login', {
       email: 'demo@magampick.com',
       password: 'abcd1234!',
       keepSignedIn: true,

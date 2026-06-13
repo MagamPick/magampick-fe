@@ -13,7 +13,7 @@ vi.mock('react-router', async (importOriginal) => {
 })
 vi.mock('../api/authApi')
 
-const credentials = { email: 'owner@magampick.com', password: 'abcd1234!' }
+const credentials = { email: 'owner@magampick.com', password: 'abcd1234!', keepSignedIn: true }
 
 describe('useLogin', () => {
   beforeEach(() => {
