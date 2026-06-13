@@ -3,11 +3,11 @@ import { ProtectedRoute } from '@/features/auth/components/ProtectedRoute'
 import { PublicOnlyRoute } from '@/features/auth/components/PublicOnlyRoute'
 import { LoginPage } from '@/features/auth/pages/LoginPage'
 import { AdminShell } from '@/shared/components/AdminShell'
-import { PlaceholderPage } from '@/shared/components/PlaceholderPage'
 import { NotFoundPage } from '@/shared/components/NotFoundPage'
 import { EventsPage } from '@/features/events/pages/EventsPage'
 import { AnnouncementsPage } from '@/features/announcements/pages/AnnouncementsPage'
 import { InquiriesPage } from '@/features/inquiries/pages/InquiriesPage'
+import { OpsPage } from '@/features/ops/pages/OpsPage'
 import { ROUTES } from '@/shared/lib/routes'
 
 export const router = createBrowserRouter([
@@ -24,8 +24,7 @@ export const router = createBrowserRouter([
       { path: ROUTES.EVENTS, element: <EventsPage /> },
       { path: ROUTES.ANNOUNCEMENTS, element: <AnnouncementsPage /> },
       { path: ROUTES.INQUIRIES, element: <InquiriesPage /> },
-      // 나머지는 placeholder — 다음 핸드오프(운영도구)에서 실제 화면으로 교체
-      { path: ROUTES.OPS, element: <PlaceholderPage title="운영 도구" /> },
+      { path: ROUTES.OPS, element: <OpsPage /> },
     ],
   },
   {
