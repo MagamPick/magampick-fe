@@ -48,6 +48,12 @@ export const orderResponseSchema = z.object({
       normalTotal: z.number().optional(),
       discountTotal: z.number().optional(),
       payTotal: z.number().optional(),
+      /** 쿠폰 할인액 (X1-BE) */
+      couponDiscount: z.number().optional(),
+      /** 포인트 사용액 (X1-BE) */
+      pointUsed: z.number().optional(),
+      /** 실결제액 = 최종 토스 청구액 (X1-BE) — payTotal − couponDiscount − pointUsed */
+      finalAmount: z.number().optional(),
     })
     .optional(),
   pickupCode: z.string().optional(),
@@ -137,6 +143,11 @@ export function mapToClientOrder(res: TossConfirmResponse): Order {
       normalTotal: res.amounts?.normalTotal ?? 0,
       discountTotal: res.amounts?.discountTotal ?? 0,
       payTotal: res.amounts?.payTotal ?? 0,
+      ...(res.amounts?.couponDiscount !== undefined
+        ? { couponDiscount: res.amounts.couponDiscount }
+        : {}),
+      ...(res.amounts?.pointUsed !== undefined ? { pointUsed: res.amounts.pointUsed } : {}),
+      ...(res.amounts?.finalAmount !== undefined ? { finalAmount: res.amounts.finalAmount } : {}),
     },
     pickupCode: res.pickupCode ?? '0000',
     status: res.status ?? 'PENDING',

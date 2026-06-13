@@ -29,7 +29,7 @@ const order: Order = {
   createdAt: '2026-06-01T00:00:00.000Z',
 }
 
-function renderSuccess(withState: boolean) {
+function renderSuccess(withState: boolean, orderArg: Order = order) {
   const router = createMemoryRouter(
     [
       { path: '/order/success', element: <OrderSuccessPage /> },
@@ -37,7 +37,7 @@ function renderSuccess(withState: boolean) {
     ],
     {
       initialEntries: withState
-        ? [{ pathname: '/order/success', state: { order } }]
+        ? [{ pathname: '/order/success', state: { order: orderArg } }]
         : ['/order/success'],
     },
   )
@@ -56,5 +56,22 @@ describe('OrderSuccessPage', () => {
   it('주문_정보_없이_직접_진입하면_홈으로', () => {
     renderSuccess(false)
     expect(screen.getByText('HOME PAGE')).toBeInTheDocument()
+  })
+
+  it('실 결제 경로(혜택 적용)면 결제 금액을 실청구액(finalAmount)으로 표시한다 (A4-2)', () => {
+    // mapToClientOrder 결과: payTotal=혜택 전(12,000) / finalAmount=실청구(9,500)
+    renderSuccess(true, {
+      ...order,
+      amounts: {
+        normalTotal: 20000,
+        discountTotal: 8000,
+        payTotal: 12000,
+        couponDiscount: 2000,
+        pointUsed: 500,
+        finalAmount: 9500,
+      },
+    })
+    expect(screen.getByText('9,500원')).toBeInTheDocument()
+    expect(screen.queryByText('12,000원')).not.toBeInTheDocument()
   })
 })

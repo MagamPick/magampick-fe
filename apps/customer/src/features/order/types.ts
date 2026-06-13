@@ -24,6 +24,11 @@ export const orderAmountsSchema = z.object({
   /** 사용 포인트 (1P=1원, Phase 8) */
   pointUsed: z.number().optional(),
   payTotal: z.number(),
+  /**
+   * 실결제액 — 실제 토스 청구액(= payTotal − couponDiscount − pointUsed, ≥0). BE OrderResponse 가 제공(X1-BE).
+   * 옵셔널: 형제 혜택 필드와 동일하게 기존 seed/fixture 후방 호환 — 미지정이면 표시단에서 payTotal 로 폴백(혜택 미적용 주문은 finalAmount==payTotal).
+   */
+  finalAmount: z.number().optional(),
   /** 적립 예정 포인트 — 픽업완료 시 적립(실결제액 1% floor, Phase 8) */
   earnedPoints: z.number().optional(),
 })

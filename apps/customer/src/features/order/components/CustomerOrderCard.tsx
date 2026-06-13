@@ -90,7 +90,8 @@ export function CustomerOrderCard({ order, onClick, onReviewClick }: Props) {
         {/* 하단: 금액 + 상태별 우측 정보 */}
         <div className="mt-2 flex items-center justify-between">
           <span className="text-[13px] font-semibold text-foreground">
-            {won(order.amounts.payTotal)}
+            {/* 실청구액(finalAmount) — 혜택 미적용/구주문은 payTotal 폴백(A4-2) */}
+            {won(order.amounts.finalAmount ?? order.amounts.payTotal)}
           </span>
           {isWaiting && (
             <span className="flex flex-col items-end gap-0.5 text-[12px] text-muted-foreground">
