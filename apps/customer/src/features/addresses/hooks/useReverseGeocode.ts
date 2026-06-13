@@ -3,9 +3,10 @@ import { addressesApi } from '../api/addressesApi'
 import type { AddressSearchResult } from '../types'
 
 /**
- * 현재 위치(GPS) → 역지오코딩 → AddressSearchResult({ roadAddress }).
+ * 현재 위치(GPS) → 역지오코딩 → AddressSearchResult({ roadAddress, latitude, longitude }).
  * - 권한 거부(code 1) / 위치 불가(code 2) / 기타 에러 시 에러 메시지로 reject
- * - 성공 시 roadAddress 만 포함 (sigunguCode 등 코드류는 undefined — BE 가 roadAddress 로 지오코딩)
+ * - 성공 시 roadAddress + 입력 GPS 좌표(lat/lng)를 보존해 하류(폼)로 전달.
+ *   코드류(sigunguCode 등)는 undefined — 폼이 좌표 보유를 보고 raw 좌표를 BE 에 직접 전송 (X3)
  */
 export function useReverseGeocode() {
   return useMutation({
@@ -18,11 +19,9 @@ export function useReverseGeocode() {
         navigator.geolocation.getCurrentPosition(
           async (position) => {
             try {
-              const result = await addressesApi.reverseGeocode({
-                latitude: position.coords.latitude,
-                longitude: position.coords.longitude,
-              })
-              resolve({ roadAddress: result.roadAddress })
+              const { latitude, longitude } = position.coords
+              const result = await addressesApi.reverseGeocode({ latitude, longitude })
+              resolve({ roadAddress: result.roadAddress, latitude, longitude })
             } catch (error) {
               reject(error)
             }

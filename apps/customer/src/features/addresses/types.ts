@@ -3,8 +3,9 @@ import { z } from 'zod'
 /**
  * 주소지 관리 도메인 타입 / Zod 스키마 (노션 "주소지 관리" 명세).
  *
- * 모델: 다음 우편번호 위젯(코드) + 서버 지오코딩.
- * 클라이언트는 좌표를 직접 보내지 않는다 — BE 가 sigunguCode+roadnameCode 또는 roadAddress 로 지오코딩.
+ * 등록 경로 2종 (X3 / findings A3-1·A3-2·A3-3):
+ * - 검색 경로(다음 위젯): sigunguCode+roadnameCode 전송 → BE 가 코드로 지오코딩.
+ * - GPS 경로(현재 위치): 브라우저가 이미 가진 좌표(lat/lng)를 직접 전송 → BE 가 raw 좌표 저장(코드 불필요).
  */
 
 /** 1인당 최대 주소 개수 (노션: 최대 3개) */
@@ -71,9 +72,8 @@ export const reverseGeocodeResponseSchema = z.object({
 
 /**
  * 다음 우편번호 위젯 / GPS 역지오코딩 결과 (검색 중간 타입).
- * - 다음 위젯: roadAddress·jibunAddress·zonecode·sigunguCode·roadnameCode 모두 존재
- * - GPS 역지오코딩: roadAddress 만, 나머지 undefined
- * - 좌표 없음 — 서버가 지오코딩
+ * - 다음 위젯: roadAddress·jibunAddress·zonecode·sigunguCode·roadnameCode 보유 (좌표 없음)
+ * - GPS 역지오코딩: roadAddress + latitude·longitude 보유 (코드 없음)
  */
 export const addressSearchResultSchema = z.object({
   roadAddress: z.string(),
@@ -81,10 +81,16 @@ export const addressSearchResultSchema = z.object({
   zonecode: z.string().optional(),
   sigunguCode: z.string().optional(),
   roadnameCode: z.string().optional(),
+  latitude: z.number().optional(),
+  longitude: z.number().optional(),
 })
 export type AddressSearchResult = z.infer<typeof addressSearchResultSchema>
 
-/** 주소 추가 API 요청 바디 (BE AddressCreateRequest) */
+/**
+ * 주소 추가 API 요청 바디 (BE AddressCreateRequest).
+ * BE 는 (좌표 OR 코드) 한 쌍을 요구 (@AssertTrue): GPS 경로는 latitude/longitude,
+ * 검색 경로는 sigunguCode/roadnameCode 를 채워 보낸다 (X3 / findings A3-1·A3-2·A3-3).
+ */
 export const createAddressInputSchema = z.object({
   label: aliasSchema,
   roadAddress: z.string().optional(),
@@ -93,6 +99,8 @@ export const createAddressInputSchema = z.object({
   zonecode: z.string().optional(),
   sigunguCode: z.string().optional(),
   roadnameCode: z.string().optional(),
+  latitude: z.number().optional(),
+  longitude: z.number().optional(),
 })
 export type CreateAddressInput = z.infer<typeof createAddressInputSchema>
 

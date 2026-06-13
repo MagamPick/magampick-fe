@@ -36,7 +36,8 @@ const LABEL_CHIPS = [
  * - 도로명은 다음 우편번호 위젯(명령형 팝업) 또는 GPS 역지오코딩 결과(roadResult). add 는 목록에서
  *   넘어온 state, edit 는 기존 주소에서 시작.
  * - '다시 검색'으로 도로명 변경 가능(add·edit 둘 다 — 노션 2026-05-31 결정).
- * - 좌표는 클라이언트가 보내지 않음 — BE 가 sigunguCode+roadnameCode 또는 roadAddress 로 지오코딩.
+ * - 제출 payload 분기 (X3 / findings A3-1·A3-2·A3-3): GPS 결과는 좌표(lat/lng)를 직접 전송,
+ *   검색(다음 위젯) 결과는 sigunguCode+roadnameCode 코드를 전송 → BE 가 지오코딩.
  */
 export function AddressFormPage() {
   const { id } = useParams()
@@ -95,14 +96,17 @@ export function AddressFormPage() {
 
   const onSubmit = (values: AddressFormValues) => {
     if (!effectiveRoad) return
+    // GPS 경로(좌표 보유)는 raw 좌표를 직접 전송하고 코드는 생략, 검색 경로는 코드를 전송 (X3).
+    const hasCoords = effectiveRoad.latitude != null && effectiveRoad.longitude != null
     const payload = {
       label: values.label,
       detailAddress: values.detailAddress || undefined,
       roadAddress: effectiveRoad.roadAddress,
       jibunAddress: effectiveRoad.jibunAddress,
       zonecode: effectiveRoad.zonecode,
-      sigunguCode: effectiveRoad.sigunguCode,
-      roadnameCode: effectiveRoad.roadnameCode,
+      ...(hasCoords
+        ? { latitude: effectiveRoad.latitude, longitude: effectiveRoad.longitude }
+        : { sigunguCode: effectiveRoad.sigunguCode, roadnameCode: effectiveRoad.roadnameCode }),
     }
     if (isEdit && numericId) {
       update.mutate({ id: numericId, input: payload }, { onSuccess: () => navigate(ROUTES.ADDRESSES) })

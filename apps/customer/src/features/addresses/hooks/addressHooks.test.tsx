@@ -115,7 +115,7 @@ describe('addresses hooks', () => {
       })
     })
 
-    it('geolocation 성공 → reverseGeocode API 호출 → {roadAddress} 반환', async () => {
+    it('geolocation 성공 → reverseGeocode API 호출 → roadAddress + 입력 좌표(lat/lng) 보존', async () => {
       const mockPosition = {
         coords: { latitude: 37.5571, longitude: 126.925 },
       } as GeolocationPosition
@@ -134,7 +134,12 @@ describe('addresses hooks', () => {
         latitude: 37.5571,
         longitude: 126.925,
       })
-      expect(result.current.data).toEqual({ roadAddress: '서울 마포구 양화로 45' })
+      // X3: GPS 좌표를 결과에 보존해 하류(폼)로 전달 — BE 에 raw 좌표로 저장
+      expect(result.current.data).toEqual({
+        roadAddress: '서울 마포구 양화로 45',
+        latitude: 37.5571,
+        longitude: 126.925,
+      })
     })
 
     it('geolocation 권한 거부(code:1) 시 에러 메시지 포함 reject', async () => {
