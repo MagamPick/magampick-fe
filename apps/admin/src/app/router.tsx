@@ -6,6 +6,7 @@ import { AdminShell } from '@/shared/components/AdminShell'
 import { PlaceholderPage } from '@/shared/components/PlaceholderPage'
 import { NotFoundPage } from '@/shared/components/NotFoundPage'
 import { EventsPage } from '@/features/events/pages/EventsPage'
+import { InquiriesPage } from '@/features/inquiries/pages/InquiriesPage'
 import { ROUTES } from '@/shared/lib/routes'
 
 export const router = createBrowserRouter([
@@ -20,9 +21,9 @@ export const router = createBrowserRouter([
     children: [
       { index: true, element: <Navigate to={ROUTES.EVENTS} replace /> },
       { path: ROUTES.EVENTS, element: <EventsPage /> },
-      // 나머지는 placeholder — 다음 핸드오프(공지·문의·운영도구)에서 실제 화면으로 교체
+      { path: ROUTES.INQUIRIES, element: <InquiriesPage /> },
+      // 나머지는 placeholder — 다음 핸드오프(공지·운영도구)에서 실제 화면으로 교체
       { path: ROUTES.ANNOUNCEMENTS, element: <PlaceholderPage title="공지사항 관리" /> },
-      { path: ROUTES.INQUIRIES, element: <PlaceholderPage title="문의 관리" /> },
       { path: ROUTES.OPS, element: <PlaceholderPage title="운영 도구" /> },
     ],
   },
