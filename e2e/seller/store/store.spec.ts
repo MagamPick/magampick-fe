@@ -97,10 +97,13 @@ test.describe('P2-10 영업시간 설정', () => {
    * - formatRange 는 en-dash (–) 사용: "10:00 – 22:00" (U+2013).
    * - 성공 메시지: "영업시간을 저장했어요."
    */
-  test('월요일 오픈 시각 10:00 변경 → 저장 → 화면 반영 + 성공 메시지', async ({
-    sellerPage,
-    seller,
-  }) => {
+  test('오픈 시각 10:00 변경 → 저장 → 화면 반영 + 성공 메시지', async ({ sellerPage, seller }) => {
+    // ★오늘 요일은 OPEN 매장에서 영업시간 변경이 잠긴다(TODAY_BUSINESS_HOURS_LOCKED) → **오늘이 아닌
+    //  요일**을 편집해 날짜 의존 깨짐을 피한다(과거 '월요일' 하드코딩은 월요일에 실행 시 실패).
+    const DAYS = ['월요일', '화요일', '수요일', '목요일', '금요일', '토요일', '일요일']
+    const todayIdx = (new Date(Date.now() + 9 * 3600 * 1000).getUTCDay() + 6) % 7 // 월=0 (KST)
+    const editDay = DAYS[(todayIdx + 2) % 7]
+
     await waitForStoreReady(sellerPage, seller.store.name)
 
     // /store/hours 진입
@@ -110,13 +113,13 @@ test.describe('P2-10 영업시간 설정', () => {
     // 영업시간 목록 로드 대기 — "불러오는 중…" 사라질 때까지
     await expect(sellerPage.getByText('불러오는 중…')).not.toBeVisible({ timeout: 10_000 })
 
-    // 월요일 행 편집 진입 (오늘=일요일이므로 월요일은 잠금 아님)
-    await sellerPage.getByRole('button', { name: '월요일 영업시간 편집' }).click()
+    // 오늘이 아닌 요일 행 편집 진입 (잠금 아님)
+    await sellerPage.getByRole('button', { name: `${editDay} 영업시간 편집` }).click()
 
     // BusinessHourEditSheet 오픈 확인
     const sheet = sellerPage.getByRole('dialog')
     await expect(sheet).toBeVisible()
-    await expect(sellerPage.getByText('월요일 영업시간')).toBeVisible()
+    await expect(sellerPage.getByText(`${editDay} 영업시간`)).toBeVisible()
 
     // 오픈 시각 10:00 으로 변경 (TimePicker 실클릭)
     await pickTime(sellerPage, '오픈 시각', '10', '00')
