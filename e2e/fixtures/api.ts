@@ -1,4 +1,4 @@
-import type { APIRequestContext } from '@playwright/test'
+import { request, type APIRequestContext } from '@playwright/test'
 import {
   ADMIN_PASSWORD,
   ADMIN_USERNAME,
@@ -96,6 +96,20 @@ export async function login(
     }),
     'login',
   )) as { accessToken: string }
+}
+
+/** 소비자 숫자 id (JWT sub) — 주문 시드(dev/test/orders) 에 customerId 로 넘길 때. */
+export async function customerIdOf(account: { email: string; password: string }): Promise<number> {
+  const api = await request.newContext()
+  try {
+    const { accessToken } = await login(api, account.email, account.password)
+    const payload = JSON.parse(
+      Buffer.from(accessToken.split('.')[1], 'base64url').toString('utf-8'),
+    ) as { sub: string }
+    return Number(payload.sub)
+  } finally {
+    await api.dispose()
+  }
 }
 
 /** 관리자 로그인 — POST /auth/admin/login {username,password}. 쿠키는 req 컨텍스트 자에 적재. */
