@@ -1,5 +1,22 @@
-import { request } from '@playwright/test'
+import { request, type APIRequestContext } from '@playwright/test'
 import { API_V1, COMMON_PASSWORD, MOCK_OTP } from './env'
+
+/**
+ * 사장 로그인 — POST /auth/seller/login (access 바디 + refresh HttpOnly 쿠키). BrowserContext.request 로
+ * 호출하면 그 컨텍스트 쿠키 자에 refresh 가 적재 → 페이지가 AuthBootstrap silent refresh 로 인증 부팅.
+ */
+export async function loginSeller(
+  req: APIRequestContext,
+  email: string,
+  password = COMMON_PASSWORD,
+): Promise<{ accessToken: string }> {
+  const res = await req.post(`${API_V1}/auth/seller/login`, {
+    data: { email, password, keepSignedIn: true },
+  })
+  if (!res.ok()) throw new Error(`[seed] seller login 실패 ${res.status()}: ${await res.text()}`)
+  const body = (await res.json()) as { data?: { accessToken: string } }
+  return body.data ?? (body as { accessToken: string })
+}
 
 /**
  * 사장 측 API 시드 헬퍼 — 소비자 deal-presence 테스트(마감임박·떨이 노출)와 wave2 사장 스윗용.
