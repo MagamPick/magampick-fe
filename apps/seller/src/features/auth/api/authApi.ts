@@ -78,6 +78,16 @@ export const authApi = {
     return tokenResponseSchema.parse(res.data)
   },
 
+  /**
+   * POST /auth/refresh — refresh 쿠키로 access 재발급 (body 없음, 전 role 공통 EP).
+   * 앱 부팅 시 AuthBootstrap 이 호출해 메모리 access 토큰을 복구한다 (새로고침=로그아웃 방지, findings BUG-C).
+   * role 은 refresh JWT claim 에 보존·복원되므로 사장 전용 refresh EP 가 필요 없다.
+   */
+  async refreshAccessToken(): Promise<{ accessToken: string }> {
+    const res = await apiClient.post('/auth/refresh')
+    return tokenResponseSchema.parse(res.data)
+  },
+
   /** POST /auth/logout — Redis refresh 삭제 + clear cookie */
   async logout(): Promise<void> {
     await apiClient.post('/auth/logout')
