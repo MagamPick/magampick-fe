@@ -137,7 +137,7 @@ export async function createSeller(opts?: {
   }
 }
 
-/** 사장 매장에 일반 상품 1개 생성(multipart, 이미지 없음) → productId */
+/** 사장 매장에 일반 상품 1개 생성(multipart, 이미지 없음) → productId (ON_SALE 보장) */
 export async function seedProduct(
   token: string,
   storeId: number,
@@ -145,16 +145,23 @@ export async function seedProduct(
 ): Promise<number> {
   const req = await request.newContext()
   try {
-    const reqObj = {
-      name: opts?.name ?? `상품${rand(5)}`,
-      regularPrice: opts?.regularPrice ?? 5000,
-      category: opts?.category ?? 'ETC',
-    }
+    const name = opts?.name ?? `상품${rand(5)}`
+    const regularPrice = opts?.regularPrice ?? 5000
+    const category = opts?.category ?? 'ETC'
+
+    // description 을 반드시 non-null 문자열로 전송.
+    // BE 는 description 미포함·빈값 시 null 로 저장해 응답에 null 을 내려준다.
+    // FE productResponseSchema 가 description: z.string().optional() 로 null 을 거부 → Zod throw →
+    // useProducts isError=true → products=[] → ClearanceCreatePage eligible=[] → 빈 목록 표시.
+    // 루트픽스(z.string().nullish())는 apps/ 수정이라 금지; 시드에서 non-null 문자열 보장으로 우회.
+    const description = 'E2E seed'
+
+    const createObj = { name, regularPrice, category, status: 'ON_SALE', description }
     const res = await req.post(`${API_V1}/seller/stores/${storeId}/products`, {
       headers: { Authorization: `Bearer ${token}` },
-      multipart: { request: jsonPart(reqObj) },
+      multipart: { request: jsonPart(createObj) },
     })
-    if (!res.ok()) throw new Error(`[seed] product 실패 ${res.status()}: ${await res.text()}`)
+    if (!res.ok()) throw new Error(`[seed] product 생성 실패 ${res.status()}: ${await res.text()}`)
     return (await res.json()).data.id
   } finally {
     await req.dispose()
