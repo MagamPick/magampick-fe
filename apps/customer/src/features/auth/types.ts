@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { nullableNumber, nullableString } from '@/shared/lib/zodNullable'
 
 /** 비밀번호 룰 (auth.md §8) — 로그인/가입/변경/재설정 공유 */
 export const passwordSchema = z
@@ -40,7 +41,7 @@ export type SignupAddress = z.infer<typeof signupAddressSchema>
 
 export const tokenResponseSchema = z.object({
   accessToken: z.string(),
-  accessExpiresIn: z.number().optional(),
+  accessExpiresIn: nullableNumber(),
 })
 
 export const phoneVerificationTokenResponseSchema = z.object({
@@ -116,7 +117,7 @@ export const kakaoExchangeResultSchema = z.discriminatedUnion('status', [
     status: z.literal('NEW'),
     socialToken: z.string(),
     email: z.string(),
-    nickname: z.string().optional(),
+    nickname: nullableString(),
   }),
 ])
 export type KakaoExchangeResult = z.infer<typeof kakaoExchangeResultSchema>

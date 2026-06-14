@@ -80,6 +80,30 @@ describe('notificationsApi (사장)', () => {
         link: null,
       })
     })
+
+    it('BE 가 null 필드를 내려도 throw 없이 기본값으로 매핑한다 (null-trap 회귀)', async () => {
+      const nullFields = {
+        id: null,
+        category: null,
+        title: null,
+        body: null,
+        createdAt: null,
+        read: null,
+        link: null,
+      }
+      vi.mocked(apiClient.get).mockResolvedValue({ data: { items: [nullFields] } })
+
+      const result = await notificationsApi.list()
+
+      expect(result[0]).toMatchObject({
+        id: '0',
+        category: '',
+        title: '',
+        body: '',
+        read: false,
+        link: null,
+      })
+    })
   })
 
   describe('unreadCount', () => {

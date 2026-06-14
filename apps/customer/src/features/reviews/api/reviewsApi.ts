@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import { apiClient } from '@/shared/lib/axios'
+import { nullish, nullableString, nullableNumber, nullableBoolean } from '@/shared/lib/zodNullable'
 import { QUICK_TAGS, REVIEW_TAG_CODE } from '../types'
 import type {
   MyReview,
@@ -13,39 +14,39 @@ import type {
 // ─── BE 응답 Zod 스키마 ──────────────────────────────────────────────────────
 
 const reviewedProductSchema = z.object({
-  productId: z.number().optional(),
-  kind: z.string().optional(),
-  name: z.string().optional(),
+  productId: nullableNumber(),
+  kind: nullableString(),
+  name: nullableString(),
 })
 
 const orderedItemSchema = z.object({
-  productId: z.number().optional(),
-  kind: z.string().optional(),
-  name: z.string().optional(),
+  productId: nullableNumber(),
+  kind: nullableString(),
+  name: nullableString(),
 })
 
 export const myReviewResponseSchema = z.object({
-  id: z.number().optional(),
-  storeId: z.number().optional(),
-  storeName: z.string().optional(),
-  items: z.array(reviewedProductSchema).optional(),
-  rating: z.number().optional(),
-  content: z.string().optional(),
+  id: nullableNumber(),
+  storeId: nullableNumber(),
+  storeName: nullableString(),
+  items: nullish(z.array(reviewedProductSchema)),
+  rating: nullableNumber(),
+  content: nullableString(),
   /** BE 는 한국어 라벨 배열로 반환 */
-  tags: z.array(z.string()).optional(),
-  photos: z.array(z.string()).optional(),
-  createdAt: z.string().optional(),
+  tags: nullish(z.array(z.string())),
+  photos: nullish(z.array(z.string())),
+  createdAt: nullableString(),
   /** absent 또는 null → null (sic: BE spec ownerReply?: string) */
   ownerReply: z.string().nullable().optional(),
 })
 
 export const reviewableOrderResponseSchema = z.object({
-  orderId: z.number().optional(),
-  storeId: z.number().optional(),
-  storeName: z.string().optional(),
-  items: z.array(orderedItemSchema).optional(),
-  pickedUpAt: z.string().optional(),
-  reviewed: z.boolean().optional(),
+  orderId: nullableNumber(),
+  storeId: nullableNumber(),
+  storeName: nullableString(),
+  items: nullish(z.array(orderedItemSchema)),
+  pickedUpAt: nullableString(),
+  reviewed: nullableBoolean(),
   reviewId: z.number().nullable().optional(),
 })
 

@@ -1,13 +1,14 @@
 import { z } from 'zod'
 import { apiClient } from '@/shared/lib/axios'
+import { nullish, nullableString, nullableNumber } from '@/shared/lib/zodNullable'
 import type { RefundRequest } from '../types'
 
 // ─── BE RefundResponse Zod 스키마 ─────────────────────────────────────────────
 
 const refundItemResponseSchema = z.object({
-  name: z.string().optional(),
-  quantity: z.number().optional(),
-  price: z.number().optional(),
+  name: nullableString(),
+  quantity: nullableNumber(),
+  price: nullableNumber(),
 })
 
 /**
@@ -16,17 +17,17 @@ const refundItemResponseSchema = z.object({
  * nullable 타임스탬프는 `.nullable().optional()` 처리.
  */
 const refundResponseSchema = z.object({
-  id: z.number().optional(),
-  orderId: z.number().optional(),
-  orderNo: z.string().optional(),
-  storeId: z.number().optional(),
-  customerName: z.string().optional(),
-  items: z.array(refundItemResponseSchema).optional(),
-  amount: z.number().optional(),
+  id: nullableNumber(),
+  orderId: nullableNumber(),
+  orderNo: nullableString(),
+  storeId: nullableNumber(),
+  customerName: nullableString(),
+  items: nullish(z.array(refundItemResponseSchema)),
+  amount: nullableNumber(),
   pickupCompletedAt: z.string().nullable().optional(),
   status: z.enum(['REQUESTED', 'APPROVED', 'REJECTED']),
-  reason: z.string().optional(),
-  requestedAt: z.string().optional(),
+  reason: nullableString(),
+  requestedAt: nullableString(),
   rejectReason: z.string().nullable().optional(),
   resolvedAt: z.string().nullable().optional(),
 })

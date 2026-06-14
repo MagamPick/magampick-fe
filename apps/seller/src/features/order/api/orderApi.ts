@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import { apiClient } from '@/shared/lib/axios'
+import { nullish, nullableString, nullableNumber } from '@/shared/lib/zodNullable'
 import { ORDER_STATUSES } from '../types'
 import type { Order } from '../types'
 
@@ -8,13 +9,13 @@ import type { Order } from '../types'
 const orderStatusSchema = z.enum(ORDER_STATUSES)
 
 const orderItemFromResponseSchema = z.object({
-  id: z.number().optional(),
-  kind: z.string().optional(),
-  name: z.string().optional(),
+  id: nullableNumber(),
+  kind: nullableString(),
+  name: nullableString(),
   imageUrl: z.string().nullable().optional(),
-  originalPrice: z.number().optional(),
-  salePrice: z.number().optional(),
-  qty: z.number().optional(),
+  originalPrice: nullableNumber(),
+  salePrice: nullableNumber(),
+  qty: nullableNumber(),
 })
 
 /**
@@ -23,32 +24,32 @@ const orderItemFromResponseSchema = z.object({
  * (런타임 리스크: 실 데이터 미검증 — strict 7-enum 채택, enum 밖 유입 시 전체 throw, 목록은 ErrorState 표시)
  */
 export const sellerOrderResponseSchema = z.object({
-  id: z.number().optional(),
-  orderNo: z.string().optional(),
-  storeId: z.number().optional(),
-  storeName: z.string().optional(),
+  id: nullableNumber(),
+  orderNo: nullableString(),
+  storeId: nullableNumber(),
+  storeName: nullableString(),
   storePhone: z.string().nullable().optional(),
-  items: z.array(orderItemFromResponseSchema).optional(),
-  pickup: z
-    .object({
-      type: z.string().optional(),
-      time: z.string().optional(),
-    })
-    .optional(),
-  memo: z.string().optional(),
-  amounts: z
-    .object({
-      normalTotal: z.number().optional(),
-      discountTotal: z.number().optional(),
-      payTotal: z.number().optional(),
-    })
-    .optional(),
-  pickupCode: z.string().optional(),
+  items: nullish(z.array(orderItemFromResponseSchema)),
+  pickup: nullish(
+    z.object({
+      type: nullableString(),
+      time: nullableString(),
+    }),
+  ),
+  memo: nullableString(),
+  amounts: nullish(
+    z.object({
+      normalTotal: nullableNumber(),
+      discountTotal: nullableNumber(),
+      payTotal: nullableNumber(),
+    }),
+  ),
+  pickupCode: nullableString(),
   /** 도메인 7-enum 엄격 검증 (PENDING·PREPARING·READY·COMPLETED·NO_SHOW·REJECTED·CANCELLED) */
   status: orderStatusSchema,
-  paymentMethod: z.string().optional(),
-  createdAt: z.string().optional(),
-  customerName: z.string().optional(),
+  paymentMethod: nullableString(),
+  createdAt: nullableString(),
+  customerName: nullableString(),
   customerPhone: z.string().nullable().optional(),
   acceptedAt: z.string().nullable().optional(),
   readyAt: z.string().nullable().optional(),

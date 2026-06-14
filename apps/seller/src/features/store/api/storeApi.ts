@@ -9,6 +9,7 @@
  */
 import { z } from 'zod'
 import { apiClient } from '@/shared/lib/axios'
+import { nullableString } from '@/shared/lib/zodNullable'
 import { operationStatusSchema } from '../types'
 import { WEEKDAY_TO_BE, BE_TO_WEEKDAY } from '../lib/dayMapping'
 import type {
@@ -76,7 +77,7 @@ const storeRegisterResponseSchema = z.object({
 const storeDetailResponseSchema = z
   .object({
     id: z.number(),
-    businessNumber: z.string().optional(),
+    businessNumber: nullableString(),
     name: z.string(),
     roadAddress: z.string(),
     // BE 가 jibunAddress/detailAddress 를 null 로 내려줄 수 있어 nullish 로 수용 (.optional() 은 null 거부)

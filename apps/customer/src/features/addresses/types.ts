@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { nullableString } from '@/shared/lib/zodNullable'
 
 /**
  * 주소지 관리 도메인 타입 / Zod 스키마 (노션 "주소지 관리" 명세).
@@ -38,12 +39,12 @@ export const addressResponseSchema = z.object({
   // BE 가 jibunAddress/detailAddress 를 null 로 내려줄 수 있어 nullish 로 수용 (.optional() 은 null 거부)
   jibunAddress: z.string().nullish(),
   detailAddress: z.string().nullish(),
-  zonecode: z.string().optional(),
+  zonecode: nullableString(),
   latitude: z.number(),
   longitude: z.number(),
   isDefault: z.boolean(),
-  createdAt: z.string().optional(),
-  updatedAt: z.string().optional(),
+  createdAt: nullableString(),
+  updatedAt: nullableString(),
 })
 
 /**

@@ -6,6 +6,7 @@
  */
 import { z } from 'zod'
 import { apiClient } from '@/shared/lib/axios'
+import { nullish, nullableString, nullableNumber } from '@/shared/lib/zodNullable'
 import { clearanceStatusSchema, clearanceCloseReasonSchema } from '../types'
 import type { ClearanceView, CreateClearancePayload, UpdateClearancePayload } from '../types'
 
@@ -35,17 +36,17 @@ function pickupEndAtToHHMM(pickupEndAt: string): string {
 /** ClearanceItemResponse (BE spec) */
 const clearanceItemResponseSchema = z.object({
   id: z.number(),
-  productId: z.number().optional(),
+  productId: nullableNumber(),
   // BE 가 imageUrl 을 null 로 내려줄 수 있어 nullish 로 수용 (소비자 앱 패턴 미러)
   imageUrl: z.string().nullish(),
-  name: z.string().optional(),
-  regularPrice: z.number().optional(),
-  salePrice: z.number().optional(),
-  totalQuantity: z.number().optional(),
-  remainingQuantity: z.number().optional(),
-  pickupEndAt: z.string().optional(),
-  status: clearanceStatusSchema.optional(),
-  createdAt: z.string().optional(),
+  name: nullableString(),
+  regularPrice: nullableNumber(),
+  salePrice: nullableNumber(),
+  totalQuantity: nullableNumber(),
+  remainingQuantity: nullableNumber(),
+  pickupEndAt: nullableString(),
+  status: nullish(clearanceStatusSchema),
+  createdAt: nullableString(),
   // 마감 사유 — BE 가 OPEN 떨이는 closeReason 을 명시적 null 로 내려줌.
   // .optional() 은 null 을 거부해 목록 전체 파싱이 throw(진행중 떨이 1개만 있어도 리스트 전체 실패) → imageUrl 과 동일하게 nullish 로 수용.
   closeReason: clearanceCloseReasonSchema.nullish(),
@@ -53,7 +54,7 @@ const clearanceItemResponseSchema = z.object({
 
 /** PageResponseClearanceItemResponse (목록) */
 const pageClearanceResponseSchema = z.object({
-  content: z.array(clearanceItemResponseSchema).optional(),
+  content: nullish(z.array(clearanceItemResponseSchema)),
 })
 
 // ─── BE 응답 → FE 도메인 매핑 ──────────────────────────────────────────────────
