@@ -71,8 +71,9 @@ export function AddressFormPage() {
 
   /**
    * 도로명 = '다시 검색' override(roadResult) ?? (edit) 기존 주소 ?? (add) 진입 state 결과.
-   * 기존 주소에서 파생할 때 sigunguCode/roadnameCode 는 AddressResponse 에 없으므로 undefined.
-   * BE 는 수정 시 roadAddress 만으로도 지오코딩 가능 (좌표 재계산).
+   * 기존 주소에는 sigunguCode/roadnameCode 가 없으므로, 재검색 없이 별칭·상세만 고칠 때를 위해
+   * 기존 좌표(latitude/longitude)를 실어 보낸다 — BE @AssertTrue(좌표 OR 코드)를 만족시켜
+   * 좌표 누락 400 을 막는다 (findings BUG-B, 등록 경로 #120 과 대칭). 재검색 시엔 roadResult 의 코드를 사용.
    */
   const effectiveRoad: AddressSearchResult | null =
     roadResult ??
@@ -81,6 +82,8 @@ export function AddressFormPage() {
           roadAddress: existing.roadAddress,
           jibunAddress: existing.jibunAddress,
           zonecode: existing.zonecode,
+          latitude: existing.latitude,
+          longitude: existing.longitude,
         }
       : null)
   const displayRoad = effectiveRoad?.roadAddress

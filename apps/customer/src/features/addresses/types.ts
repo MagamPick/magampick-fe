@@ -107,7 +107,8 @@ export type CreateAddressInput = z.infer<typeof createAddressInputSchema>
 
 /**
  * 주소 수정 API 요청 바디 (BE AddressUpdateRequest — 부분 수정).
- * 도로명 변경 시 sigunguCode + roadnameCode 동반 필요.
+ * BE @AssertTrue 는 등록과 동일하게 (좌표 OR 코드) 한 쌍을 요구한다 (findings BUG-B).
+ * 도로명 유지(재검색 안 함) 시 기존 좌표(latitude/longitude)를, 재검색 시 sigunguCode+roadnameCode 를 전송.
  */
 export const updateAddressInputSchema = z.object({
   label: aliasSchema.optional(),
@@ -117,6 +118,8 @@ export const updateAddressInputSchema = z.object({
   zonecode: z.string().optional(),
   sigunguCode: z.string().optional(),
   roadnameCode: z.string().optional(),
+  latitude: z.number().optional(),
+  longitude: z.number().optional(),
   geocodeKeyValid: z.boolean().optional(),
 })
 export type UpdateAddressInput = z.infer<typeof updateAddressInputSchema>
