@@ -55,3 +55,18 @@ export async function seedCodeAddresses(
     await api.dispose()
   }
 }
+
+/** 소비자 단골 추가 (홈 단골 섹션 등) — POST /customers/me/favorites {storeId}, idempotent */
+export async function seedFavorite(account: CustomerAccount, storeId: number): Promise<void> {
+  const api = await request.newContext()
+  try {
+    const { accessToken } = await login(api, account.email, account.password)
+    const res = await api.post(`${API_V1}/customers/me/favorites`, {
+      headers: { Authorization: `Bearer ${accessToken}` },
+      data: { storeId },
+    })
+    if (!res.ok()) throw new Error(`[seed] favorite 실패 ${res.status()}: ${await res.text()}`)
+  } finally {
+    await api.dispose()
+  }
+}
