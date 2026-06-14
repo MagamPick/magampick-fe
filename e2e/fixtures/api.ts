@@ -1,5 +1,13 @@
 import type { APIRequestContext } from '@playwright/test'
-import { API_V1, COMMON_PASSWORD, CUSTOMER_TERM_IDS, MOCK_OTP, SEED_ADDRESS } from './env'
+import {
+  ADMIN_PASSWORD,
+  ADMIN_USERNAME,
+  API_V1,
+  COMMON_PASSWORD,
+  CUSTOMER_TERM_IDS,
+  MOCK_OTP,
+  SEED_ADDRESS,
+} from './env'
 
 /**
  * BE(api.dev.magampick.com) 직접 호출 헬퍼 — fixtures 전용 (계정 시딩·로그인).
@@ -87,5 +95,15 @@ export async function login(
       data: { email, password, keepSignedIn: true },
     }),
     'login',
+  )) as { accessToken: string }
+}
+
+/** 관리자 로그인 — POST /auth/admin/login {username,password}. 쿠키는 req 컨텍스트 자에 적재. */
+export async function loginAdmin(req: APIRequestContext): Promise<{ accessToken: string }> {
+  return (await unwrap(
+    await req.post(`${API_V1}/auth/admin/login`, {
+      data: { username: ADMIN_USERNAME, password: ADMIN_PASSWORD },
+    }),
+    'admin-login',
   )) as { accessToken: string }
 }

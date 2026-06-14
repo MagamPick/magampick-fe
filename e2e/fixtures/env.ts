@@ -44,3 +44,10 @@ export const SEED_ADDRESS = {
  * 강남 테헤란로 105 (reverse-geocode → "서울특별시 강남구 테헤란로 105").
  */
 export const SEED_GPS = { latitude: 37.4985273694175, longitude: 127.02855895858346 } as const
+
+/**
+ * 관리자 계정 (dev env 시드 — 배포 시크릿 DEV_ADMIN_*). admin 은 단일 공유 계정이라 격리 불가 →
+ * 생성 엔티티(이벤트/공지)는 유니크 네이밍으로 병렬 충돌을 피한다. 값은 env override 가능.
+ */
+export const ADMIN_USERNAME = process.env.E2E_ADMIN_USERNAME ?? 'admin'
+export const ADMIN_PASSWORD = process.env.E2E_ADMIN_PASSWORD ?? 'password123!'
