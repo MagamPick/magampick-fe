@@ -10,10 +10,10 @@ import { createSeller, type SeededSeller } from './seller'
  *                  같은 사장 API 는 국세청 무관.)
  * - `sellerPage` : 그 사장으로 **UI 로그인**된 사장 앱 Page.
  *
- * ★ 사장 앱은 customer 와 달리 **AuthBootstrap(부팅 silent refresh)이 없다** → 쿠키 주입만으론 인증
- * 안 되고, **하드 리로드 시 로그아웃**된다(세션 미복원). 그래서 (1) 인증은 UI 로그인으로, (2) 시드 후
- * 화면 갱신은 `spaGoto`(클라 네비, 인메모리 세션 보존)로만 — **`spaGotoFresh`(하드 리로드)는 사장에서
- * 금지**(로그아웃됨). 시드는 데이터 페이지를 **처음 방문하기 전**에 끝내 첫 fetch 가 신선하게 한다.
+ * ★ 인증은 **UI 로그인**으로 한다. BUG-C(#145)로 사장 앱에도 AuthBootstrap 이 생겨 쿠키 주입 인증이
+ * 원론적으론 가능하나, 주문 목록(/orders)의 현재매장(useCurrentStoreStore) 해석이 로그인 플로우에
+ * 의존해 쿠키 주입만으론 주문 목록이 비지 않는다(빈 상태 미렌더). 그래서 UI 로그인을 유지한다.
+ * (하드 리로드 시 로그아웃되므로 시드 후 갱신은 `spaGoto`만 — `spaGotoFresh` 금지.)
  */
 async function loginSellerViaUI(
   page: Page,
@@ -47,8 +47,8 @@ export const test = base.extend<{ sellerPage: Page }, { seller: SeededSeller }>(
 export { expect } from '@playwright/test'
 
 /**
- * 테스트별 격리 사장 + 인증 페이지 (영업상태 전이 등 stateful 케이스). ⚠️ createSeller=국세청 호출이라
- * 꼭 필요한 격리 케이스에만. 사용 후 반환된 close() 를 호출해 컨텍스트 정리.
+ * 테스트별 격리 사장 + 인증 페이지 (영업상태 전이·빈상태 단언 등 stateful 케이스). ⚠️ createSeller=국세청
+ * 호출이라 꼭 필요한 격리 케이스에만. 사용 후 반환된 close() 를 호출해 컨텍스트 정리.
  */
 export async function openFreshSellerPage(
   browser: Browser,

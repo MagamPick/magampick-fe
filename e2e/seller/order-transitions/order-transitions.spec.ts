@@ -18,13 +18,26 @@
  *     — 상세는 orderId 만으로 직접 접근 가능, currentStoreStore 없어도 fetch 정상 동작
  */
 
-import { test, expect } from '../../fixtures/seller-test'
-import { seedProduct, seedClearance } from '../../fixtures/seller'
+import { test as base, expect, openFreshSellerPage } from '../../fixtures/seller-test'
+import { seedProduct, seedClearance, type SeededSeller } from '../../fixtures/seller'
 import { seedOrder } from '../../fixtures/order'
 import { uniqueCustomer } from '../../fixtures/data'
 import { createCustomer, customerIdOf } from '../../fixtures/api'
 import { spaGoto } from '../../fixtures/navigation'
-import { request } from '@playwright/test'
+import { request, type Page } from '@playwright/test'
+
+/**
+ * ★ 이 스윗은 주문을 시드(mutate)하므로 **공유 워커 사장(seller fixture) 대신 테스트별 격리 사장**을 쓴다.
+ * (워커 사장에 주문을 쌓으면 같은 워커의 order/order-list 빈상태·stats 0값 테스트가 오염돼 풀스윗 동시
+ *  실행 시 깨짐 — 풀 통합 실행에서 발견.) `seller`/`sellerPage` 를 격리 세션으로 오버라이드해 본문 무변경.
+ */
+const test = base.extend<{ sellerSession: { seller: SeededSeller; page: Page } }>({
+  sellerSession: async ({ browser }, use) => {
+    const session = await openFreshSellerPage(browser)
+    await use({ seller: session.seller, page: session.page })
+    await session.close()
+  },
+})
 
 /** 상품 → 떨이 → 소비자 계정 → 주문 시드 (각 테스트가 고유 주문을 격리). */
 async function seedFlow(
@@ -48,8 +61,9 @@ test.describe('P5 사장 주문 상태 전이', () => {
    *
    * 상세 CTA [주문 수락] 클릭 → 배너가 "신규 주문"→"준비중" 으로, CTA 가 "준비 완료로 변경" 으로 전환.
    */
-  test('P5-08: PENDING → 주문 수락 → 준비중 전환', async ({ seller, sellerPage }) => {
+  test('P5-08: PENDING → 주문 수락 → 준비중 전환', async ({ sellerSession }) => {
     test.setTimeout(120_000)
+    const { seller, page: sellerPage } = sellerSession
 
     const order = await seedFlow(seller.token, seller.store.id, 'PENDING')
     await spaGoto(sellerPage, `/orders/${order.orderId}`)
@@ -79,8 +93,9 @@ test.describe('P5 사장 주문 상태 전이', () => {
    * 해결: 실 결제주문(Vercel Preview + 토스 샌드박스 E2E)에서만 검증 가능. 현 dev 시드 환경
    * 한계로 expected failure 처리.
    */
-  test('P5-09: PENDING → 거절 확인 → 매장 거절 전환', async ({ seller, sellerPage }) => {
+  test('P5-09: PENDING → 거절 확인 → 매장 거절 전환', async ({ sellerSession }) => {
     test.setTimeout(120_000)
+    const { seller, page: sellerPage } = sellerSession
     test.fail(
       true,
       'P5-09: reject mutation 이 BE 자동환불(Toss) 실패로 오류 반환 → ConfirmSheet 닫히지 않음.' +
@@ -114,8 +129,9 @@ test.describe('P5 사장 주문 상태 전이', () => {
    * [준비 완료로 변경] → "준비완료" 배너 + 픽업 인증 코드 강조 확인
    * → [수령 완료 처리] → "픽업 완료" + 작업 없음.
    */
-  test('P5-10: PREPARING → 준비 완료로 변경 → 픽업 코드 노출 → 수령 완료', async ({ seller, sellerPage }) => {
+  test('P5-10: PREPARING → 준비 완료로 변경 → 픽업 코드 노출 → 수령 완료', async ({ sellerSession }) => {
     test.setTimeout(120_000)
+    const { seller, page: sellerPage } = sellerSession
 
     const order = await seedFlow(seller.token, seller.store.id, 'PREPARING')
     await spaGoto(sellerPage, `/orders/${order.orderId}`)
@@ -149,8 +165,9 @@ test.describe('P5 사장 주문 상태 전이', () => {
    * 시드된 픽업 코드가 상세 화면에 표시(강조 border/색)되고,
    * [수령 완료 처리] 클릭 후 픽업 완료 터미널 상태로 전환.
    */
-  test('P5-11: READY → 픽업 코드 표시 확인 → 수령 완료', async ({ seller, sellerPage }) => {
+  test('P5-11: READY → 픽업 코드 표시 확인 → 수령 완료', async ({ sellerSession }) => {
     test.setTimeout(120_000)
+    const { seller, page: sellerPage } = sellerSession
 
     const order = await seedFlow(seller.token, seller.store.id, 'READY')
     await spaGoto(sellerPage, `/orders/${order.orderId}`)
@@ -176,10 +193,10 @@ test.describe('P5 사장 주문 상태 전이', () => {
    * READY 상세에 픽업 코드가 **표시**되되 **코드 입력 필드는 없다**.
    */
   test('P5-12: 픽업코드는 표시 전용 — 코드 입력 검증 게이트 없음 (A4-1 의도됨)', async ({
-    seller,
-    sellerPage,
+    sellerSession,
   }) => {
     test.setTimeout(120_000)
+    const { seller, page: sellerPage } = sellerSession
     const order = await seedFlow(seller.token, seller.store.id, 'READY')
     await spaGoto(sellerPage, `/orders/${order.orderId}`)
     await expect(sellerPage.getByText('준비완료')).toBeVisible({ timeout: 15_000 })
@@ -195,8 +212,9 @@ test.describe('P5 사장 주문 상태 전이', () => {
    * [미수령] → ConfirmSheet "미수령 처리할까요?" → [미수령 처리] 확인
    * → 터미널 상태: "처리할 작업이 없어요" + READY CTA 버튼 소멸.
    */
-  test('P5-13: READY → 미수령 처리 → NO_SHOW 전환', async ({ seller, sellerPage }) => {
+  test('P5-13: READY → 미수령 처리 → NO_SHOW 전환', async ({ sellerSession }) => {
     test.setTimeout(120_000)
+    const { seller, page: sellerPage } = sellerSession
 
     const order = await seedFlow(seller.token, seller.store.id, 'READY')
     await spaGoto(sellerPage, `/orders/${order.orderId}`)

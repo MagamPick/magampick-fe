@@ -25,27 +25,18 @@ test.describe('주소 추가 — GPS 경로', () => {
   })
 
   /**
-   * ★ BUG-A (be-null-jibunaddress-optional-trap 계열): GPS 생성 주소를 BE 가 `zonecode: null` 로
-   * 내려주는데 FE `addressResponseSchema.zonecode` 가 `.optional()`(=null 거부)이라, create 응답
-   * (POST 201)을 파싱하다 ZodError → create.error → 폼에 "저장 중 문제가 발생했어요"만 뜨고 목록으로
-   * 복귀하지 않는다(주소는 DB 엔 생성됨). 목록에 GPS 주소가 끼면 list parse 도 throw → ErrorState.
-   *   수정: apps/customer/src/features/addresses/types.ts (zonecode `.optional()`→`.nullish()`).
-   *   수정되면 이 test.fail 이 통과로 뒤집혀 마커 제거를 요구한다.
+   * GPS 주소 추가가 끝까지(create→목록 복귀→표시) 동작한다.
+   * (과거 BUG-A: GPS 주소 zonecode:null 을 FE 스키마가 거부해 저장 실패·목록 깨짐 → PR#143 .nullish() sweep 으로 해소.)
    */
   test('GPS 주소 추가 후 목록에 나타난다', async ({ customerPage }) => {
-    test.fail(true, 'BUG-A: GPS 주소(zonecode null) create 응답 parse throw → 저장 실패·목록 미복귀')
     await spaGoto(customerPage, '/addresses')
     await customerPage.getByRole('button', { name: '현재 위치로 찾기' }).click()
     await expect(customerPage.getByRole('heading', { name: '주소 추가' })).toBeVisible()
     await customerPage.getByRole('button', { name: /우리집/ }).click()
     await customerPage.getByRole('button', { name: '추가하기' }).click()
 
-    // 기대: 목록 복귀 + 새 주소 표시. 현재: BUG-A 로 폼에 머물며 에러 → 아래가 실패(expected fail).
-    await expect(customerPage.getByRole('heading', { name: '주소 설정' })).toBeVisible({
-      timeout: 5000,
-    })
-    await expect(customerPage.getByText('테헤란로 105', { exact: false })).toBeVisible({
-      timeout: 5000,
-    })
+    // 목록 복귀 + 새 주소(테헤란로 105) 표시
+    await expect(customerPage.getByRole('heading', { name: '주소 설정' })).toBeVisible()
+    await expect(customerPage.getByText('테헤란로 105', { exact: false })).toBeVisible()
   })
 })
