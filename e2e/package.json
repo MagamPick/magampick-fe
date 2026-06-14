@@ -1,0 +1,19 @@
+{
+  "name": "e2e",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "description": "마감픽 Playwright E2E 스윗 (대상 = 배포된 dev). CI 게이트 아님 — 로컬/수동 실행.",
+  "scripts": {
+    "test:e2e": "playwright test",
+    "test:e2e:customer": "playwright test --project=customer",
+    "test:e2e:seller": "playwright test --project=seller",
+    "test:e2e:admin": "playwright test --project=admin",
+    "test:e2e:ui": "playwright test --ui",
+    "report": "playwright show-report"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.60.0",
+    "@types/node": "^24.12.3"
+  }
+}
