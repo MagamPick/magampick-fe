@@ -48,12 +48,19 @@ function jsonPart(obj: unknown) {
   return { name: 'request.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(obj)) }
 }
 
-/** 떨이 픽업 마감 시각(KST 벽시계) — 기본 오늘 21:00, 마감임박 테스트는 kstFromNow(0.5) 사용 */
+/** 떨이 픽업 마감 시각(KST 벽시계). 마감임박 테스트는 kstFromNow(0.5) 사용 */
 export function kstFromNow(hours: number): string {
   return new Date(Date.now() + (9 + hours) * 3600 * 1000).toISOString().slice(0, 19)
 }
-function todayKst2100(): string {
-  return new Date(Date.now() + 9 * 3600 * 1000).toISOString().slice(0, 10) + 'T21:00:00'
+/**
+ * 기본 픽업 마감 — BE 검증 "오늘 내 + 현재 이후"를 시간대 무관하게 만족.
+ * now+2h 가 오늘이면 그 시각, 자정을 넘기면 **오늘 23:55** 로 캡(저녁 늦게 실행해도 유효).
+ * (이전 고정 21:00 은 21시 이후 실행 시 과거가 돼 INVALID_PICKUP_WINDOW 로 실패했음.)
+ */
+function pickupEndDefault(): string {
+  const todayKst = new Date(Date.now() + 9 * 3600 * 1000).toISOString().slice(0, 10)
+  const plus2h = new Date(Date.now() + 11 * 3600 * 1000).toISOString().slice(0, 19)
+  return plus2h.slice(0, 10) === todayKst ? plus2h : `${todayKst}T23:55:00`
 }
 
 export type SeededSeller = {
@@ -183,7 +190,7 @@ export async function seedClearance(
         productId,
         salePrice: opts?.salePrice ?? 2000,
         totalQuantity: opts?.totalQuantity ?? 5,
-        pickupEndAt: opts?.pickupEndAt ?? todayKst2100(),
+        pickupEndAt: opts?.pickupEndAt ?? pickupEndDefault(),
       },
     })
     if (!res.ok()) throw new Error(`[seed] clearance 실패 ${res.status()}: ${await res.text()}`)
