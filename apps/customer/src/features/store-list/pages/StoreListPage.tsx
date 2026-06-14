@@ -1,12 +1,12 @@
 import { useEffect, useRef } from 'react'
 import { Bell } from 'lucide-react'
-import { useSearchParams } from 'react-router'
-import { ComingSoonProvider } from '@/shared/components/ComingSoonToast'
+import { Link, useSearchParams } from 'react-router'
 import { ScreenContainer } from '@/shared/components/ScreenContainer'
 import { EmptyState } from '@/shared/components/EmptyState'
 import { ErrorState } from '@/shared/components/ErrorState'
 import { ListRowSkeleton } from '@/shared/components/Skeletons'
-import { useComingSoon } from '@/shared/hooks/useComingSoon'
+import { ROUTES } from '@/shared/lib/routes'
+import { useUnreadCount } from '@/features/notifications/hooks/useUnreadCount'
 import { SearchBarButton } from '@/shared/components/SearchBarButton'
 import { PullToRefresh } from '@/shared/components/PullToRefresh'
 import { StoreSortTabs } from '../components/StoreSortTabs'
@@ -15,18 +15,25 @@ import { useStoreList } from '../hooks/useStoreList'
 import { useStoreListRefresh } from '../hooks/useStoreListRefresh'
 import { storeListParamsSchema, type StoreSort } from '../types'
 
-/** 미구현 알림(Phase 후순위) 진입 — 탭 시 "준비 중" 안내. 카운트 배지는 알림 기능 생기면. */
+/** 알림센터 진입 — 홈 헤더와 동일하게 미읽음 수 뱃지 표시 (소비자 알림 #11 연동 완료). */
 function NotificationBell() {
-  const { show } = useComingSoon()
+  const { data: unreadCount = 0 } = useUnreadCount()
   return (
-    <button
-      type="button"
+    <Link
+      to={ROUTES.NOTIFICATIONS}
       aria-label="알림"
-      onClick={() => show('알림은 준비 중이에요.')}
-      className="-mr-2 inline-flex size-11 items-center justify-center text-foreground"
+      className="relative -mr-2 inline-flex size-11 items-center justify-center text-foreground"
     >
       <Bell className="size-[22px]" aria-hidden />
-    </button>
+      {unreadCount > 0 && (
+        <span
+          className="absolute right-1.5 top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold leading-none text-white"
+          aria-hidden
+        >
+          {unreadCount > 99 ? '99+' : unreadCount}
+        </span>
+      )}
+    </Link>
   )
 }
 
@@ -104,16 +111,14 @@ export function StoreListPage() {
   const refresh = useStoreListRefresh()
 
   return (
-    <ComingSoonProvider>
-      <ScreenContainer as="section" variant="tab">
-        <header className="flex h-[52px] flex-shrink-0 items-center justify-between px-5">
-          <h1 className="text-lg font-extrabold tracking-[-0.3px]">전체 매장</h1>
-          <NotificationBell />
-        </header>
-        <PullToRefresh onRefresh={refresh}>
-          <StoreListBody sort={sort} onSortChange={(next) => setSearchParams({ sort: next })} />
-        </PullToRefresh>
-      </ScreenContainer>
-    </ComingSoonProvider>
+    <ScreenContainer as="section" variant="tab">
+      <header className="flex h-[52px] flex-shrink-0 items-center justify-between px-5">
+        <h1 className="text-lg font-extrabold tracking-[-0.3px]">전체 매장</h1>
+        <NotificationBell />
+      </header>
+      <PullToRefresh onRefresh={refresh}>
+        <StoreListBody sort={sort} onSortChange={(next) => setSearchParams({ sort: next })} />
+      </PullToRefresh>
+    </ScreenContainer>
   )
 }
