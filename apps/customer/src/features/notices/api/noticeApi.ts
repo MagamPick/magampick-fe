@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import { apiClient } from '@/shared/lib/axios'
+import { nullableString, nullableBoolean, nullableNumber } from '@/shared/lib/zodNullable'
 import { sortNotices } from '../lib/sortNotices'
 import { noticeTagSchema, type Notice } from '../types'
 
@@ -14,12 +15,12 @@ import { noticeTagSchema, type Notice } from '../types'
 
 /** BE AnnouncementResponse */
 const announcementResponseSchema = z.object({
-  id: z.number().optional(),
+  id: nullableNumber(),
   tag: noticeTagSchema,
-  pinned: z.boolean().optional(),
-  date: z.string().optional(),
-  title: z.string().optional(),
-  body: z.string().optional(),
+  pinned: nullableBoolean(),
+  date: nullableString(),
+  title: nullableString(),
+  body: nullableString(),
 })
 
 type AnnouncementResponse = z.infer<typeof announcementResponseSchema>

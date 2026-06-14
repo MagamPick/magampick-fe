@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import { apiClient } from '@/shared/lib/axios'
+import { nullish, nullableString, nullableNumber } from '@/shared/lib/zodNullable'
 import { QUICK_EVAL_TAGS } from '../types'
 import type { AnalyticsData, AnalyticsPeriod, QuickEvalTag } from '../types'
 
@@ -17,55 +18,55 @@ const PERIOD_PARAM: Record<AnalyticsPeriod, string> = {
 
 /** BE SalesBar 스키마 — 전 필드 SpringDoc optional. */
 const salesBarSchema = z.object({
-  label: z.string().optional(),
-  amount: z.number().optional(),
+  label: nullableString(),
+  amount: nullableNumber(),
 })
 
 /** BE SalesMetrics 스키마. */
 const salesMetricsSchema = z.object({
-  totalSales: z.number().optional(),
-  deltaPct: z.number().optional(),
-  chart: z.array(salesBarSchema).optional(),
-  avgOrderValue: z.number().optional(),
-  peakHour: z.string().optional(),
+  totalSales: nullableNumber(),
+  deltaPct: nullableNumber(),
+  chart: nullish(z.array(salesBarSchema)),
+  avgOrderValue: nullableNumber(),
+  peakHour: nullableString(),
 })
 
 /** BE OrderMetrics 스키마. */
 const orderMetricsSchema = z.object({
-  total: z.number().optional(),
-  pickedUp: z.number().optional(),
-  canceled: z.number().optional(),
-  noShow: z.number().optional(),
+  total: nullableNumber(),
+  pickedUp: nullableNumber(),
+  canceled: nullableNumber(),
+  noShow: nullableNumber(),
 })
 
 /** BE ClearanceMetrics 스키마. */
 const clearanceMetricsSchema = z.object({
-  soldQty: z.number().optional(),
-  savedQty: z.number().optional(),
-  savedAmount: z.number().optional(),
-  avgDiscountRate: z.number().optional(),
+  soldQty: nullableNumber(),
+  savedQty: nullableNumber(),
+  savedAmount: nullableNumber(),
+  avgDiscountRate: nullableNumber(),
 })
 
 /** BE ReviewTagCount 스키마 — tag 는 한글 라벨 string (방어 필터는 매핑에서). */
 const reviewTagCountSchema = z.object({
-  tag: z.string().optional(),
-  count: z.number().optional(),
+  tag: nullableString(),
+  count: nullableNumber(),
 })
 
 /** BE ReviewMetrics 스키마. */
 const reviewMetricsSchema = z.object({
-  avgRating: z.number().optional(),
-  newCount: z.number().optional(),
-  replyRate: z.number().optional(),
-  tags: z.array(reviewTagCountSchema).optional(),
+  avgRating: nullableNumber(),
+  newCount: nullableNumber(),
+  replyRate: nullableNumber(),
+  tags: nullish(z.array(reviewTagCountSchema)),
 })
 
 /** BE AnalyticsResponse 최상위 스키마. */
 const analyticsResponseSchema = z.object({
-  sales: salesMetricsSchema.optional(),
-  orders: orderMetricsSchema.optional(),
-  clearance: clearanceMetricsSchema.optional(),
-  review: reviewMetricsSchema.optional(),
+  sales: nullish(salesMetricsSchema),
+  orders: nullish(orderMetricsSchema),
+  clearance: nullish(clearanceMetricsSchema),
+  review: nullish(reviewMetricsSchema),
 })
 
 type AnalyticsResponse = z.infer<typeof analyticsResponseSchema>

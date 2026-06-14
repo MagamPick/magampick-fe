@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { nullableString } from '@/shared/lib/zodNullable'
 
 /**
  * 소비자 프로필(마이페이지) 도메인 타입 / Zod 스키마.
@@ -13,8 +14,8 @@ export const profileResponseSchema = z.object({
   email: z.string(),
   nickname: z.string(),
   phone: z.string().nullable().optional(), // 가입 직후 null 가능
-  phoneVerifiedAt: z.string().optional(),
-  createdAt: z.string().optional(),
+  phoneVerifiedAt: nullableString(),
+  createdAt: nullableString(),
 })
 export type ProfileResponse = z.infer<typeof profileResponseSchema>
 

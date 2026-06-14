@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import { apiClient } from '@/shared/lib/axios'
+import { nullish, nullableString, nullableNumber } from '@/shared/lib/zodNullable'
 import {
   inquiryCategorySchema,
   inquiryInputSchema,
@@ -19,25 +20,25 @@ import {
 
 /** BE FaqResponse */
 const faqResponseSchema = z.object({
-  id: z.number().optional(),
-  question: z.string().optional(),
-  answer: z.string().optional(),
+  id: nullableNumber(),
+  question: nullableString(),
+  answer: nullableString(),
 })
 
 /** BE InquiryAnswerResponse */
 const inquiryAnswerResponseSchema = z.object({
-  content: z.string().optional(),
-  answeredAt: z.string().optional(),
+  content: nullableString(),
+  answeredAt: nullableString(),
 })
 
 /** BE InquiryResponse — category 는 본인(사장) 문의라 사장 enum 범위 */
 const inquiryResponseSchema = z.object({
-  id: z.number().optional(),
+  id: nullableNumber(),
   category: inquiryCategorySchema,
-  title: z.string().optional(),
-  content: z.string().optional(),
-  status: inquiryStatusSchema.optional(),
-  createdAt: z.string().optional(),
+  title: nullableString(),
+  content: nullableString(),
+  status: nullish(inquiryStatusSchema),
+  createdAt: nullableString(),
   answer: inquiryAnswerResponseSchema.nullish(),
 })
 

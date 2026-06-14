@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import { apiClient } from '@/shared/lib/axios'
+import { nullish, nullableString, nullableNumber, nullableBoolean } from '@/shared/lib/zodNullable'
 import type { Notification, NotificationSettingKey, NotificationSettings } from '../types'
 
 /**
@@ -12,34 +13,34 @@ import type { Notification, NotificationSettingKey, NotificationSettings } from 
 
 /** BE NotificationResponse */
 const notificationResponseSchema = z.object({
-  id: z.number().optional(),
-  category: z.string().optional(),
-  title: z.string().optional(),
-  body: z.string().optional(),
-  createdAt: z.string().optional(),
-  read: z.boolean().optional(),
+  id: nullableNumber(),
+  category: nullableString(),
+  title: nullableString(),
+  body: nullableString(),
+  createdAt: nullableString(),
+  read: nullableBoolean(),
   // BE 가 link 를 null 로 내려줄 수 있어 nullish 로 수용 — B3-3
   link: z.string().nullish(),
 })
 
 /** BE NotificationListResponse */
 const notificationListResponseSchema = z.object({
-  items: z.array(notificationResponseSchema).optional(),
+  items: nullish(z.array(notificationResponseSchema)),
 })
 
 /** BE UnreadCountResponse */
 const unreadCountResponseSchema = z.object({
-  count: z.number().optional(),
+  count: nullableNumber(),
 })
 
 /** BE SellerNotificationSettingsResponse */
 const sellerNotificationSettingsResponseSchema = z.object({
-  newOrder: z.boolean().optional(),
-  orderCancel: z.boolean().optional(),
-  refundRequest: z.boolean().optional(),
-  newReview: z.boolean().optional(),
-  notice: z.boolean().optional(),
-  marketing: z.boolean().optional(),
+  newOrder: nullableBoolean(),
+  orderCancel: nullableBoolean(),
+  refundRequest: nullableBoolean(),
+  newReview: nullableBoolean(),
+  notice: nullableBoolean(),
+  marketing: nullableBoolean(),
 })
 
 type NotificationResponse = z.infer<typeof notificationResponseSchema>

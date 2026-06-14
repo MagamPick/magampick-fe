@@ -54,6 +54,21 @@ describe('addressesApi (실 BE 연동)', () => {
       expect(result[0].jibunAddress).toBeUndefined()
     })
 
+    it('zonecode 가 null 이어도 throw 없이 undefined 로 정규화한다 (BE null-trap 회귀)', async () => {
+      const nullZonecode = { ...addressFixture, zonecode: null }
+      vi.mocked(apiClient.get).mockResolvedValue({ data: [nullZonecode] })
+      const result = await addressesApi.list()
+      expect(result[0].zonecode).toBeUndefined()
+    })
+
+    it('createdAt · updatedAt 이 null 이어도 throw 없이 undefined 로 정규화한다', async () => {
+      const nullDates = { ...addressFixture, createdAt: null, updatedAt: null }
+      vi.mocked(apiClient.get).mockResolvedValue({ data: [nullDates] })
+      const result = await addressesApi.list()
+      expect(result[0].createdAt).toBeUndefined()
+      expect(result[0].updatedAt).toBeUndefined()
+    })
+
     it('isDefault 가 boolean 으로 파싱됨', async () => {
       vi.mocked(apiClient.get).mockResolvedValue({ data: [addressFixture] })
       const result = await addressesApi.list()

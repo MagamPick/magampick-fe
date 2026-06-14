@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import { apiClient } from '@/shared/lib/axios'
+import { nullish, nullableString, nullableNumber } from '@/shared/lib/zodNullable'
 import { orderStatusSchema } from '../types'
 import type { Order, RefundStatus } from '../types'
 import type { CartItem, CartItemKind, Pickup } from '@/features/cart/types'
@@ -7,21 +8,21 @@ import type { CartItem, CartItemKind, Pickup } from '@/features/cart/types'
 // ─── BE OrderResponse Zod 스키마 (공용 — confirm/listOrders/getOrder/cancelOrder 공유) ─────
 
 const orderItemFromResponseSchema = z.object({
-  id: z.number().optional(),
-  kind: z.string().optional(),
-  name: z.string().optional(),
+  id: nullableNumber(),
+  kind: nullableString(),
+  name: nullableString(),
   imageUrl: z.string().nullable().optional(),
-  originalPrice: z.number().optional(),
-  salePrice: z.number().optional(),
-  qty: z.number().optional(),
+  originalPrice: nullableNumber(),
+  salePrice: nullableNumber(),
+  qty: nullableNumber(),
 })
 
 const refundInfoResponseSchema = z.object({
-  status: z.string().optional(),
-  reason: z.string().optional(),
-  requestedAt: z.string().optional(),
-  rejectReason: z.string().optional(),
-  resolvedAt: z.string().optional(),
+  status: nullableString(),
+  reason: nullableString(),
+  requestedAt: nullableString(),
+  rejectReason: nullableString(),
+  resolvedAt: nullableString(),
 })
 
 /**
@@ -30,43 +31,43 @@ const refundInfoResponseSchema = z.object({
  * (런타임 미검증 리스크: listOrders 에 AWAITING_PAYMENT 주문이 포함될 수 있으나 실 데이터 확인 불가 — 리포트 명시)
  */
 export const orderResponseSchema = z.object({
-  id: z.number().optional(),
-  orderNo: z.string().optional(),
-  storeId: z.number().optional(),
-  storeName: z.string().optional(),
-  storePhone: z.string().optional(),
-  items: z.array(orderItemFromResponseSchema).optional(),
-  pickup: z
-    .object({
-      type: z.string().optional(),
-      time: z.string().optional(),
-    })
-    .optional(),
-  memo: z.string().optional(),
-  amounts: z
-    .object({
-      normalTotal: z.number().optional(),
-      discountTotal: z.number().optional(),
-      payTotal: z.number().optional(),
+  id: nullableNumber(),
+  orderNo: nullableString(),
+  storeId: nullableNumber(),
+  storeName: nullableString(),
+  storePhone: nullableString(),
+  items: nullish(z.array(orderItemFromResponseSchema)),
+  pickup: nullish(
+    z.object({
+      type: nullableString(),
+      time: nullableString(),
+    }),
+  ),
+  memo: nullableString(),
+  amounts: nullish(
+    z.object({
+      normalTotal: nullableNumber(),
+      discountTotal: nullableNumber(),
+      payTotal: nullableNumber(),
       /** 쿠폰 할인액 (X1-BE) */
-      couponDiscount: z.number().optional(),
+      couponDiscount: nullableNumber(),
       /** 포인트 사용액 (X1-BE) */
-      pointUsed: z.number().optional(),
+      pointUsed: nullableNumber(),
       /** 실결제액 = 최종 토스 청구액 (X1-BE) — payTotal − couponDiscount − pointUsed */
-      finalAmount: z.number().optional(),
-    })
-    .optional(),
-  pickupCode: z.string().optional(),
+      finalAmount: nullableNumber(),
+    }),
+  ),
+  pickupCode: nullableString(),
   /** 도메인 7-enum 엄격 검증 (PENDING·PREPARING·READY·COMPLETED·NO_SHOW·REJECTED·CANCELLED) */
-  status: orderStatusSchema.optional(),
-  paymentMethod: z.string().optional(),
-  createdAt: z.string().optional(),
+  status: nullish(orderStatusSchema),
+  paymentMethod: nullableString(),
+  createdAt: nullableString(),
   /** 수령완료 시각 (COMPLETED) */
-  completedAt: z.string().optional(),
+  completedAt: nullableString(),
   /** 취소 시각 (CANCELLED) — 도메인에선 completedAt 으로 흡수 */
-  cancelledAt: z.string().optional(),
+  cancelledAt: nullableString(),
   /** 환불 정보 (미요청 시 absent) */
-  refund: refundInfoResponseSchema.optional(),
+  refund: nullish(refundInfoResponseSchema),
 })
 
 export type TossConfirmResponse = z.infer<typeof orderResponseSchema>

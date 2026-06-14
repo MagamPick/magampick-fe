@@ -1,13 +1,14 @@
 import { z } from 'zod'
 import { apiClient } from '@/shared/lib/axios'
+import { nullish, nullableString, nullableNumber } from '@/shared/lib/zodNullable'
 import type { SellerReview, ReviewSummary } from '../types'
 
 // ─── BE StoreReviewResponse Zod 스키마 ─────────────────────────────────────
 
 const reviewedProductSchema = z.object({
-  productId: z.number().optional(),
-  kind: z.string().optional(),
-  name: z.string().optional(),
+  productId: nullableNumber(),
+  kind: nullableString(),
+  name: nullableString(),
 })
 
 /**
@@ -16,14 +17,14 @@ const reviewedProductSchema = z.object({
  * ownerReply 는 답글 없으면 null.
  */
 export const storeReviewResponseSchema = z.object({
-  id: z.number().optional(),
-  authorNickname: z.string().optional(),
-  rating: z.number().optional(),
-  content: z.string().optional(),
-  createdAt: z.string().optional(),
-  products: z.array(reviewedProductSchema).optional(),
-  photos: z.array(z.string()).optional(),
-  tags: z.array(z.string()).optional(),
+  id: nullableNumber(),
+  authorNickname: nullableString(),
+  rating: nullableNumber(),
+  content: nullableString(),
+  createdAt: nullableString(),
+  products: nullish(z.array(reviewedProductSchema)),
+  photos: nullish(z.array(z.string())),
+  tags: nullish(z.array(z.string())),
   ownerReply: z.string().nullable().optional(),
 })
 

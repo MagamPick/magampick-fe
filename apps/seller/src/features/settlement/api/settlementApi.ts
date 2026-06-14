@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import { apiClient } from '@/shared/lib/axios'
+import { nullish, nullableString, nullableNumber } from '@/shared/lib/zodNullable'
 import type { SettlementCycle, SettlementSummary } from '../types'
 
 // ─── BE SettlementCycleResponse Zod 스키마 ───────────────────────────────────
@@ -9,17 +10,17 @@ import type { SettlementCycle, SettlementSummary } from '../types'
  * status 는 2-enum 으로 엄격 검증. half 는 1|2 리터럴.
  */
 const settlementCycleSchema = z.object({
-  id: z.number().optional(),
-  storeId: z.number().optional(),
-  year: z.number().optional(),
-  month: z.number().optional(),
-  half: z.union([z.literal(1), z.literal(2)]).optional(),
-  periodStart: z.string().optional(),
-  periodEnd: z.string().optional(),
-  depositDate: z.string().optional(),
-  grossAmount: z.number().optional(),
-  feeAmount: z.number().optional(),
-  netAmount: z.number().optional(),
+  id: nullableNumber(),
+  storeId: nullableNumber(),
+  year: nullableNumber(),
+  month: nullableNumber(),
+  half: nullish(z.union([z.literal(1), z.literal(2)])),
+  periodStart: nullableString(),
+  periodEnd: nullableString(),
+  depositDate: nullableString(),
+  grossAmount: nullableNumber(),
+  feeAmount: nullableNumber(),
+  netAmount: nullableNumber(),
   status: z.enum(['SCHEDULED', 'DEPOSITED']),
 })
 
@@ -28,10 +29,10 @@ const settlementCycleSchema = z.object({
  * 가장 최근 SCHEDULED 회차 요약. 없으면 BE 가 204 반환.
  */
 const settlementSummarySchema = z.object({
-  cycleId: z.number().optional(),
-  periodLabel: z.string().optional(),
-  netAmount: z.number().optional(),
-  depositDate: z.string().optional(),
+  cycleId: nullableNumber(),
+  periodLabel: nullableString(),
+  netAmount: nullableNumber(),
+  depositDate: nullableString(),
   status: z.enum(['SCHEDULED', 'DEPOSITED']),
 })
 

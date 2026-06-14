@@ -5,6 +5,7 @@
  */
 import { z } from 'zod'
 import { apiClient } from '@/shared/lib/axios'
+import { nullish, nullableString, nullableNumber } from '@/shared/lib/zodNullable'
 import { productCategorySchema } from '../types'
 import type { CreateProductPayload, Product, UpdateProductPayload } from '../types'
 
@@ -13,20 +14,20 @@ import type { CreateProductPayload, Product, UpdateProductPayload } from '../typ
 /** ProductResponse (BE spec) */
 const productResponseSchema = z.object({
   id: z.number(),
-  name: z.string().optional(),
-  regularPrice: z.number().optional(),
+  name: nullableString(),
+  regularPrice: nullableNumber(),
   // BE 가 imageUrl 을 null 로 내려줄 수 있어 nullish 로 수용 (소비자 앱 패턴 미러)
   imageUrl: z.string().nullish(),
-  status: z.enum(['ON_SALE', 'SOLD_OUT']).optional(),
-  category: productCategorySchema.optional(),
-  description: z.string().optional(),
-  createdAt: z.string().optional(),
+  status: nullish(z.enum(['ON_SALE', 'SOLD_OUT'])),
+  category: nullish(productCategorySchema),
+  description: nullableString(),
+  createdAt: nullableString(),
   // storeId 는 BE 응답에 없음 — 호출 측 storeId 로 채움
 })
 
 /** PageResponseProductResponse (목록) */
 const pageProductResponseSchema = z.object({
-  content: z.array(productResponseSchema).optional(),
+  content: nullish(z.array(productResponseSchema)),
   // page/size/totalCount 는 FE에서 미사용 (100개 단일 페이지 전략)
 })
 
