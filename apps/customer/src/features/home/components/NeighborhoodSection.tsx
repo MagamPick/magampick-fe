@@ -12,7 +12,7 @@ export function NeighborhoodSection() {
   return (
     <section className="px-5 pt-[22px]">
       <SectionHeader
-        title="📍 우리 동네 마감픽"
+        title="우리 동네 마감픽"
         moreTo={`${ROUTES.ALL}?sort=${STORE_SORT.RECOMMENDED}`}
       />
       {isPending ? (

@@ -1,3 +1,4 @@
+import { Star } from 'lucide-react'
 import { MetricHero } from './MetricHero'
 import { StatRows } from './StatRows'
 import { formatPercent, formatRating, formatUnit, topTags } from '../lib/analyticsFormat'
@@ -14,7 +15,15 @@ export function ReviewPanel({ review }: { review: ReviewMetrics }) {
   const tags = topTags(review.tags, TOP_TAG_LIMIT)
   return (
     <div>
-      <MetricHero label="평균 별점" value={`⭐ ${formatRating(review.avgRating)}`} />
+      <MetricHero
+        label="평균 별점"
+        value={
+          <span className="flex items-center gap-1.5">
+            <Star aria-hidden className="size-6 fill-amber-400 text-amber-400" />
+            {formatRating(review.avgRating)}
+          </span>
+        }
+      />
       <div className="px-5 pt-5">
         <StatRows
           rows={[

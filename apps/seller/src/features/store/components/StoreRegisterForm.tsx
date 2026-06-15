@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState, type ChangeEvent } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useNavigate } from 'react-router'
-import { CalendarIcon } from 'lucide-react'
+import { AlertTriangle, CalendarIcon, Camera, CheckCircle2 } from 'lucide-react'
 import {
   Form,
   FormControl,
@@ -223,7 +223,7 @@ export function StoreRegisterForm() {
                 <img src={previewUrl} alt="매장 대표 사진 미리보기" className="size-full object-cover" />
               ) : (
                 <>
-                  <span className="text-[34px] leading-none">📷</span>
+                  <Camera className="size-8 text-muted-foreground" aria-hidden />
                   <span className="text-[13.5px] font-semibold">대표 사진 등록</span>
                   <span className="text-[11.5px] text-placeholder">
                     매장 외관이 잘 보이는 사진을 권장해요 (선택)
@@ -367,13 +367,13 @@ export function StoreRegisterForm() {
 
           {biz.isSuccess && (
             <div className="mb-4 flex items-start gap-2.5 rounded-xl bg-success-subtle px-4 py-3.5 text-[13.5px] font-semibold leading-normal text-success">
-              <span className="text-base leading-none">✅</span>
+              <CheckCircle2 className="size-4 shrink-0" aria-hidden />
               <span>정상 등록된 사업자입니다.</span>
             </div>
           )}
           {biz.isError && (
             <div className="mb-4 flex items-start gap-2.5 rounded-xl bg-destructive-subtle px-4 py-3.5 text-[13.5px] font-semibold leading-normal text-destructive">
-              <span className="text-base leading-none">⚠️</span>
+              <AlertTriangle className="size-4 shrink-0" aria-hidden />
               <span>
                 조회되지 않는 사업자등록번호입니다.
                 <br />

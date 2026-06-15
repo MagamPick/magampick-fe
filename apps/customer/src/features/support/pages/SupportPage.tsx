@@ -1,5 +1,5 @@
 import { useNavigate, useSearchParams } from 'react-router'
-import { ChevronLeft } from 'lucide-react'
+import { ChevronLeft, HelpCircle, MessageSquare } from 'lucide-react'
 import { ScreenContainer } from '@/shared/components/ScreenContainer'
 import { SegTabs, type SegTabItem } from '@/shared/components/SegTabs'
 import { EmptyState } from '@/shared/components/EmptyState'
@@ -62,7 +62,7 @@ export function SupportPage() {
           ) : faqs && faqs.length > 0 ? (
             <FaqList faqs={faqs} />
           ) : (
-            <EmptyState icon="❓">등록된 FAQ가 없어요.</EmptyState>
+            <EmptyState icon={<HelpCircle />}>등록된 FAQ가 없어요.</EmptyState>
           )
         ) : (
           <div className="flex flex-col">
@@ -92,7 +92,7 @@ export function SupportPage() {
                 ))}
               </div>
             ) : (
-              <EmptyState icon="💬">아직 문의 내역이 없어요.</EmptyState>
+              <EmptyState icon={<MessageSquare />}>아직 문의 내역이 없어요.</EmptyState>
             )}
           </div>
         )}

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef } from 'react'
+import { Camera } from 'lucide-react'
 import { REVIEW_PHOTO_MAX } from '../types'
 import type { ReviewPhoto } from '../types'
 
@@ -68,7 +69,7 @@ export function ReviewPhotoInput({ value, onChange }: Props) {
           onClick={() => inputRef.current?.click()}
           className="flex size-[72px] flex-col items-center justify-center gap-[3px] rounded-xl border-[1.5px] border-dashed border-border bg-background text-[11px] font-bold text-muted-foreground"
         >
-          <span className="text-[22px]">📷</span>
+          <Camera className="size-5" aria-hidden />
           <span>사진 추가</span>
         </button>
       )}

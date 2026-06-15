@@ -1,5 +1,5 @@
 import { useNavigate, useParams } from 'react-router'
-import { ChevronLeft } from 'lucide-react'
+import { ChevronLeft, Search } from 'lucide-react'
 import { ScreenContainer } from '@/shared/components/ScreenContainer'
 import { ErrorState } from '@/shared/components/ErrorState'
 import { INQUIRY_CATEGORY_LABEL } from '../types'
@@ -30,7 +30,7 @@ export function InquiryDetailPage() {
         {isLoading ? (
           <p className="py-16 text-center text-sm text-muted-foreground">불러오는 중…</p>
         ) : isError || !inquiry ? (
-          <ErrorState icon="🔍" onRetry={() => refetch()}>문의를 찾을 수 없어요.</ErrorState>
+          <ErrorState icon={<Search />} onRetry={() => refetch()}>문의를 찾을 수 없어요.</ErrorState>
         ) : (
           <div className="flex flex-col gap-4">
             <div>

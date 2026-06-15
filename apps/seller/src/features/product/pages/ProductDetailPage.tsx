@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { z } from 'zod'
 import { Link, Navigate, useNavigate, useParams } from 'react-router'
-import { ChevronLeft, Pencil, Trash2, Zap } from 'lucide-react'
+import { ChevronLeft, Pencil, ShoppingBag, Trash2, Utensils, Zap } from 'lucide-react'
 import { ConfirmSheet } from '@/shared/components/ConfirmSheet'
 import { ErrorState } from '@/shared/components/ErrorState'
 import { cn } from '@/shared/lib/utils'
@@ -91,7 +91,7 @@ export function ProductDetailPage() {
       )}
 
       {!isLoading && (isError || !product) && (
-        <ErrorState icon="🍞" onRetry={() => refetch()}>
+        <ErrorState icon={<ShoppingBag />} onRetry={() => refetch()}>
           상품을 찾을 수 없어요.
         </ErrorState>
       )}
@@ -105,7 +105,7 @@ export function ProductDetailPage() {
                 {product.imageUrl ? (
                   <img src={product.imageUrl} alt={product.name} className="size-full object-cover" />
                 ) : (
-                  '🍽️'
+                  <Utensils className="size-7 text-muted-foreground" />
                 )}
               </span>
               <div className="flex min-w-0 flex-col items-start gap-1.5">

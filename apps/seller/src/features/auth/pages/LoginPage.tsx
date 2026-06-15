@@ -1,4 +1,5 @@
 import { Link } from 'react-router'
+import { Megaphone } from 'lucide-react'
 import { LoginForm } from '../components/LoginForm'
 import { ROUTES } from '@/shared/lib/routes'
 
@@ -7,9 +8,7 @@ export function LoginPage() {
   return (
     <main className="mx-auto flex min-h-screen max-w-md flex-col bg-card px-5 pb-10 pt-6">
       <div className="mt-10 text-center">
-        <div className="mx-auto flex size-[72px] items-center justify-center rounded-[18px] bg-[linear-gradient(160deg,#FFD9C7,#FFB088)] text-4xl shadow-[0_8px_20px_rgba(255,107,53,0.22)]">
-          🍞
-        </div>
+        <img src="/icons/icon-192.png" alt="" aria-hidden className="mx-auto size-[72px] rounded-full" />
         <h1 className="mt-3.5 text-[22px] font-extrabold tracking-[-0.6px] text-foreground">
           마감픽 사장님
         </h1>
@@ -30,9 +29,7 @@ export function LoginPage() {
       </p>
 
       <div className="mt-8 flex items-start gap-2.5 rounded-xl bg-secondary px-4 py-3.5">
-        <span aria-hidden className="text-base leading-none">
-          📣
-        </span>
+        <Megaphone aria-hidden className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
         <p className="text-[12.5px] leading-relaxed text-muted-foreground">
           <b className="font-bold text-foreground">소비자이신가요?</b>
           <br />

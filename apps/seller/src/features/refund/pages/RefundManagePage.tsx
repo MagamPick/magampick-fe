@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router'
-import { ChevronLeft } from 'lucide-react'
+import { ChevronLeft, ArrowLeftRight } from 'lucide-react'
 import { cn } from '@/shared/lib/utils'
 import { ScreenContainer } from '@/shared/components/ScreenContainer'
 import { EmptyState } from '@/shared/components/EmptyState'
@@ -123,7 +123,7 @@ export function RefundManagePage() {
         )}
 
         {!listLoading && !isError && visible.length === 0 && (
-          <EmptyState icon="💸">{SEG_EMPTY[seg]}</EmptyState>
+          <EmptyState icon={<ArrowLeftRight />}>{SEG_EMPTY[seg]}</EmptyState>
         )}
 
         {visible.map((refund) => (

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { Minus, Plus } from 'lucide-react'
+import { Map, Minus, Plus } from 'lucide-react'
 import type { GeoPosition } from '@/shared/hooks/useGeolocation'
 
 /**
@@ -143,7 +143,7 @@ export function StoreLocationMap({
 
       {sdkError && (
         <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-background px-8 text-center">
-          <span className="text-2xl">🗺️</span>
+          <Map className="size-7 text-muted-foreground" aria-hidden />
           <p className="text-sm font-bold text-foreground">지도를 불러오지 못했어요</p>
           <p className="text-xs text-muted-foreground">
             카카오맵 키(VITE_KAKAO_MAP_KEY)와 플랫폼 도메인 등록을 확인해 주세요.

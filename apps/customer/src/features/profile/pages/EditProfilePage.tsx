@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router'
-import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { Camera, ChevronLeft, ChevronRight } from 'lucide-react'
 import { ComingSoonProvider } from '@/shared/components/ComingSoonToast'
 import { ScreenContainer } from '@/shared/components/ScreenContainer'
 import { useComingSoon } from '@/shared/hooks/useComingSoon'
@@ -66,7 +66,7 @@ function EditProfileContent() {
                   aria-hidden
                   className="absolute -bottom-0.5 -right-0.5 flex size-[30px] items-center justify-center rounded-full border-2 border-card bg-foreground text-[14px]"
                 >
-                  📷
+                  <Camera className="size-3.5 text-background" aria-hidden />
                 </span>
               </button>
             </div>

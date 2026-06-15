@@ -1,4 +1,4 @@
-import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Store, Clock, Pencil, ClipboardList } from 'lucide-react'
 import { Link, useNavigate } from 'react-router'
 import { cn } from '@/shared/lib/utils'
 import { ROUTES } from '@/shared/lib/routes'
@@ -39,8 +39,8 @@ export function StoreManagePage() {
 
       {/* 매장 헤드 */}
       <div className="mx-5 mt-4 flex items-center gap-3.5 rounded-[16px] border border-border bg-card px-[18px] py-4">
-        <span className="flex size-14 shrink-0 items-center justify-center rounded-[14px] bg-cream text-3xl">
-          🏪
+        <span className="flex size-14 shrink-0 items-center justify-center rounded-[14px] bg-cream">
+          <Store className="size-7 text-muted-foreground" aria-hidden />
         </span>
         <div className="flex min-w-0 flex-col items-start gap-1.5">
           <span className="truncate text-[17px] font-extrabold tracking-tight">{name}</span>
@@ -69,7 +69,7 @@ export function StoreManagePage() {
             to={ROUTES.STORE_HOURS}
             className="flex items-center gap-3 px-4 py-3.5 transition active:bg-muted"
           >
-            <span className="text-lg">🕒</span>
+            <Clock className="size-[18px] shrink-0 text-muted-foreground" aria-hidden />
             <span className="flex-1 text-[14px] font-semibold text-foreground">영업시간</span>
             <ChevronRight className="size-[18px] text-muted-foreground" />
           </Link>
@@ -77,12 +77,12 @@ export function StoreManagePage() {
             to={ROUTES.STORE_EDIT}
             className="flex items-center gap-3 border-t border-border px-4 py-3.5 transition active:bg-muted"
           >
-            <span className="text-lg">✏️</span>
+            <Pencil className="size-[18px] shrink-0 text-muted-foreground" aria-hidden />
             <span className="flex-1 text-[14px] font-semibold text-foreground">매장 정보 수정</span>
             <ChevronRight className="size-[18px] text-muted-foreground" />
           </Link>
           <div className="flex items-center gap-3 border-t border-border px-4 py-3.5 opacity-50">
-            <span className="text-lg">📋</span>
+            <ClipboardList className="size-[18px] shrink-0 text-muted-foreground" aria-hidden />
             <span className="flex-1 text-[14px] font-semibold text-foreground">휴업·폐업 신청</span>
             <span className="text-[11.5px] text-muted-foreground">준비중</span>
           </div>

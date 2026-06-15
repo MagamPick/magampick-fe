@@ -10,6 +10,7 @@ import {
   FormLabel,
   FormMessage,
 } from '@/shared/components/ui/form'
+import { Camera } from 'lucide-react'
 import { Input } from '@/shared/components/ui/input'
 import { cn } from '@/shared/lib/utils'
 import { ApiError } from '@/shared/lib/apiError'
@@ -152,7 +153,7 @@ export function StoreEditForm({ detail }: { detail: StoreDetail }) {
                 <img src={displayImageUrl} alt="매장 대표 사진 미리보기" className="size-full object-cover" />
               ) : (
                 <>
-                  <span className="text-[34px] leading-none">📷</span>
+                  <Camera className="size-8 text-muted-foreground" aria-hidden />
                   <span className="text-[13.5px] font-semibold">대표 사진 등록</span>
                   <span className="text-[11.5px] text-placeholder">
                     매장 외관이 잘 보이는 사진을 권장해요 (선택)

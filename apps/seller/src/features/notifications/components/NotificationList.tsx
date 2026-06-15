@@ -1,3 +1,4 @@
+import { BellOff } from 'lucide-react'
 import { NotificationRow } from './NotificationRow'
 import type { Notification } from '../types'
 
@@ -15,8 +16,8 @@ export function NotificationList({
   if (!notifications || notifications.length === 0) {
     return (
       <div className="px-5 py-14 text-center">
-        <div className="text-[44px]" aria-hidden>
-          🔕
+        <div className="flex justify-center text-muted-foreground" aria-hidden>
+          <BellOff className="size-14" />
         </div>
         <p className="mt-3 text-sm font-semibold text-muted-foreground">새 알림이 없어요</p>
       </div>

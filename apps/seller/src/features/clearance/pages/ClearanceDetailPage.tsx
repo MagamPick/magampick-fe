@@ -3,7 +3,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { Navigate, useNavigate, useParams } from 'react-router'
-import { ChevronLeft } from 'lucide-react'
+import { ChevronLeft, Flame, UtensilsCrossed } from 'lucide-react'
 import {
   Form,
   FormControl,
@@ -133,7 +133,7 @@ export function ClearanceDetailPage() {
       )}
 
       {!isLoading && (isError || !clearance) && (
-        <ErrorState icon="🔥" onRetry={() => refetch()}>
+        <ErrorState icon={<Flame />} onRetry={() => refetch()}>
           마감 할인을 찾을 수 없어요.
         </ErrorState>
       )}
@@ -150,7 +150,7 @@ export function ClearanceDetailPage() {
                   className="size-full object-cover"
                 />
               ) : (
-                '🍞'
+                <UtensilsCrossed className="size-7 text-muted-foreground" />
               )}
             </span>
             <div className="flex min-w-0 flex-col items-start gap-1.5">

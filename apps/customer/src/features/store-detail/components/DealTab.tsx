@@ -22,7 +22,7 @@ export function DealTab({
   return (
     <div>
       <p className="mx-5 mt-4 rounded-[12px] bg-secondary px-4 py-[14px] text-[13px] font-bold text-secondary-foreground">
-        🎉 지금 바로 픽업 가능한 마감 할인이에요
+        지금 바로 픽업 가능한 마감 할인이에요
       </p>
       {!orderable && <OffBusinessNotice />}
       <div className="px-5 pt-1">

@@ -2,7 +2,7 @@ import { Fragment, useEffect, useRef, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useNavigate, useSearchParams } from 'react-router'
-import { ChevronLeft, Check } from 'lucide-react'
+import { ChevronLeft, Check, Moon, ShoppingCart, Utensils } from 'lucide-react'
 import {
   Form,
   FormControl,
@@ -195,7 +195,7 @@ export function ClearanceCreatePage() {
 
       {notOpen ? (
         <div className="flex flex-1 flex-col items-center justify-center px-8 text-center">
-          <p className="text-[40px]">🌙</p>
+          <Moon aria-hidden className="size-10 text-muted-foreground" />
           <p className="mt-3 text-[15px] font-bold text-foreground">지금은 등록할 수 없어요</p>
           <p className="mt-1.5 text-[13.5px] leading-relaxed text-muted-foreground">
             영업 중일 때만 마감 할인을 등록할 수 있어요.
@@ -227,7 +227,7 @@ export function ClearanceCreatePage() {
                       </p>
                     ) : eligible.length === 0 ? (
                       <div className="px-6 py-12 text-center">
-                        <p className="text-[34px]">🛒</p>
+                        <ShoppingCart aria-hidden className="size-9 text-muted-foreground" />
                         <p className="mt-2 text-[13.5px] leading-relaxed text-muted-foreground">
                           마감 할인으로 등록할 수 있는 상품이 없어요.
                           <br />
@@ -259,7 +259,7 @@ export function ClearanceCreatePage() {
                                     className="size-full object-cover"
                                   />
                                 ) : (
-                                  '🍽️'
+                                  <Utensils className="size-6 text-muted-foreground" />
                                 )}
                               </span>
                               <span className="min-w-0 flex-1">

@@ -1,3 +1,4 @@
+import { Heart } from 'lucide-react'
 import { ROUTES } from '@/shared/lib/routes'
 import { useFavorites } from '@/features/favorites/hooks/useFavorites'
 import { FavoriteStoreCard } from './FavoriteStoreCard'
@@ -13,7 +14,7 @@ export function FavoriteStoresSection() {
 
   return (
     <section className="px-5 pt-[22px]">
-      <SectionHeader title="⭐ 내 단골 가게" moreTo={ROUTES.FAVS} />
+      <SectionHeader title={<span className="inline-flex items-center gap-1.5"><Heart aria-hidden className="size-[14px] fill-primary text-primary" />내 단골 가게</span>} moreTo={ROUTES.FAVS} />
       {isPending ? (
         <div className="grid grid-cols-2 gap-[10px]">
           {[0, 1].map((i) => (

@@ -1,3 +1,4 @@
+import { Heart } from 'lucide-react'
 import { useFavorites } from '../hooks/useFavorites'
 import { FavoriteListCard } from '../components/FavoriteListCard'
 import { ScreenContainer } from '@/shared/components/ScreenContainer'
@@ -21,7 +22,7 @@ export function FavoritesPage() {
         ) : isError ? (
           <ErrorState onRetry={() => refetch()} />
         ) : data.stores.length === 0 ? (
-          <EmptyState icon="❤️">
+          <EmptyState icon={<Heart />}>
             단골 가게가 없어요.
             <br />
             매장 상세에서 ♡ 버튼을 눌러 단골로 등록해보세요.

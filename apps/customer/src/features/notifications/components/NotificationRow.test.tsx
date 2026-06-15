@@ -47,11 +47,11 @@ describe('NotificationRow', () => {
     expect(screen.getByText('읽지 않음')).toBeInTheDocument()
   })
 
-  it('category=order 이면 🛍️ 아이콘을 렌더한다', () => {
+  it('category=order 이면 아이콘 영역을 렌더한다', () => {
     renderRow(baseNotification)
-    // icon span 은 aria-hidden, but text content 확인
+    // 아이콘은 SVG(lucide), aria-hidden. 버튼 안에 svg가 존재하는지 확인
     const button = screen.getByRole('button')
-    expect(button.textContent).toContain('🛍️')
+    expect(button.querySelector('svg')).not.toBeNull()
   })
 
   it('미읽음 행 클릭 시 읽음 처리(number id)하고 /orders 로 이동', async () => {
@@ -73,31 +73,25 @@ describe('NotificationRow', () => {
     expect(screen.getByText('주문 화면')).toBeInTheDocument()
   })
 
-  it('category=deal 이면 🔥 아이콘 + 홈으로 이동', async () => {
+  it('category=deal 이면 홈으로 이동', async () => {
     const user = userEvent.setup()
     renderRow({ ...baseNotification, category: 'deal' })
-    const button = screen.getByRole('button')
-    expect(button.textContent).toContain('🔥')
-    await user.click(button)
+    await user.click(screen.getByRole('button'))
     expect(screen.getByText('홈 화면')).toBeInTheDocument()
   })
 
-  it('category=system 이면 📢 아이콘 + 클릭 시 이동 없음(화면 유지)', async () => {
+  it('category=system 이면 클릭 시 이동 없음(화면 유지)', async () => {
     const user = userEvent.setup()
     renderRow({ ...baseNotification, category: 'system' })
-    const button = screen.getByRole('button')
-    expect(button.textContent).toContain('📢')
-    await user.click(button)
+    await user.click(screen.getByRole('button'))
     // system → route=null → 화면 이동 없음
     expect(screen.getByRole('button')).toBeInTheDocument()
   })
 
-  it('category=review 이면 💬 아이콘 + /reviews/my 로 이동', async () => {
+  it('category=review 이면 /reviews/my 로 이동', async () => {
     const user = userEvent.setup()
     renderRow({ ...baseNotification, category: 'review' })
-    const button = screen.getByRole('button')
-    expect(button.textContent).toContain('💬')
-    await user.click(button)
+    await user.click(screen.getByRole('button'))
     expect(screen.getByText('내 리뷰')).toBeInTheDocument()
   })
 })

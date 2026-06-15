@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router'
-import { ChevronLeft } from 'lucide-react'
+import { ChevronLeft, Wallet } from 'lucide-react'
 import { ScreenContainer } from '@/shared/components/ScreenContainer'
 import { SegTabs, type SegTabItem } from '@/shared/components/SegTabs'
 import { EmptyState } from '@/shared/components/EmptyState'
@@ -59,7 +59,7 @@ export function PointHistoryPage() {
             ))}
           </ul>
         ) : (
-          <EmptyState icon="🪙">해당 내역이 없어요.</EmptyState>
+          <EmptyState icon={<Wallet />}>해당 내역이 없어요.</EmptyState>
         )}
       </main>
     </ScreenContainer>

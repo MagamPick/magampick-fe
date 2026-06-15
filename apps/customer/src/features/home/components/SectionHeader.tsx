@@ -1,10 +1,11 @@
+import type { ReactNode } from 'react'
 import { useNavigate } from 'react-router'
 
 /**
  * 섹션 제목 + (선택) 더보기. 더보기는 해당 목록 탭으로 이동.
  * 정렬 파라미터(마감임박순/추천순)는 전체 매장 화면 스펙 확정 시 추가 — 지금은 plain navigate.
  */
-export function SectionHeader({ title, moreTo }: { title: string; moreTo?: string }) {
+export function SectionHeader({ title, moreTo }: { title: ReactNode; moreTo?: string }) {
   const navigate = useNavigate()
   return (
     <div className="mb-3 flex items-center justify-between">

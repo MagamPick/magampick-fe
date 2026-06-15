@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router'
-import { ChevronLeft } from 'lucide-react'
+import { ChevronLeft, Gift, Ticket } from 'lucide-react'
 import { ScreenContainer } from '@/shared/components/ScreenContainer'
 import { EmptyState } from '@/shared/components/EmptyState'
 import { ErrorState } from '@/shared/components/ErrorState'
@@ -46,9 +46,7 @@ export function EventPage() {
 
       <main className="flex-1 pb-6">
         <div className="mx-5 mb-1.5 mt-3.5 flex items-center gap-3 rounded-[14px] border border-[#FFD9BD] bg-gradient-to-br from-[#FFF6EE] to-[#FFE7D6] px-4 py-3.5">
-          <span className="text-[28px] leading-none" aria-hidden>
-            🎁
-          </span>
+          <Gift aria-hidden className="size-7 shrink-0 text-primary" />
           <div className="min-w-0 flex-1">
             <div className="text-sm font-extrabold text-foreground">진행 중인 쿠폰 이벤트</div>
             <div className="mt-0.5 text-xs leading-[1.45] text-muted-foreground">
@@ -79,7 +77,7 @@ export function EventPage() {
             ))}
           </div>
         ) : (
-          <EmptyState icon="🎉">진행 중인 이벤트가 없어요.</EmptyState>
+          <EmptyState icon={<Ticket />}>진행 중인 이벤트가 없어요.</EmptyState>
         )}
       </main>
     </ScreenContainer>

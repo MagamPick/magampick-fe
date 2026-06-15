@@ -1,3 +1,5 @@
+import type { ReactNode } from 'react'
+import { Flame, Utensils } from 'lucide-react'
 import { cn } from '@/shared/lib/utils'
 import { CATEGORY_LABELS } from '../types'
 import type { ProductSaleStatus } from '../types'
@@ -11,8 +13,8 @@ import type { ProductSaleStatus } from '../types'
  */
 export interface ProductCardProps {
   name: string
-  /** 썸네일 이모지 (사진 없을 때 폴백) */
-  thumbnail?: string
+  /** 사진 없을 때 폴백 아이콘 */
+  thumbnail?: ReactNode
   /** 대표 사진 URL — 있으면 이모지 대신 표시 */
   imageUrl?: string
   /** 카테고리 (음료 / 베이커리 / 디저트 …) */
@@ -37,7 +39,7 @@ const STATUS_BADGE: Record<ProductSaleStatus, { label: string; className: string
 
 export function ProductCard({
   name,
-  thumbnail = '🍽️',
+  thumbnail = <Utensils className="size-[27px] text-muted-foreground" />,
   imageUrl,
   category,
   price,
@@ -71,7 +73,9 @@ export function ProductCard({
             )}
           <p className="mt-1 text-[14px] font-extrabold text-foreground">{won(price)}</p>
           {hasDeal && (
-            <p className="mt-1 text-[11px] font-bold text-primary">🔥 마감 할인 진행중</p>
+            <p className="mt-1 flex items-center gap-1 text-[11px] font-bold text-primary">
+              <Flame className="size-[11px]" aria-hidden /> 마감 할인 진행중
+            </p>
           )}
         </div>
       </div>

@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { MessageSquare } from 'lucide-react'
 import { Skeleton } from '@/shared/components/ui/skeleton'
 import { EmptyState } from '@/shared/components/EmptyState'
 import { ErrorState } from '@/shared/components/ErrorState'
@@ -72,7 +73,7 @@ export function InquiriesPage() {
       ) : isError ? (
         <ErrorState onRetry={() => refetch()} />
       ) : inquiries.length === 0 ? (
-        <EmptyState icon="💬">조건에 맞는 문의가 없어요</EmptyState>
+        <EmptyState icon={<MessageSquare />}>조건에 맞는 문의가 없어요</EmptyState>
       ) : (
         <>
           <InquiriesTable inquiries={inquiries} onSelect={setSelected} />

@@ -1,4 +1,4 @@
-import { Bell, ChevronDown, ShoppingCart } from 'lucide-react'
+import { Bell, ChevronDown, ShoppingCart, MapPin } from 'lucide-react'
 import { Link } from 'react-router'
 import { ROUTES } from '@/shared/lib/routes'
 import { useUnreadCount } from '@/features/notifications/hooks/useUnreadCount'
@@ -19,9 +19,7 @@ export function HomeHeader() {
         to={ROUTES.ADDRESSES}
         className="flex min-h-11 min-w-0 flex-1 items-center gap-1 py-1.5 text-left"
       >
-        <span aria-hidden className="text-[15px]">
-          📍
-        </span>
+        <MapPin aria-hidden className="size-[15px] shrink-0 text-muted-foreground" />
         <span className="truncate text-base font-extrabold tracking-[-0.3px]">{label}</span>
         <ChevronDown className="size-4 flex-shrink-0 text-muted-foreground" aria-hidden />
       </Link>

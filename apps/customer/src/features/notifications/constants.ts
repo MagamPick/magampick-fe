@@ -26,22 +26,6 @@ export const CUSTOMER_SETTING_META: SettingMeta[] = [
 ]
 
 /**
- * category → 표시 이모지 아이콘.
- * icon 필드가 BE 응답에 없으므로 category 기반으로 FE 에서 파생한다.
- */
-export const CATEGORY_ICON: Record<NotificationCategory, string> = {
-  deal: '🔥',
-  order: '🛍️',
-  review: '💬',
-  benefit: '🎁',
-  system: '📢',
-  refund: '↩️',
-  settlement: '💰',
-  notice: '📢',
-  inquiry: '💬',
-}
-
-/**
  * category → 클릭 시 이동할 내부 라우트.
  * link 필드(딥링크 문자열)는 무시하고 category 로 결정.
  * system / settlement 는 별도 라우트 없음 → null.

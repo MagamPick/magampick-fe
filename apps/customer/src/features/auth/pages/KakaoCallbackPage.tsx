@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { useNavigate, useSearchParams } from 'react-router'
-import { Loader2 } from 'lucide-react'
+import { AlertTriangle, Frown, Loader2 } from 'lucide-react'
 import {
   Dialog,
   DialogContent,
@@ -63,9 +63,9 @@ export function KakaoCallbackPage() {
 
       {(conflict || otherError) && (
         <div className="flex w-full flex-col items-center gap-3">
-          <span className="text-4xl" aria-hidden="true">
-            {conflict ? '⚠️' : '😢'}
-          </span>
+          {conflict
+            ? <AlertTriangle className="size-10 text-warning" aria-hidden="true" />
+            : <Frown className="size-10 text-muted-foreground" aria-hidden="true" />}
           <p className="text-[15px] font-bold leading-relaxed text-foreground">
             {conflict ? error?.message : '카카오 로그인에 실패했어요. 잠시 후 다시 시도해 주세요.'}
           </p>

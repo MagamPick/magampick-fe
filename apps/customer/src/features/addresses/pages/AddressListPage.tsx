@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router'
-import { ChevronLeft, Search, LocateFixed, Plus } from 'lucide-react'
+import { ChevronLeft, Search, LocateFixed, Plus, MapPin } from 'lucide-react'
 import { ROUTES } from '@/shared/lib/routes'
 import { ScreenContainer } from '@/shared/components/ScreenContainer'
 import { EmptyState } from '@/shared/components/EmptyState'
@@ -121,7 +121,7 @@ export function AddressListPage() {
             ))}
           </div>
         ) : (
-          <EmptyState icon="📍">
+          <EmptyState icon={<MapPin />}>
             저장된 주소가 없어요.
             <br />
             위에서 새 주소를 추가해보세요.

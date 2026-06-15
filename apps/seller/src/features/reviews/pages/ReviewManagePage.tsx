@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router'
-import { ChevronLeft } from 'lucide-react'
+import { ChevronLeft, MessageSquare } from 'lucide-react'
 import { ScreenContainer } from '@/shared/components/ScreenContainer'
 import { EmptyState } from '@/shared/components/EmptyState'
 import { ErrorState } from '@/shared/components/ErrorState'
@@ -48,7 +48,7 @@ export function ReviewManagePage() {
         ) : isError ? (
           <ErrorState onRetry={() => refetch()}>리뷰를 불러오지 못했어요.</ErrorState>
         ) : !reviews || reviews.length === 0 ? (
-          <EmptyState icon="💬">아직 리뷰가 없어요.</EmptyState>
+          <EmptyState icon={<MessageSquare />}>아직 리뷰가 없어요.</EmptyState>
         ) : (
           reviews.map((review) => (
             <SellerReviewCard key={review.id} review={review} onReply={setReplyTarget} />

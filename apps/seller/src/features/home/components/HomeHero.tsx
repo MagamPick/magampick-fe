@@ -20,9 +20,7 @@ export function HomeHero() {
   return (
     <header className="relative overflow-hidden rounded-b-3xl bg-gradient-to-br from-primary to-secondary-foreground px-5 pb-7 pt-[calc(env(safe-area-inset-top,0px)+1.75rem)] text-white shadow-e3">
       <div className="relative flex items-center gap-3">
-        <span className="flex size-14 shrink-0 items-center justify-center rounded-2xl bg-white/15 text-[30px] ring-2 ring-inset ring-white/55">
-          🥐
-        </span>
+        <img src="/icons/icon-192.png" alt="" aria-hidden className="size-14 rounded-2xl" />
         <div className="flex min-w-0 flex-1 flex-col gap-1.5">
           <StoreSwitcher />
           <div className="flex items-center gap-1.5 text-[12.5px] font-medium text-white/95">

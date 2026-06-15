@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router'
-import { Search, X } from 'lucide-react'
+import { Search, X, ReceiptText } from 'lucide-react'
 import { cn } from '@/shared/lib/utils'
 import { ROUTES } from '@/shared/lib/routes'
 import { ScreenContainer } from '@/shared/components/ScreenContainer'
@@ -212,13 +212,13 @@ export function OrderListPage() {
           !isError &&
           visible.length === 0 &&
           (searching ? (
-            <EmptyState icon="🔍">
+            <EmptyState icon={<Search />}>
               검색 결과가 없어요.
               <br />
               다른 키워드로 검색해 보세요.
             </EmptyState>
           ) : (
-            <EmptyState icon="🧾">{SEG_EMPTY[seg]}</EmptyState>
+            <EmptyState icon={<ReceiptText />}>{SEG_EMPTY[seg]}</EmptyState>
           ))}
 
         {visible.map((o) => (

@@ -1,4 +1,5 @@
 import { useNavigate, useSearchParams } from 'react-router'
+import { ReceiptText } from 'lucide-react'
 import { cn } from '@/shared/lib/utils'
 import { ScreenContainer } from '@/shared/components/ScreenContainer'
 import { EmptyState } from '@/shared/components/EmptyState'
@@ -70,7 +71,7 @@ export function OrderListPage() {
         ) : isError ? (
           <ErrorState onRetry={() => refetch()}>주문 내역을 불러오지 못했어요.</ErrorState>
         ) : visible.length === 0 ? (
-          <EmptyState icon="🧾">주문 내역이 없어요.</EmptyState>
+          <EmptyState icon={<ReceiptText />}>주문 내역이 없어요.</EmptyState>
         ) : (
           visible.map((order) => (
             <CustomerOrderCard

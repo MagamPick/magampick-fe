@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router'
-import { ChevronLeft } from 'lucide-react'
+import { ChevronLeft, Ticket } from 'lucide-react'
 import { ScreenContainer } from '@/shared/components/ScreenContainer'
 import { SegTabs, type SegTabItem } from '@/shared/components/SegTabs'
 import { EmptyState } from '@/shared/components/EmptyState'
@@ -69,7 +69,7 @@ export function CouponBoxPage() {
           </div>
         ) : (
           <EmptyState
-            icon="🎟"
+            icon={<Ticket />}
             action={
               <button
                 type="button"

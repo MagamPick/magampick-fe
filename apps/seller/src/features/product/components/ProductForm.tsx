@@ -10,6 +10,7 @@ import {
   FormLabel,
   FormMessage,
 } from '@/shared/components/ui/form'
+import { Camera } from 'lucide-react'
 import { Input } from '@/shared/components/ui/input'
 import { Textarea } from '@/shared/components/ui/textarea'
 import { Switch } from '@/shared/components/ui/switch'
@@ -151,7 +152,7 @@ export function ProductForm({ mode = 'create', product }: Props) {
               />
             ) : (
               <>
-                <span className="text-[34px]">📷</span>
+                <Camera className="size-8 text-muted-foreground" aria-hidden />
                 <span className="text-[13.5px] font-semibold">상품 사진 등록</span>
                 <span className="text-[12px]">정사각형 사진을 권장해요</span>
               </>

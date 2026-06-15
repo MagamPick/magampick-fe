@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react'
-import { Bell } from 'lucide-react'
+import { Bell, Store } from 'lucide-react'
 import { Link, useSearchParams } from 'react-router'
 import { ScreenContainer } from '@/shared/components/ScreenContainer'
 import { EmptyState } from '@/shared/components/EmptyState'
@@ -73,7 +73,7 @@ function StoreListBody({
         ) : isError ? (
           <ErrorState onRetry={() => refetch()} />
         ) : items.length === 0 ? (
-          <EmptyState icon="🏪">주변 5km에 둘러볼 매장이 없어요.</EmptyState>
+          <EmptyState icon={<Store />}>주변 5km에 둘러볼 매장이 없어요.</EmptyState>
         ) : (
           <>
             <p className="px-1 pb-2 pt-1 text-[13px] font-semibold text-muted-foreground">

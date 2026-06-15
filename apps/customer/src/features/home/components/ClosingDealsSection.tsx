@@ -1,3 +1,4 @@
+import { Timer } from 'lucide-react'
 import { ROUTES } from '@/shared/lib/routes'
 import { STORE_SORT } from '@/features/store-list/types'
 import { useClosingDeals } from '../hooks/useClosingDeals'
@@ -12,7 +13,7 @@ export function ClosingDealsSection() {
   return (
     <section className="px-5 pt-[22px]">
       <SectionHeader
-        title="⏰ 마감 임박 특가"
+        title={<span className="inline-flex items-center gap-1.5"><Timer aria-hidden className="size-[15px] text-primary" />마감 임박 특가</span>}
         moreTo={`${ROUTES.ALL}?sort=${STORE_SORT.CLOSING}`}
       />
       {isPending ? (

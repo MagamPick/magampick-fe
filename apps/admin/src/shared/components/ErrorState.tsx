@@ -1,16 +1,17 @@
 import type { ReactNode } from 'react'
+import { AlertCircle } from 'lucide-react'
 import { cn } from '@/shared/lib/utils'
 import { Button } from './ui/button'
 
-/** 에러 안내 — 큰 이모지 + 안내 문구 + 선택적 "다시 시도"(refetch). EmptyState 와 같은 레이아웃. */
+/** 에러 안내 — 아이콘 + 안내 문구 + 선택적 "다시 시도"(refetch). EmptyState 와 같은 레이아웃. */
 export function ErrorState({
-  icon = '⚠️',
+  icon = <AlertCircle />,
   children,
   onRetry,
   retryLabel = '다시 시도',
   className,
 }: {
-  icon?: string
+  icon?: ReactNode
   children?: ReactNode
   onRetry?: () => void
   retryLabel?: string
@@ -18,7 +19,7 @@ export function ErrorState({
 }) {
   return (
     <div className={cn('px-5 py-14 text-center', className)}>
-      <div className="text-[44px]" aria-hidden>
+      <div className="flex justify-center text-muted-foreground [&>svg]:size-14" aria-hidden>
         {icon}
       </div>
       <div className="mt-3 text-sm font-semibold text-muted-foreground">

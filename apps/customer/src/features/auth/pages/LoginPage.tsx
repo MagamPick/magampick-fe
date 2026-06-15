@@ -7,9 +7,7 @@ export function LoginPage() {
   return (
     <main className="mx-auto flex min-h-screen max-w-md flex-col bg-card px-5 pb-10 pt-6">
       <div className="mt-10 text-center">
-        <div className="mx-auto flex size-[72px] items-center justify-center rounded-[18px] bg-[linear-gradient(160deg,#FFD9C7,#FFB088)] text-4xl shadow-[0_8px_20px_rgba(255,107,53,0.22)]">
-          🥐
-        </div>
+        <img src="/icons/icon-192.png" alt="" aria-hidden className="mx-auto size-[72px] rounded-full" />
         <h1 className="mt-3.5 text-[22px] font-extrabold tracking-[-0.6px] text-foreground">
           마감픽
         </h1>

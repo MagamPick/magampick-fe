@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Megaphone } from 'lucide-react'
 import { Button } from '@/shared/components/ui/button'
 import { Skeleton } from '@/shared/components/ui/skeleton'
 import { EmptyState } from '@/shared/components/EmptyState'
@@ -53,7 +54,7 @@ export function AnnouncementsPage() {
       ) : isError ? (
         <ErrorState onRetry={() => refetch()} />
       ) : !announcements || announcements.length === 0 ? (
-        <EmptyState icon="📢">등록된 공지가 없어요</EmptyState>
+        <EmptyState icon={<Megaphone />}>등록된 공지가 없어요</EmptyState>
       ) : (
         <AnnouncementsTable
           announcements={announcements}

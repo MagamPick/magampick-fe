@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { Map, Moon } from 'lucide-react'
 import type { GeoPosition } from '@/shared/hooks/useGeolocation'
 import type { MapDistance, MapStore } from '../types'
 
@@ -134,7 +135,7 @@ export function KakaoMapView({
 
       {sdkError && (
         <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-background px-8 text-center">
-          <span className="text-2xl">🗺️</span>
+          <Map className="size-7 text-muted-foreground" aria-hidden />
           <p className="text-sm font-bold text-foreground">지도를 불러오지 못했어요</p>
           <p className="text-xs text-muted-foreground">
             카카오맵 키(VITE_KAKAO_MAP_KEY)와 플랫폼 도메인 등록을 확인해 주세요.
@@ -144,7 +145,7 @@ export function KakaoMapView({
 
       {!sdkError && mapReady && stores.length === 0 && (
         <div className="pointer-events-none absolute left-1/2 top-1/2 w-[78%] max-w-[280px] -translate-x-1/2 -translate-y-1/2 rounded-[16px] bg-card/95 px-4 py-[22px] text-center shadow-[0_8px_26px_rgba(0,0,0,0.12)]">
-          <div className="text-[32px]">🌙</div>
+          <Moon className="size-9 text-muted-foreground" aria-hidden />
           <p className="mt-2.5 text-sm font-extrabold text-foreground">이 반경에는 매장이 없어요</p>
           <p className="mt-1.5 text-[12.5px] text-muted-foreground">반경을 더 넓게 조정해보세요.</p>
         </div>

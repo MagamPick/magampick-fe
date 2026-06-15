@@ -1,4 +1,4 @@
-import { Check, Pencil } from 'lucide-react'
+import { Check, Pencil, MapPin } from 'lucide-react'
 import type { Address } from '../types'
 
 /**
@@ -16,9 +16,7 @@ export function AddressCard({ address, onSelect, onEdit, disabled }: AddressCard
   const { label, roadAddress, detailAddress, isDefault } = address
   return (
     <div className="grid grid-cols-[28px_1fr_28px_36px] items-center gap-2.5 border-b border-border py-[18px] last:border-b-0">
-      <span aria-hidden className="text-center text-[18px]">
-        📍
-      </span>
+      <MapPin aria-hidden className="mx-auto size-[18px] text-muted-foreground" />
       <button
         type="button"
         onClick={onSelect}

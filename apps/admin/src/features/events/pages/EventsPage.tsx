@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Ticket } from 'lucide-react'
 import { Button } from '@/shared/components/ui/button'
 import { Skeleton } from '@/shared/components/ui/skeleton'
 import { EmptyState } from '@/shared/components/EmptyState'
@@ -53,7 +54,7 @@ export function EventsPage() {
       ) : isError ? (
         <ErrorState onRetry={() => refetch()} />
       ) : !events || events.length === 0 ? (
-        <EmptyState icon="🎟️">등록된 이벤트가 없어요</EmptyState>
+        <EmptyState icon={<Ticket />}>등록된 이벤트가 없어요</EmptyState>
       ) : (
         <EventsTable events={events} onEdit={openEdit} onEnd={setEndTarget} />
       )}

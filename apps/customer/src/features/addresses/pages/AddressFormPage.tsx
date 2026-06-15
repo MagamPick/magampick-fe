@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams, useLocation, Navigate } from 'react-router'
-import { ChevronLeft, Trash2 } from 'lucide-react'
+import { ChevronLeft, Trash2, MapPin, Home, Building2, BookOpen, Heart } from 'lucide-react'
 import { useForm, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import {
@@ -25,10 +25,10 @@ import { addressFormSchema, type AddressFormValues, type AddressSearchResult } f
 
 /** 별칭 빠른 선택 칩 (프로토타입 64-addr-edit) */
 const LABEL_CHIPS = [
-  { label: '우리집', emoji: '🏠' },
-  { label: '회사', emoji: '🏢' },
-  { label: '학교', emoji: '📚' },
-  { label: '기타', emoji: '💗' },
+  { label: '우리집', icon: <Home className="inline-block size-[14px]" /> },
+  { label: '회사', icon: <Building2 className="inline-block size-[14px]" /> },
+  { label: '학교', icon: <BookOpen className="inline-block size-[14px]" /> },
+  { label: '기타', icon: <Heart className="inline-block size-[14px]" /> },
 ]
 
 /**
@@ -179,9 +179,7 @@ export function AddressFormPage() {
                 도로명 주소<span className="text-primary">*</span>
               </div>
               <div className="flex min-h-[54px] items-center gap-2.5 rounded-xl border-[1.25px] border-border bg-background px-3.5">
-                <span aria-hidden className="text-[18px]">
-                  📍
-                </span>
+                <MapPin className="size-[18px] shrink-0 text-muted-foreground" aria-hidden />
                 <span
                   className={cn(
                     'text-sm leading-[1.4]',
@@ -220,7 +218,7 @@ export function AddressFormPage() {
                         : 'border-border bg-card font-semibold text-muted-foreground',
                     )}
                   >
-                    {chip.emoji} {chip.label}
+                    {chip.icon} {chip.label}
                   </button>
                 ))}
               </div>
