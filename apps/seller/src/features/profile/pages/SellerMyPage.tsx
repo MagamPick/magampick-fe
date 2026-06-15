@@ -69,7 +69,7 @@ function SellerMyPageContent() {
       <MenuGroup title="설정">
         <MenuRow icon={<Bell />} label="알림 설정" to={ROUTES.NOTIFICATION_SETTINGS} />
         <MenuRow icon={<Lock />} label="비밀번호 변경" to={ROUTES.PASSWORD_CHANGE} />
-        <MenuRow icon={<FileText />} label="약관 및 정책" onClick={soon} />
+        <MenuRow icon={<FileText />} label="약관 및 정책" to={ROUTES.TERMS} />
       </MenuGroup>
 
       <MenuGroup title="지원">

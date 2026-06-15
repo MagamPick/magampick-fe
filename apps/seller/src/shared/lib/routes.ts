@@ -49,4 +49,7 @@ export const ROUTES = {
   // 알림센터(홈 히어로 종에서 진입) + 알림 설정(마이에서 진입) — 풀스크린, 바텀네비 없음 (프로토타입 51 / 52)
   NOTIFICATIONS: '/notifications',
   NOTIFICATION_SETTINGS: '/mypage/notifications',
+
+  // 약관 및 정책 — 마이 허브에서 진입, 풀스크린 보호 라우트
+  TERMS: '/mypage/terms',
 } as const

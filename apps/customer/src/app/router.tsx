@@ -40,6 +40,7 @@ import { InquiryFormPage } from '@/features/support/pages/InquiryFormPage'
 import { InquiryDetailPage } from '@/features/support/pages/InquiryDetailPage'
 import { NotificationCenterPage } from '@/features/notifications/pages/NotificationCenterPage'
 import { NotificationSettingsPage } from '@/features/notifications/pages/NotificationSettingsPage'
+import { TermsPolicyPage } from '@/features/profile/pages/TermsPolicyPage'
 import { NotFoundPage } from '@/shared/components/NotFoundPage'
 import { ROUTES } from '@/shared/lib/routes'
 
@@ -228,6 +229,15 @@ export const router = createBrowserRouter([
     element: (
       <ProtectedRoute>
         <EventPage />
+      </ProtectedRoute>
+    ),
+  },
+  // 약관 및 정책 — 마이페이지에서 진입, 풀스크린 보호 라우트
+  {
+    path: ROUTES.TERMS,
+    element: (
+      <ProtectedRoute>
+        <TermsPolicyPage />
       </ProtectedRoute>
     ),
   },
