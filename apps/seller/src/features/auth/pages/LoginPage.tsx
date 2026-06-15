@@ -7,26 +7,28 @@ import { ROUTES } from '@/shared/lib/routes'
 export function LoginPage() {
   return (
     <main className="mx-auto flex min-h-screen max-w-md flex-col bg-card px-5 pb-10 pt-6">
-      <div className="mt-10 text-center">
-        <img src="/icons/icon-192.png" alt="" aria-hidden className="mx-auto size-[72px] rounded-full" />
-        <h1 className="mt-3.5 text-[22px] font-extrabold tracking-[-0.6px] text-foreground">
-          마감픽 사장님
-        </h1>
-        <p className="mt-1.5 text-sm font-medium text-muted-foreground">
-          사장님을 위한 마감 세일 파트너
+      <div className="flex flex-1 flex-col justify-center">
+        <div className="text-center">
+          <img src="/icons/icon-192.png" alt="" aria-hidden className="mx-auto size-[72px] rounded-full" />
+          <h1 className="mt-3.5 text-[22px] font-extrabold tracking-[-0.6px] text-foreground">
+            마감픽 사장님
+          </h1>
+          <p className="mt-1.5 text-sm font-medium text-muted-foreground">
+            사장님을 위한 마감 세일 파트너
+          </p>
+        </div>
+
+        <div className="mt-[34px]">
+          <LoginForm />
+        </div>
+
+        <p className="mt-4 text-center text-[13px] text-muted-foreground">
+          아직 회원이 아니신가요?{' '}
+          <Link to={ROUTES.SIGNUP} className="font-bold text-primary">
+            회원가입
+          </Link>
         </p>
       </div>
-
-      <div className="mt-[34px]">
-        <LoginForm />
-      </div>
-
-      <p className="mt-4 text-center text-[13px] text-muted-foreground">
-        아직 회원이 아니신가요?{' '}
-        <Link to={ROUTES.SIGNUP} className="font-bold text-primary">
-          회원가입
-        </Link>
-      </p>
 
       <div className="mt-8 flex items-start gap-2.5 rounded-xl bg-secondary px-4 py-3.5">
         <Megaphone aria-hidden className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
