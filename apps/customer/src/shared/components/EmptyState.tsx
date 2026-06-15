@@ -15,7 +15,7 @@ export function EmptyState({
   className?: string
 }) {
   return (
-    <div className={cn('px-5 py-14 text-center', className)}>
+    <div className={cn('flex min-h-[50vh] flex-col items-center justify-center px-5 py-10 text-center', className)}>
       <div className="flex justify-center text-muted-foreground [&>svg]:size-14" aria-hidden>
         {icon}
       </div>
