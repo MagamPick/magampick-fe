@@ -6,6 +6,7 @@ import {
   PenLine,
   MapPin,
   Bell,
+  FileText,
   Megaphone,
   Headphones,
   Info,
@@ -83,6 +84,7 @@ function MyPageContent() {
       <MenuGroup title="설정 · 지원">
         <MenuRow icon={<MapPin />} label="주소 관리" to={ROUTES.ADDRESSES} />
         <MenuRow icon={<Bell />} label="알림 설정" to={ROUTES.NOTIFICATION_SETTINGS} />
+        <MenuRow icon={<FileText />} label="약관 및 정책" to={ROUTES.TERMS} />
         <MenuRow icon={<Megaphone />} label="공지사항" to={ROUTES.NOTICES} />
         <MenuRow icon={<Headphones />} label="고객센터" to={ROUTES.SUPPORT} />
         <MenuRow icon={<Info />} label="앱 버전" value="v1.0.0" />

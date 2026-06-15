@@ -71,6 +71,9 @@ export const ROUTES = {
   ADDRESS_NEW: '/addresses/new',
   ADDRESS_EDIT: (id: number) => `/addresses/${id}/edit`,
 
+  // 약관 및 정책 — 마이페이지에서 진입, 풀스크린 보호 라우트
+  TERMS: '/mypage/terms',
+
   // 공지사항 조회 + 고객센터(문의하기) — 마이페이지에서 진입, 풀스크린(바텀네비 없음, Phase 11)
   NOTICES: '/notices',
   SUPPORT: '/support',
