@@ -13,13 +13,20 @@ vi.mock('react-router', async (importOriginal) => {
 vi.mock('../api/authApi')
 
 const input: SocialSignupInput = {
-  kakaoId: 'k1',
+  socialToken: 'st-uuid',
   email: 'k@kakao.com',
-  agreedTermIds: ['AGE_14', 'TERMS_OF_SERVICE', 'PRIVACY', 'LOCATION'],
+  agreedTermIds: [4, 1, 2, 3],
   name: '홍길동',
   phone: '010-1234-5678',
   verificationToken: 'mock-verification-token',
-  address: '서울 마포구 와우산로 94',
+  address: {
+    label: '집',
+    roadAddress: '서울특별시 마포구 와우산로 94',
+    jibunAddress: '서울특별시 마포구 상수동 72-1',
+    zonecode: '04066',
+    sigunguCode: '11440',
+    roadnameCode: '3135001',
+  },
   nickname: '길동이',
 }
 

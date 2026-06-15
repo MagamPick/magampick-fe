@@ -7,5 +7,6 @@ export function useSettlementSummary(storeId: string) {
   return useQuery({
     queryKey: settlementKeys.summary(storeId),
     queryFn: () => settlementApi.getSettlementSummary(storeId),
+    enabled: !!storeId,
   })
 }

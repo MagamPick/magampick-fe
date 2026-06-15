@@ -1,16 +1,21 @@
 import { z } from 'zod'
+import { nullableString } from '@/shared/lib/zodNullable'
 
 /**
  * 주소지 관리 도메인 타입 / Zod 스키마 (노션 "주소지 관리" 명세).
  *
- * - 주소 필드 = 별칭 · 도로명 · 상세주소 · 좌표 (+ 기본 여부). 픽업 메모는 명세 비범위.
- * - 도로명·좌표는 검색/GPS(역지오코딩) 결과로만 결정 (직접 입력 X). 수정 시 별칭·상세만 변경 가능.
+ * 등록 경로 2종 (X3 / findings A3-1·A3-2·A3-3):
+ * - 검색 경로(다음 위젯): sigunguCode+roadnameCode 전송 → BE 가 코드로 지오코딩.
+ * - GPS 경로(현재 위치): 브라우저가 이미 가진 좌표(lat/lng)를 직접 전송 → BE 가 raw 좌표 저장(코드 불필요).
  */
 
 /** 1인당 최대 주소 개수 (노션: 최대 3개) */
 export const MAX_ADDRESSES = 3
 
-/** 도메인 에러 코드 (노션 인수 기준) — mock API 가 ApiError.code 로 사용 */
+/**
+ * 도메인 에러 코드 (BE 가 반환하는 ApiError.code 상수 문서화).
+ * 클라이언트는 직접 throw 하지 않음 — BE envelope→ApiError 로 수신.
+ */
 export const ADDRESS_ERROR = {
   LIMIT_EXCEEDED: 'ADDRESS_LIMIT_EXCEEDED',
   ALIAS_LENGTH: 'ALIAS_LENGTH',
@@ -20,60 +25,108 @@ export const ADDRESS_ERROR = {
   NOT_FOUND: 'ADDRESS_NOT_FOUND',
 } as const
 
-/** 별칭 1~10자 (노션 AC: ALIAS_LENGTH) — 중복 허용 */
+/** 별칭 1~20자 (노션 AC·BE 확정값 20, B1-2) */
 export const aliasSchema = z
   .string()
   .min(1, '별칭을 입력해주세요')
-  .max(10, '별칭은 10자 이하여야 합니다')
+  .max(20, '별칭은 20자 이하여야 합니다')
 
-/** 저장된 주소 */
-export const addressSchema = z.object({
-  id: z.string(),
-  label: z.string(), // 별칭
-  roadAddress: z.string(), // 도로명 주소 (수정 불가)
-  detail: z.string(), // 상세 주소 (자유 입력, 빈 문자열 허용)
+/** BE AddressResponse Zod 파싱 스키마 (id: number, detailAddress optional) */
+export const addressResponseSchema = z.object({
+  id: z.number(),
+  label: z.string(),
+  roadAddress: z.string(),
+  // BE 가 jibunAddress/detailAddress 를 null 로 내려줄 수 있어 nullish 로 수용 (.optional() 은 null 거부)
+  jibunAddress: z.string().nullish(),
+  detailAddress: z.string().nullish(),
+  zonecode: nullableString(),
   latitude: z.number(),
   longitude: z.number(),
   isDefault: z.boolean(),
+  createdAt: nullableString(),
+  updatedAt: nullableString(),
+})
+
+/**
+ * 정규화된 클라이언트 주소 타입.
+ * detailAddress: BE 응답에 없으면 '' 으로 정규화 (컴포넌트에서 null 체크 불필요).
+ */
+export const addressSchema = z.object({
+  id: z.number(),
+  label: z.string(),
+  roadAddress: z.string(),
+  jibunAddress: z.string().optional(),
+  detailAddress: z.string(),
+  zonecode: z.string().optional(),
+  latitude: z.number(),
+  longitude: z.number(),
+  isDefault: z.boolean(),
+  createdAt: z.string().optional(),
+  updatedAt: z.string().optional(),
 })
 export type Address = z.infer<typeof addressSchema>
 
-/** 주소 추가 입력 — 도로명·좌표는 검색/GPS 결과에서 채워진다 */
+/** 역지오코딩 응답 스키마 */
+export const reverseGeocodeResponseSchema = z.object({
+  roadAddress: z.string(),
+})
+
+/**
+ * 다음 우편번호 위젯 / GPS 역지오코딩 결과 (검색 중간 타입).
+ * - 다음 위젯: roadAddress·jibunAddress·zonecode·sigunguCode·roadnameCode 보유 (좌표 없음)
+ * - GPS 역지오코딩: roadAddress + latitude·longitude 보유 (코드 없음)
+ */
+export const addressSearchResultSchema = z.object({
+  roadAddress: z.string(),
+  jibunAddress: z.string().optional(),
+  zonecode: z.string().optional(),
+  sigunguCode: z.string().optional(),
+  roadnameCode: z.string().optional(),
+  latitude: z.number().optional(),
+  longitude: z.number().optional(),
+})
+export type AddressSearchResult = z.infer<typeof addressSearchResultSchema>
+
+/**
+ * 주소 추가 API 요청 바디 (BE AddressCreateRequest).
+ * BE 는 (좌표 OR 코드) 한 쌍을 요구 (@AssertTrue): GPS 경로는 latitude/longitude,
+ * 검색 경로는 sigunguCode/roadnameCode 를 채워 보낸다 (X3 / findings A3-1·A3-2·A3-3).
+ */
 export const createAddressInputSchema = z.object({
-  roadAddress: z.string().min(1, '도로명 주소를 선택해주세요'),
-  latitude: z.number(),
-  longitude: z.number(),
   label: aliasSchema,
-  detail: z.string().max(40, '상세 주소는 40자 이하여야 합니다'),
+  roadAddress: z.string().optional(),
+  jibunAddress: z.string().optional(),
+  detailAddress: z.string().max(40, '상세 주소는 40자 이하여야 합니다').optional(),
+  zonecode: z.string().optional(),
+  sigunguCode: z.string().optional(),
+  roadnameCode: z.string().optional(),
+  latitude: z.number().optional(),
+  longitude: z.number().optional(),
 })
 export type CreateAddressInput = z.infer<typeof createAddressInputSchema>
 
 /**
- * 주소 수정 입력 — 별칭·상세 + 도로명·좌표.
- * (노션 결정 2026-05-31: 수정에서도 '다시 검색'으로 도로명 변경 가능 → 변경 시 좌표 함께 갱신.
- *  기존 "도로명 수정 불가(삭제 후 재등록)" 정책에서 변경.)
+ * 주소 수정 API 요청 바디 (BE AddressUpdateRequest — 부분 수정).
+ * BE @AssertTrue 는 등록과 동일하게 (좌표 OR 코드) 한 쌍을 요구한다 (findings BUG-B).
+ * 도로명 유지(재검색 안 함) 시 기존 좌표(latitude/longitude)를, 재검색 시 sigunguCode+roadnameCode 를 전송.
  */
 export const updateAddressInputSchema = z.object({
-  roadAddress: z.string().min(1, '도로명 주소를 선택해주세요'),
-  latitude: z.number(),
-  longitude: z.number(),
-  label: aliasSchema,
-  detail: z.string().max(40, '상세 주소는 40자 이하여야 합니다'),
+  label: aliasSchema.optional(),
+  roadAddress: z.string().optional(),
+  jibunAddress: z.string().optional(),
+  detailAddress: z.string().max(40, '상세 주소는 40자 이하여야 합니다').optional(),
+  zonecode: z.string().optional(),
+  sigunguCode: z.string().optional(),
+  roadnameCode: z.string().optional(),
+  latitude: z.number().optional(),
+  longitude: z.number().optional(),
+  geocodeKeyValid: z.boolean().optional(),
 })
 export type UpdateAddressInput = z.infer<typeof updateAddressInputSchema>
 
-/** 입력 폼(react-hook-form) 필드 — 사용자가 직접 타이핑하는 별칭·상세. 도로명·좌표는 검색/GPS 결과. */
+/** 입력 폼(react-hook-form) 필드 — 사용자가 직접 타이핑하는 별칭·상세 주소 */
 export const addressFormSchema = z.object({
   label: aliasSchema,
-  detail: z.string().max(40, '상세 주소는 40자 이하여야 합니다'),
+  detailAddress: z.string().max(40, '상세 주소는 40자 이하여야 합니다'),
 })
 export type AddressFormValues = z.infer<typeof addressFormSchema>
-
-/** 주소 검색 / 역지오코딩 결과 (mock 카카오 로컬 — ADR-002, 연동 PR 에서 실 API) */
-export const addressSearchResultSchema = z.object({
-  roadAddress: z.string(),
-  latitude: z.number(),
-  longitude: z.number(),
-  zip: z.string().optional(),
-})
-export type AddressSearchResult = z.infer<typeof addressSearchResultSchema>

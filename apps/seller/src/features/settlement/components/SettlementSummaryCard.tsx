@@ -15,7 +15,9 @@ interface Props {
  * useSettlementSummary 로 이번 회차 정산 예정 금액 + 입금 예정일 표시. 현재 선택 매장 기준.
  */
 export function SettlementSummaryCard({ className }: Props) {
-  const storeId = useCurrentStoreStore((s) => s.selectedStoreId)
+  const _storeIdNum = useCurrentStoreStore((s) => s.selectedStoreId)
+  // mock hook(string storeId) 전달용 변환 — Step 2 실연동 시 이전
+  const storeId = _storeIdNum != null ? String(_storeIdNum) : ''
   const { data: summary, isPending } = useSettlementSummary(storeId)
 
   if (isPending) {

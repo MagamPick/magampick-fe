@@ -13,6 +13,11 @@ import { formatPhone } from '@/shared/lib/formatPhone'
 import { usePhoneVerification } from '../hooks/usePhoneVerification'
 import type { SignupInput } from '../types'
 
+/** 인증 카운트다운(초) — 발송 시 3:00 으로 시작, 재전송 성공 시 다시 3:00 으로 갱신 */
+const VERIFY_TIMER_SEC = 180
+/** 발송 후 재전송 허용까지 대기(초) — 2:30(=180−30)부터 재전송 가능. 상단·하단 재전송 버튼 공통 게이트 */
+const RESEND_AFTER_SEC = 30
+
 export function Step3Phone({ form }: { form: UseFormReturn<SignupInput> }) {
   const { request, verify } = usePhoneVerification()
   const [codeSent, setCodeSent] = useState(false)
@@ -35,7 +40,7 @@ export function Step3Phone({ form }: { form: UseFormReturn<SignupInput> }) {
     request.mutate(phone, {
       onSuccess: () => {
         setCodeSent(true)
-        setTimer(180)
+        setTimer(VERIFY_TIMER_SEC)
       },
     })
 
@@ -108,7 +113,7 @@ export function Step3Phone({ form }: { form: UseFormReturn<SignupInput> }) {
               </FormControl>
               <button
                 type="button"
-                disabled={!canSend || verified || request.isPending}
+                disabled={!canSend || verified || request.isPending || timer > VERIFY_TIMER_SEC - RESEND_AFTER_SEC}
                 onClick={sendCode}
                 className="absolute right-1.5 top-1/2 h-11 -translate-y-1/2 rounded-lg bg-secondary px-3.5 text-[13px] font-bold text-secondary-foreground disabled:opacity-50"
               >
@@ -122,6 +127,10 @@ export function Step3Phone({ form }: { form: UseFormReturn<SignupInput> }) {
           </FormItem>
         )}
       />
+
+      {request.error && (
+        <p className="mt-1.5 text-xs text-destructive">{(request.error as Error).message}</p>
+      )}
 
       {codeSent && !verified && (
         <div className="mt-4">
@@ -154,7 +163,7 @@ export function Step3Phone({ form }: { form: UseFormReturn<SignupInput> }) {
             <button
               type="button"
               className="text-[12.5px] font-bold text-secondary-foreground disabled:text-muted-foreground"
-              disabled={timer > 120}
+              disabled={timer > VERIFY_TIMER_SEC - RESEND_AFTER_SEC}
               onClick={sendCode}
             >
               ↺ 인증번호 재전송

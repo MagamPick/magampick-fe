@@ -1,3 +1,4 @@
+import { BellOff } from 'lucide-react'
 import { EmptyState } from '@/shared/components/EmptyState'
 import { NotificationRow } from './NotificationRow'
 import type { Notification } from '../types'
@@ -14,7 +15,7 @@ export function NotificationList({
     return <p className="py-16 text-center text-sm text-muted-foreground">불러오는 중…</p>
   }
   if (!notifications || notifications.length === 0) {
-    return <EmptyState icon="🔕">새 알림이 없어요</EmptyState>
+    return <EmptyState icon={<BellOff />}>새 알림이 없어요</EmptyState>
   }
   return (
     <ul className="divide-y divide-border">

@@ -11,8 +11,6 @@ export interface CheckoutAmountsInput {
   pointInput: number
   /** 보유 포인트 잔액 */
   pointBalance: number
-  /** 만료/사용가능 판정 기준 시각 */
-  now: Date
 }
 
 export interface CheckoutAmounts {
@@ -45,13 +43,13 @@ export interface CheckoutAmounts {
  * 상품합계(떨이=할인가/일반=정가) → 쿠폰 차감(일반 상품분) → 포인트 차감(전체 잔액 한도) → 최종(≥0).
  * 적립 예정 = 최종 결제 현금액 × 1% floor (전액 쿠폰·포인트 결제 시 0).
  * 기존 calcCartAmounts(상품 합계) 재사용.
+ * 쿠폰 상태 판정은 BE status(USABLE) 신뢰 — now 인자 없음.
  */
 export function calcCheckoutAmounts({
   items,
   coupon,
   pointInput,
   pointBalance,
-  now,
 }: CheckoutAmountsInput): CheckoutAmounts {
   const cart = calcCartAmounts(items)
   const { normalTotal, discountTotal: dealDiscount, payTotal: payProductTotal } = cart
@@ -60,7 +58,7 @@ export function calcCheckoutAmounts({
     .filter((i) => i.kind === 'menu')
     .reduce((sum, i) => sum + i.salePrice * i.qty, 0)
 
-  const couponApplicable = coupon ? isCouponUsable(coupon, menuSubtotal, now) : false
+  const couponApplicable = coupon ? isCouponUsable(coupon, menuSubtotal) : false
   const couponDiscount = couponApplicable && coupon ? calcCouponDiscount(coupon, menuSubtotal) : 0
   const afterCoupon = payProductTotal - couponDiscount
 

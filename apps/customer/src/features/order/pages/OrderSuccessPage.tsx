@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { Check } from 'lucide-react'
+import { AlertTriangle, Check } from 'lucide-react'
 import { Navigate, useLocation, useNavigate } from 'react-router'
 import { cn } from '@/shared/lib/utils'
 import { ScreenContainer } from '@/shared/components/ScreenContainer'
@@ -57,7 +57,8 @@ export function OrderSuccessPage() {
         <div className="mt-[22px] rounded-[14px] border border-border bg-card px-[18px] py-4 text-left">
           <InfoRow label="매장" value={order.storeName} />
           <InfoRow label="픽업 시간" value={pickupLabel(order.pickup)} highlight />
-          <InfoRow label="결제 금액" value={won(order.amounts.payTotal)} />
+          {/* 실청구액(finalAmount) — 실 결제 경로의 매핑 주문은 payTotal=혜택 전. 목/구주문은 payTotal 폴백(A4-2) */}
+          <InfoRow label="결제 금액" value={won(order.amounts.finalAmount ?? order.amounts.payTotal)} />
           {(order.amounts.earnedPoints ?? 0) > 0 && (
             <InfoRow
               label="적립 예정"
@@ -65,10 +66,19 @@ export function OrderSuccessPage() {
             />
           )}
           <InfoRow label="결제 수단" value="토스페이" />
+          {/* 적립은 픽업완료 즉시가 아니라 환불 윈도우(3일) 종료 후 확정·사용 가능(D1) */}
+          {(order.amounts.earnedPoints ?? 0) > 0 && (
+            <p className="mt-1.5 border-t border-border pt-2 text-[11.5px] leading-[1.5] text-muted-foreground">
+              적립 예정 포인트는 픽업 완료 3일 후 사용 가능해요.
+            </p>
+          )}
         </div>
 
         <div className="mt-[18px] rounded-[11px] bg-warning-subtle px-[14px] py-[13px] text-left text-[12.5px] leading-[1.6] text-[#8b5a00]">
-          <b className="font-extrabold text-warning-foreground">⚠️ 매장 마감 전까지 픽업해 주세요.</b>
+          <b className="flex items-center gap-1.5 font-extrabold text-warning-foreground">
+            <AlertTriangle aria-hidden className="size-[13px] shrink-0" />
+            매장 마감 전까지 픽업해 주세요.
+          </b>
           <br />
           픽업 시간이 지나도 주문은 유지되지만, 끝내 찾아가지 못하면 환불이 제한될 수 있어요.
         </div>

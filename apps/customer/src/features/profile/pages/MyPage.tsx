@@ -1,3 +1,18 @@
+import {
+  Ticket,
+  Wallet,
+  Gift,
+  Heart,
+  PenLine,
+  MapPin,
+  Bell,
+  FileText,
+  Megaphone,
+  Headphones,
+  Info,
+  LogOut,
+  Trash2,
+} from 'lucide-react'
 import { ComingSoonProvider } from '@/shared/components/ComingSoonToast'
 import { ScreenContainer } from '@/shared/components/ScreenContainer'
 import { useComingSoon } from '@/shared/hooks/useComingSoon'
@@ -29,7 +44,7 @@ function MyPageContent() {
   const pointValue =
     pointSummary != null ? `${pointSummary.balance.toLocaleString('ko-KR')}P` : undefined
   const usableCouponValue =
-    coupons != null ? `${coupons.filter((c) => c.status === 'usable').length}장` : undefined
+    coupons != null ? `${coupons.filter((c) => c.status === 'USABLE').length}장` : undefined
 
   const soon = () => show(COMING_SOON)
   const handleLogout = () => {
@@ -56,27 +71,28 @@ function MyPageContent() {
       )}
 
       <MenuGroup title="혜택">
-        <MenuRow icon="🎉" label="이벤트" to={ROUTES.EVENTS} />
-        <MenuRow icon="🪙" label="포인트" value={pointValue} to={ROUTES.POINTS} />
-        <MenuRow icon="🎁" label="쿠폰함" value={usableCouponValue} to={ROUTES.COUPONS} />
+        <MenuRow icon={<Ticket />} label="이벤트" to={ROUTES.EVENTS} />
+        <MenuRow icon={<Wallet />} label="포인트" value={pointValue} to={ROUTES.POINTS} />
+        <MenuRow icon={<Gift />} label="쿠폰함" value={usableCouponValue} to={ROUTES.COUPONS} />
       </MenuGroup>
 
       <MenuGroup title="활동">
-        <MenuRow icon="❤️" label="찜한 가게" to={ROUTES.FAVS} />
-        <MenuRow icon="✍️" label="내가 쓴 리뷰" to={ROUTES.MY_REVIEWS} />
+        <MenuRow icon={<Heart />} label="찜한 가게" to={ROUTES.FAVS} />
+        <MenuRow icon={<PenLine />} label="내가 쓴 리뷰" to={ROUTES.MY_REVIEWS} />
       </MenuGroup>
 
       <MenuGroup title="설정 · 지원">
-        <MenuRow icon="📍" label="주소 관리" to={ROUTES.ADDRESSES} />
-        <MenuRow icon="🔔" label="알림 설정" to={ROUTES.NOTIFICATION_SETTINGS} />
-        <MenuRow icon="📢" label="공지사항" to={ROUTES.NOTICES} />
-        <MenuRow icon="🎧" label="고객센터" to={ROUTES.SUPPORT} />
-        <MenuRow icon="ℹ️" label="앱 버전" value="v1.0.0" />
+        <MenuRow icon={<MapPin />} label="주소 관리" to={ROUTES.ADDRESSES} />
+        <MenuRow icon={<Bell />} label="알림 설정" to={ROUTES.NOTIFICATION_SETTINGS} />
+        <MenuRow icon={<FileText />} label="약관 및 정책" to={ROUTES.TERMS} />
+        <MenuRow icon={<Megaphone />} label="공지사항" to={ROUTES.NOTICES} />
+        <MenuRow icon={<Headphones />} label="고객센터" to={ROUTES.SUPPORT} />
+        <MenuRow icon={<Info />} label="앱 버전" value="v1.0.0" />
       </MenuGroup>
 
       <MenuGroup title="계정">
-        <MenuRow icon="🚪" label="로그아웃" danger onClick={handleLogout} />
-        <MenuRow icon="🗑️" label="회원 탈퇴" danger onClick={soon} />
+        <MenuRow icon={<LogOut />} label="로그아웃" danger onClick={handleLogout} />
+        <MenuRow icon={<Trash2 />} label="회원 탈퇴" danger onClick={soon} />
       </MenuGroup>
     </ScreenContainer>
   )

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useMemo, useRef, useState, type ChangeEvent } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useNavigate } from 'react-router'
@@ -10,65 +10,110 @@ import {
   FormLabel,
   FormMessage,
 } from '@/shared/components/ui/form'
+import { Camera } from 'lucide-react'
 import { Input } from '@/shared/components/ui/input'
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/shared/components/ui/sheet'
 import { cn } from '@/shared/lib/utils'
 import { ApiError } from '@/shared/lib/apiError'
 import { ROUTES } from '@/shared/lib/routes'
-import { SAMPLE_ADDRESSES } from '../lib/sampleAddresses'
+import { searchStoreAddress } from '@/features/auth/lib/addressSearch'
 import { useUpdateStore } from '../hooks/useUpdateStore'
 import { storeEditSchema } from '../types'
 import type { StoreDetail, StoreEditInput } from '../types'
 
+/** 대표 사진 최대 용량(MB) */
+const MAX_IMAGE_MB = 5
+
 /**
  * 매장 정보 수정 폼 — 현재 정보 미리채움(detail) 후 5필드(매장명·주소·상세 주소·전화·대표 사진) 수정.
  * 저장(자동 승인·즉시 반영) → 매장 관리로 복귀. 사업자번호·대표자명·영업상태·영업시간은 비범위(수정 불가).
- * UI 골격은 등록 폼(StoreRegisterForm)에서 사업자 진위확인 블록만 뺀 부분집합.
+ *
+ * 부분 업데이트 설계:
+ * - 매장명·전화·상세주소: 항상 제출 (BE 멱등)
+ * - 주소(road+코드들): Daum 재검색한 경우에만 PATCH 에 포함 (storeAddress !== null) → 미포함 시 지오코딩 재호출 없음
+ * - 이미지: 새 File 선택한 경우에만 image 파트 전송
  */
 export function StoreEditForm({ detail }: { detail: StoreDetail }) {
   const navigate = useNavigate()
   const update = useUpdateStore()
-  const [addrOpen, setAddrOpen] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [addrPending, setAddrPending] = useState(false)
+  const [addrError, setAddrError] = useState<string | null>(null)
 
   const form = useForm<StoreEditInput>({
     resolver: zodResolver(storeEditSchema),
     mode: 'onChange',
     defaultValues: {
-      storeName: detail.storeName,
-      storeAddress: detail.storeAddress,
-      storeAddressDetail: detail.storeAddressDetail ?? '',
-      storePhone: detail.storePhone,
-      photoAdded: detail.photoAdded,
+      storeName: detail.name,
+      storeAddress: null,       // null = 주소 미변경 (Daum 재검색 전까지)
+      storeAddressDetail: detail.detailAddress ?? '',
+      storePhone: detail.phone,
+      storeImageFile: undefined,
     },
   })
 
-  const photoAdded = !!form.watch('photoAdded')
+  const storeImageFile = form.watch('storeImageFile')
   const storeName = form.watch('storeName')
-  const storeAddress = form.watch('storeAddress')
   const storePhone = form.watch('storePhone')
-  // 필수 3필드(매장명·주소·전화)가 모두 채워졌을 때만 저장 가능 — storeEditSchema 필수와 동치
-  const canSave =
-    storeName.trim().length > 0 && storeAddress.trim().length > 0 && storePhone.trim().length > 0
+  // 필수 2필드(매장명·전화)가 채워져야 저장 가능. 주소는 null=미변경(유효)
+  const canSave = storeName.trim().length > 0 && storePhone.trim().length > 0
 
-  const togglePhoto = () =>
-    form.setValue('photoAdded', !photoAdded, { shouldValidate: true, shouldDirty: true })
+  // 대표 사진 미리보기 — 새 File 에서 object URL 파생 + 정리
+  const previewUrl = useMemo(
+    () => (storeImageFile ? URL.createObjectURL(storeImageFile) : null),
+    [storeImageFile],
+  )
+  useEffect(() => {
+    if (!previewUrl) return
+    return () => URL.revokeObjectURL(previewUrl)
+  }, [previewUrl])
 
-  const selectAddr = (addr: string) => {
-    form.setValue('storeAddress', addr, { shouldValidate: true })
-    setAddrOpen(false)
+  // 표시할 이미지 URL: 새 파일 미리보기 > 기존 imageUrl > 없음
+  const displayImageUrl = previewUrl ?? detail.imageUrl ?? null
+
+  const onPickFile = (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    e.target.value = ''
+    if (!file) return
+    if (!file.type.startsWith('image/')) return
+    if (file.size > MAX_IMAGE_MB * 1024 * 1024) return
+    form.setValue('storeImageFile', file, { shouldDirty: true })
+  }
+
+  const removePhoto = () => {
+    form.setValue('storeImageFile', undefined, { shouldDirty: true })
+  }
+
+  // Daum 우편번호 위젯 — 재검색한 경우에만 storeAddress 에 구조화 주소 저장
+  const searchAddress = async () => {
+    setAddrPending(true)
+    setAddrError(null)
+    try {
+      const address = await searchStoreAddress()
+      form.setValue('storeAddress', address, { shouldValidate: true, shouldDirty: true })
+    } catch (error) {
+      setAddrError(error instanceof Error ? error.message : '주소를 선택하지 못했어요')
+    } finally {
+      setAddrPending(false)
+    }
   }
 
   function onSubmit(values: StoreEditInput) {
+    // 변경 필드 구성: 주소는 Daum 재검색(non-null)한 경우만 포함
     update.mutate(
       {
         storeId: detail.id,
-        storeName: values.storeName,
-        storeAddress: values.storeAddress,
-        storeAddressDetail: values.storeAddressDetail?.trim() || undefined,
-        storePhone: values.storePhone,
-        photoAdded: values.photoAdded,
+        name: values.storeName,
+        phone: values.storePhone,
+        detailAddress: values.storeAddressDetail ?? '',
+        ...(values.storeAddress !== null && {
+          roadAddress: values.storeAddress.roadAddress,
+          jibunAddress: values.storeAddress.jibunAddress,
+          zonecode: values.storeAddress.zonecode,
+          sigunguCode: values.storeAddress.sigunguCode,
+          roadnameCode: values.storeAddress.roadnameCode,
+        }),
+        ...(values.storeImageFile && { imageFile: values.storeImageFile }),
       },
-      // 저장 즉시 반영(무효화는 훅) 후 매장 관리로 복귀
       { onSuccess: () => navigate(ROUTES.STORE_MANAGE) },
     )
   }
@@ -84,32 +129,48 @@ export function StoreEditForm({ detail }: { detail: StoreDetail }) {
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} noValidate className="flex flex-1 flex-col">
         <div className="flex-1 px-5 pb-6 pt-4">
-          {/* 대표 사진 — mock 토글. 실 업로드/기존 삭제는 BE·연동 PR */}
-          <button
-            type="button"
-            onClick={togglePhoto}
-            className={cn(
-              'mb-5 flex h-[168px] w-full flex-col items-center justify-center gap-2 rounded-[14px] border-[1.5px] transition',
-              photoAdded
-                ? 'border-solid border-primary bg-gradient-to-br from-secondary to-[#ffd9c7] text-secondary-foreground'
-                : 'border-dashed border-border bg-background text-muted-foreground',
-            )}
-          >
-            <span className="text-[34px] leading-none">{photoAdded ? '🏪' : '📷'}</span>
-            <span className="text-[13.5px] font-semibold">
-              {photoAdded ? '대표 사진 등록 완료' : '대표 사진 등록'}
-            </span>
-            <span
+          {/* 대표 사진 — 새 파일 선택 시 image 파트 전송. 기존 이미지는 미리보기만 */}
+          <div className="mb-5">
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              aria-label="매장 대표 사진"
+              onChange={onPickFile}
+            />
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
               className={cn(
-                'text-[11.5px]',
-                photoAdded ? 'text-secondary-foreground' : 'text-placeholder',
+                'flex h-[168px] w-full flex-col items-center justify-center gap-2 overflow-hidden rounded-[14px] border-[1.5px] transition',
+                displayImageUrl
+                  ? 'border-solid border-primary'
+                  : 'border-dashed border-border bg-background text-muted-foreground',
               )}
             >
-              {photoAdded
-                ? '탭하면 사진을 제거합니다 (데모)'
-                : '매장 외관이 잘 보이는 사진을 권장해요'}
-            </span>
-          </button>
+              {displayImageUrl ? (
+                <img src={displayImageUrl} alt="매장 대표 사진 미리보기" className="size-full object-cover" />
+              ) : (
+                <>
+                  <Camera className="size-8 text-muted-foreground" aria-hidden />
+                  <span className="text-[13.5px] font-semibold">대표 사진 등록</span>
+                  <span className="text-[11.5px] text-placeholder">
+                    매장 외관이 잘 보이는 사진을 권장해요 (선택)
+                  </span>
+                </>
+              )}
+            </button>
+            {storeImageFile && (
+              <button
+                type="button"
+                onClick={removePhoto}
+                className="mt-2 text-[12.5px] font-semibold text-muted-foreground underline"
+              >
+                사진 제거
+              </button>
+            )}
+          </div>
 
           <FormField
             control={form.control}
@@ -147,17 +208,23 @@ export function StoreEditForm({ detail }: { detail: StoreDetail }) {
                       placeholder="주소를 검색하세요"
                       readOnly
                       className="pr-[104px]"
-                      {...field}
+                      name={field.name}
+                      ref={field.ref}
+                      onBlur={field.onBlur}
+                      // null(미변경)이면 현재 detail.roadAddress 를 표시
+                      value={field.value?.roadAddress ?? detail.roadAddress}
                     />
                   </FormControl>
                   <button
                     type="button"
-                    onClick={() => setAddrOpen(true)}
-                    className="absolute right-1.5 top-1/2 h-11 -translate-y-1/2 rounded-lg bg-secondary px-3.5 text-[13px] font-bold text-secondary-foreground"
+                    onClick={searchAddress}
+                    disabled={addrPending}
+                    className="absolute right-1.5 top-1/2 h-11 -translate-y-1/2 rounded-lg bg-secondary px-3.5 text-[13px] font-bold text-secondary-foreground disabled:opacity-50"
                   >
-                    주소 검색
+                    {addrPending ? '검색 중' : '주소 검색'}
                   </button>
                 </div>
+                {addrError && <p className="mt-1.5 text-xs text-destructive">{addrError}</p>}
                 <FormMessage />
               </FormItem>
             )}
@@ -213,27 +280,6 @@ export function StoreEditForm({ detail }: { detail: StoreDetail }) {
             {update.isPending ? '저장 중…' : '저장'}
           </button>
         </div>
-
-        <Sheet open={addrOpen} onOpenChange={setAddrOpen}>
-          <SheetContent side="bottom" className="max-h-[70vh] rounded-t-[22px]">
-            <SheetHeader>
-              <SheetTitle>주소 검색</SheetTitle>
-            </SheetHeader>
-            <ul className="overflow-y-auto px-5 pb-6">
-              {SAMPLE_ADDRESSES.map((addr) => (
-                <li key={addr}>
-                  <button
-                    type="button"
-                    onClick={() => selectAddr(addr)}
-                    className="w-full border-b border-border py-3.5 text-left text-sm font-bold text-foreground last:border-b-0"
-                  >
-                    {addr}
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </SheetContent>
-        </Sheet>
       </form>
     </Form>
   )

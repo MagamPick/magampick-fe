@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useRef, useState, type ChangeEvent } from 'react'
 import type { UseFormReturn } from 'react-hook-form'
 import {
   FormField,
@@ -7,25 +7,17 @@ import {
   FormControl,
   FormMessage,
 } from '@/shared/components/ui/form'
-import { CalendarIcon } from 'lucide-react'
+import { AlertTriangle, CalendarIcon, Camera, CheckCircle2 } from 'lucide-react'
 import { Input } from '@/shared/components/ui/input'
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/shared/components/ui/sheet'
 import { Calendar } from '@/shared/components/ui/calendar'
 import { cn } from '@/shared/lib/utils'
 import { useBusinessCheck } from '../hooks/useBusinessCheck'
+import { searchStoreAddress } from '../lib/addressSearch'
 import type { SignupInput } from '../types'
 
-// Mock 매장 주소 — 의도적 최소 구현. 실연동 시 카카오(Daum) 우편번호 위젯이 이 시트를 대체.
-const SAMPLE_ADDRESSES = [
-  '서울 강남구 테헤란로 152',
-  '서울 강남구 역삼로 180',
-  '서울 마포구 양화로 45',
-  '서울 마포구 월드컵북로 396',
-  '서울 송파구 올림픽로 300',
-  '서울 영등포구 여의대로 24',
-  '경기 성남시 분당구 판교역로 235',
-  '서울 용산구 이태원로 200',
-]
+/** 대표 사진 최대 용량(MB) */
+const MAX_IMAGE_MB = 5
 
 // 프로토타입 bizNo input — 숫자 10자리 → 000-00-00000 자동 포맷
 function formatBizNo(value: string): string {
@@ -45,10 +37,13 @@ const parseYMD = (s: string) => {
 
 export function Step5Store({ form }: { form: UseFormReturn<SignupInput> }) {
   const biz = useBusinessCheck()
-  const [addrOpen, setAddrOpen] = useState(false)
   const [dateOpen, setDateOpen] = useState(false)
+  const [addrPending, setAddrPending] = useState(false)
+  const [addrError, setAddrError] = useState<string | null>(null)
+  const [photoError, setPhotoError] = useState<string | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const photoAdded = !!form.watch('photoAdded')
+  const storeImageFile = form.watch('storeImageFile')
   const representativeName = form.watch('representativeName')
   const businessNumber = form.watch('businessNumber')
   const openDate = form.watch('openDate')
@@ -61,8 +56,36 @@ export function Step5Store({ form }: { form: UseFormReturn<SignupInput> }) {
     }
   }, [form])
 
-  const togglePhoto = () =>
-    form.setValue('photoAdded', !photoAdded, { shouldValidate: true, shouldDirty: true })
+  // 대표 사진 미리보기 — File 에서 object URL 파생(리마운트에도 유지) + 정리
+  const previewUrl = useMemo(
+    () => (storeImageFile ? URL.createObjectURL(storeImageFile) : null),
+    [storeImageFile],
+  )
+  useEffect(() => {
+    if (!previewUrl) return
+    return () => URL.revokeObjectURL(previewUrl)
+  }, [previewUrl])
+
+  const onPickFile = (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    e.target.value = '' // 같은 파일 재선택 허용
+    if (!file) return
+    if (!file.type.startsWith('image/')) {
+      setPhotoError('이미지 파일만 등록할 수 있어요')
+      return
+    }
+    if (file.size > MAX_IMAGE_MB * 1024 * 1024) {
+      setPhotoError(`이미지는 ${MAX_IMAGE_MB}MB 이하만 등록할 수 있어요`)
+      return
+    }
+    setPhotoError(null)
+    form.setValue('storeImageFile', file, { shouldDirty: true })
+  }
+
+  const removePhoto = () => {
+    form.setValue('storeImageFile', undefined, { shouldDirty: true })
+    setPhotoError(null)
+  }
 
   // 진위확인 입력(대표자명·번호·개업일자) 변경 시 조회 결과·검증 플래그 리셋 (재조회 강제)
   const resetBiz = () => {
@@ -87,9 +110,19 @@ export function Step5Store({ form }: { form: UseFormReturn<SignupInput> }) {
     openDate.trim().length > 0 &&
     !biz.isPending
 
-  const selectAddr = (addr: string) => {
-    form.setValue('storeAddress', addr, { shouldValidate: true })
-    setAddrOpen(false)
+  // 다음 우편번호 위젯 — 도로명 주소 + 지오코딩 키(sigunguCode·roadnameCode)를 받아 구조화 저장
+  const searchAddress = async () => {
+    setAddrPending(true)
+    setAddrError(null)
+    try {
+      const address = await searchStoreAddress()
+      form.setValue('storeAddress', address, { shouldValidate: true, shouldDirty: true })
+      form.clearErrors('storeAddress')
+    } catch (error) {
+      setAddrError(error instanceof Error ? error.message : '주소를 선택하지 못했어요')
+    } finally {
+      setAddrPending(false)
+    }
   }
 
   return (
@@ -103,25 +136,49 @@ export function Step5Store({ form }: { form: UseFormReturn<SignupInput> }) {
         사업자등록번호와 매장 정보를 함께 등록합니다.
       </p>
 
-      {/* 대표 사진 — mock 토글 (실제 업로드는 매장 등록 신청 연동 PR) */}
-      <button
-        type="button"
-        onClick={togglePhoto}
-        className={cn(
-          'mb-5 flex h-[168px] w-full flex-col items-center justify-center gap-2 rounded-[14px] border-[1.5px] transition',
-          photoAdded
-            ? 'border-solid border-primary bg-gradient-to-br from-secondary to-[#ffd9c7] text-secondary-foreground'
-            : 'border-dashed border-border bg-background text-muted-foreground',
+      {/* 대표 사진 — 선택 업로드 (multipart image 파트). 없어도 가입 완료 */}
+      <div className="mb-5">
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          aria-label="매장 대표 사진"
+          onChange={onPickFile}
+        />
+        <button
+          type="button"
+          onClick={() => fileInputRef.current?.click()}
+          className={cn(
+            'flex h-[168px] w-full flex-col items-center justify-center gap-2 overflow-hidden rounded-[14px] border-[1.5px] transition',
+            storeImageFile
+              ? 'border-solid border-primary'
+              : 'border-dashed border-border bg-background text-muted-foreground',
+          )}
+        >
+          {previewUrl ? (
+            <img src={previewUrl} alt="매장 대표 사진 미리보기" className="size-full object-cover" />
+          ) : (
+            <>
+              <Camera className="size-8 text-muted-foreground" aria-hidden />
+              <span className="text-[13.5px] font-semibold">대표 사진 등록</span>
+              <span className="text-[11.5px] text-placeholder">
+                매장 외관이 잘 보이는 사진을 권장해요 (선택)
+              </span>
+            </>
+          )}
+        </button>
+        {storeImageFile && (
+          <button
+            type="button"
+            onClick={removePhoto}
+            className="mt-2 text-[12.5px] font-semibold text-muted-foreground underline"
+          >
+            사진 제거
+          </button>
         )}
-      >
-        <span className="text-[34px] leading-none">{photoAdded ? '🏪' : '📷'}</span>
-        <span className="text-[13.5px] font-semibold">
-          {photoAdded ? '대표 사진 등록 완료' : '대표 사진 등록'}
-        </span>
-        <span className={cn('text-[11.5px]', photoAdded ? 'text-secondary-foreground' : 'text-placeholder')}>
-          {photoAdded ? '탭하면 사진을 제거합니다 (데모)' : '매장 외관이 잘 보이는 사진을 권장해요'}
-        </span>
-      </button>
+        {photoError && <p className="mt-1.5 text-xs text-destructive">{photoError}</p>}
+      </div>
 
       <FormField
         control={form.control}
@@ -238,13 +295,13 @@ export function Step5Store({ form }: { form: UseFormReturn<SignupInput> }) {
 
       {biz.isSuccess && (
         <div className="mb-4 flex items-start gap-2.5 rounded-xl bg-success-subtle px-4 py-3.5 text-[13.5px] font-semibold leading-normal text-success">
-          <span className="text-base leading-none">✅</span>
+          <CheckCircle2 className="size-4 shrink-0" aria-hidden />
           <span>정상 등록된 사업자입니다.</span>
         </div>
       )}
       {biz.isError && (
         <div className="mb-4 flex items-start gap-2.5 rounded-xl bg-destructive-subtle px-4 py-3.5 text-[13.5px] font-semibold leading-normal text-destructive">
-          <span className="text-base leading-none">⚠️</span>
+          <AlertTriangle className="size-4 shrink-0" aria-hidden />
           <span>
             조회되지 않는 사업자등록번호입니다.
             <br />
@@ -279,16 +336,29 @@ export function Step5Store({ form }: { form: UseFormReturn<SignupInput> }) {
             </FormLabel>
             <div className="relative">
               <FormControl>
-                <Input placeholder="주소를 검색하세요" readOnly className="pr-[104px]" {...field} />
+                <Input
+                  placeholder="주소를 검색하세요"
+                  readOnly
+                  className="pr-[104px]"
+                  name={field.name}
+                  ref={field.ref}
+                  onBlur={field.onBlur}
+                  value={field.value?.roadAddress ?? ''}
+                />
               </FormControl>
               <button
                 type="button"
-                onClick={() => setAddrOpen(true)}
+                onClick={searchAddress}
+                disabled={addrPending}
                 className="absolute right-1.5 top-1/2 h-11 -translate-y-1/2 rounded-lg bg-secondary px-3.5 text-[13px] font-bold text-secondary-foreground"
               >
-                주소 검색
+                {addrPending ? '검색 중' : '주소 검색'}
               </button>
             </div>
+            <p className="mt-1.5 text-xs text-muted-foreground">
+              도로명·지번 모두 검색 가능해요. 위치는 등록한 주소를 기준으로 자동 설정됩니다.
+            </p>
+            {addrError && <p className="mt-1.5 text-xs text-destructive">{addrError}</p>}
             <FormMessage />
           </FormItem>
         )}
@@ -323,27 +393,6 @@ export function Step5Store({ form }: { form: UseFormReturn<SignupInput> }) {
           </FormItem>
         )}
       />
-
-      <Sheet open={addrOpen} onOpenChange={setAddrOpen}>
-        <SheetContent side="bottom" className="max-h-[70vh] rounded-t-[22px]">
-          <SheetHeader>
-            <SheetTitle>주소 검색</SheetTitle>
-          </SheetHeader>
-          <ul className="overflow-y-auto px-5 pb-6">
-            {SAMPLE_ADDRESSES.map((addr) => (
-              <li key={addr}>
-                <button
-                  type="button"
-                  onClick={() => selectAddr(addr)}
-                  className="w-full border-b border-border py-3.5 text-left text-sm font-bold text-foreground last:border-b-0"
-                >
-                  {addr}
-                </button>
-              </li>
-            ))}
-          </ul>
-        </SheetContent>
-      </Sheet>
     </div>
   )
 }

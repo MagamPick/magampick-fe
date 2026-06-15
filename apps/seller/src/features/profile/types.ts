@@ -28,7 +28,3 @@ export const nameFormSchema = z.object({
 })
 export type NameFormValues = z.infer<typeof nameFormSchema>
 
-/** 도메인 에러 코드 (노션 AC) — mock API 가 ApiError.code 로 사용 */
-export const PROFILE_ERROR = {
-  NAME_LENGTH: 'NAME_LENGTH',
-} as const

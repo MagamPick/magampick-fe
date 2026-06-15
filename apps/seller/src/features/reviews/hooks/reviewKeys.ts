@@ -2,5 +2,4 @@
 export const reviewKeys = {
   all: ['reviews'] as const,
   list: (storeId: string) => [...reviewKeys.all, storeId, 'list'] as const,
-  summary: (storeId: string) => [...reviewKeys.all, storeId, 'summary'] as const,
 }

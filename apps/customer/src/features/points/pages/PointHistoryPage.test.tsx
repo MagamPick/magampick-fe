@@ -22,13 +22,23 @@ describe('PointHistoryPage', () => {
   it('잔액과 내역을 표시', async () => {
     vi.mocked(pointApi.getSummary).mockResolvedValue({ balance: 2450 })
     vi.mocked(pointApi.listHistory).mockResolvedValue([
-      { id: 't1', reason: 'earn', amount: 120, storeName: '브레드샵', date: '2026-05-28' },
+      { id: 1, reason: 'EARN', amount: 120, storeName: '브레드샵', occurredAt: '2026-05-28T10:00:00+09:00' },
     ])
 
     renderPage()
 
     expect(await screen.findByText('2,450')).toBeInTheDocument()
     expect(await screen.findByText('결제 적립 · 브레드샵')).toBeInTheDocument()
+  })
+
+  it('적립 예정(pendingPoints)이 있으면 Hero에 함께 표시', async () => {
+    vi.mocked(pointApi.getSummary).mockResolvedValue({ balance: 2450, pendingPoints: 300 })
+    vi.mocked(pointApi.listHistory).mockResolvedValue([])
+
+    renderPage()
+
+    expect(await screen.findByText('적립 예정')).toBeInTheDocument()
+    expect(screen.getByText('+300 P')).toBeInTheDocument()
   })
 
   it('내역이 없으면 빈 상태', async () => {

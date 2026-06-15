@@ -1,233 +1,196 @@
-import { ApiError } from '@/shared/lib/apiError'
-import { REVIEW_CONTENT_MAX, REVIEW_PHOTO_MAX } from '../types'
-import type { CreateReviewPayload, MyReview, ReviewableOrder, UpdateReviewPayload } from '../types'
+import { z } from 'zod'
+import { apiClient } from '@/shared/lib/axios'
+import { nullish, nullableString, nullableNumber, nullableBoolean } from '@/shared/lib/zodNullable'
+import { QUICK_TAGS, REVIEW_TAG_CODE } from '../types'
+import type {
+  MyReview,
+  ReviewableOrder,
+  CreateReviewPayload,
+  UpdateReviewPayload,
+  QuickTag,
+  ReviewPhoto,
+} from '../types'
+
+// ─── BE 응답 Zod 스키마 ──────────────────────────────────────────────────────
+
+const reviewedProductSchema = z.object({
+  productId: nullableNumber(),
+  kind: nullableString(),
+  name: nullableString(),
+})
+
+const orderedItemSchema = z.object({
+  productId: nullableNumber(),
+  kind: nullableString(),
+  name: nullableString(),
+})
+
+export const myReviewResponseSchema = z.object({
+  id: nullableNumber(),
+  storeId: nullableNumber(),
+  storeName: nullableString(),
+  items: nullish(z.array(reviewedProductSchema)),
+  rating: nullableNumber(),
+  content: nullableString(),
+  /** BE 는 한국어 라벨 배열로 반환 */
+  tags: nullish(z.array(z.string())),
+  photos: nullish(z.array(z.string())),
+  createdAt: nullableString(),
+  /** absent 또는 null → null (sic: BE spec ownerReply?: string) */
+  ownerReply: z.string().nullable().optional(),
+})
+
+export const reviewableOrderResponseSchema = z.object({
+  orderId: nullableNumber(),
+  storeId: nullableNumber(),
+  storeName: nullableString(),
+  items: nullish(z.array(orderedItemSchema)),
+  pickedUpAt: nullableString(),
+  reviewed: nullableBoolean(),
+  reviewId: z.number().nullable().optional(),
+})
+
+// ─── BE 응답 → 클라이언트 타입 변환 ─────────────────────────────────────────
+
+function mapToMyReview(res: z.infer<typeof myReviewResponseSchema>): MyReview {
+  return {
+    id: String(res.id ?? 0),
+    storeId: String(res.storeId ?? 0),
+    storeName: res.storeName ?? '',
+    items: (res.items ?? []).map((item) => ({
+      productId: String(item.productId ?? 0),
+      kind: item.kind?.toLowerCase() === 'deal' ? 'deal' : 'menu',
+      name: item.name ?? '',
+    })),
+    rating: res.rating ?? 0,
+    content: res.content ?? '',
+    /**
+     * BE 응답 tags = 한국어 라벨 배열.
+     * 방어필터: QUICK_TAGS에 없는 미지 라벨은 드롭 (BE 라벨 문자열 미검증 안전장치).
+     */
+    tags: (res.tags ?? []).filter((t) => (QUICK_TAGS as readonly string[]).includes(t)),
+    photos: res.photos ?? [],
+    createdAt: res.createdAt ?? '',
+    ownerReply: res.ownerReply ?? null,
+  }
+}
+
+function mapToReviewableOrder(res: z.infer<typeof reviewableOrderResponseSchema>): ReviewableOrder {
+  return {
+    orderId: String(res.orderId ?? 0),
+    storeId: String(res.storeId ?? 0),
+    storeName: res.storeName ?? '',
+    items: (res.items ?? []).map((item) => ({
+      productId: String(item.productId ?? 0),
+      kind: item.kind?.toLowerCase() === 'deal' ? 'deal' : 'menu',
+      name: item.name ?? '',
+    })),
+    pickedUpAt: res.pickedUpAt ?? '',
+    reviewed: res.reviewed ?? false,
+    reviewId: res.reviewId != null ? String(res.reviewId) : null,
+  }
+}
+
+// ─── 태그 코드 변환 ──────────────────────────────────────────────────────────
 
 /**
- * ⚠️ Mock 스텁 — 리뷰 BE 미구현(review 도메인 없음). in-memory 로 상태 유지.
- * 실연동 시 apiClient 호출 + Zod 응답 검증으로 교체(api-client-convention).
- * 작성/수정/삭제는 '내 리뷰'·'완료주문(reviewed)' 에만 반영 — 매장 상세 리뷰 탭(store-detail)
- * 은 별도 mock 이라 즉시 반영 안 함(BE 연동 시 통합).
- * 상품 id 는 product-detail mock 과 연결(알려진 sd-1/mn-1 + 그 외 id 는 defaultProduct 로 렌더됨).
+ * FE 한국어 태그 라벨 → BE enum 코드 변환.
+ * REVIEW_TAG_CODE 에 없는 라벨은 필터.
  */
-const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
-const clone = <T>(value: T): T => structuredClone(value)
-
-const UNSPLASH = (id: string) => `https://images.unsplash.com/${id}?w=240&h=240&fit=crop&q=80`
-
-/** 데모 시드 — 완료주문 3건(미작성 2 + 작성 1), 내 리뷰 3건(답글 1건 → 수정·삭제 잠금) */
-function seedOrders(): ReviewableOrder[] {
-  return [
-    {
-      orderId: 'od-1',
-      storeId: 'st-1',
-      storeName: '베이커리 브레드샵',
-      storeEmoji: '🥐',
-      items: [
-        { productId: 'sd-1', kind: 'deal', name: '크루아상 세트 (4개입)' },
-        { productId: 'mn-1', kind: 'menu', name: '플레인 크루아상' },
-      ],
-      pickedUpAt: '2026-05-29T10:20:00+09:00',
-      reviewed: false,
-      reviewId: null,
-    },
-    {
-      orderId: 'od-2',
-      storeId: 'st-2',
-      storeName: '소금빵 연구소',
-      storeEmoji: '🧂',
-      items: [{ productId: 'rp-salt', kind: 'menu', name: '소금빵' }],
-      pickedUpAt: '2026-05-27T18:05:00+09:00',
-      reviewed: false,
-      reviewId: null,
-    },
-    {
-      orderId: 'od-3',
-      storeId: 'st-3',
-      storeName: '단팥빵 명가',
-      storeEmoji: '🫘',
-      items: [
-        { productId: 'rp-redbean', kind: 'menu', name: '단팥빵' },
-        { productId: 'rp-milk', kind: 'menu', name: '우유 식빵' },
-      ],
-      pickedUpAt: '2026-05-20T09:40:00+09:00',
-      reviewed: true,
-      reviewId: 'rv-1',
-    },
-  ]
+function toTagCodes(labels: string[]): string[] {
+  return labels
+    .map((label) => REVIEW_TAG_CODE[label as QuickTag])
+    .filter((code): code is string => Boolean(code))
 }
 
-function seedReviews(): MyReview[] {
-  return [
-    {
-      id: 'rv-1',
-      storeId: 'st-3',
-      storeName: '단팥빵 명가',
-      storeEmoji: '🫘',
-      items: [
-        { productId: 'rp-redbean', kind: 'menu', name: '단팥빵' },
-        { productId: 'rp-milk', kind: 'menu', name: '우유 식빵' },
-      ],
-      rating: 5,
-      content: '단팥이 꽉 차 있고 갓 구운 빵이라 너무 맛있었어요. 마감 할인까지 받아서 행복했어요!',
-      tags: ['맛있어요', '재구매'],
-      photos: [UNSPLASH('photo-1568254183919-78a4f43a2877')],
-      createdAt: '2026-05-21T11:00:00+09:00',
-      ownerReply: '맛있게 드셔주셔서 감사해요! 또 들러주세요 🥐',
-    },
-    {
-      id: 'rv-2',
-      storeId: 'st-5',
-      storeName: '모닝 베이글',
-      storeEmoji: '🥯',
-      items: [
-        { productId: 'rp-bagel', kind: 'menu', name: '플레인 베이글' },
-        { productId: 'rp-onion', kind: 'menu', name: '어니언 베이글' },
-      ],
-      rating: 4,
-      content: '베이글이 쫀득하고 좋아요. 다음에 또 살게요.',
-      tags: ['신선해요'],
-      photos: [
-        UNSPLASH('photo-1509440159596-0249088772ff'),
-        UNSPLASH('photo-1555507036-ab1f4038808a'),
-      ],
-      createdAt: '2026-05-18T08:30:00+09:00',
-      ownerReply: null,
-    },
-    {
-      id: 'rv-3',
-      storeId: 'st-7',
-      storeName: '동네 도넛',
-      storeEmoji: '🍩',
-      items: [{ productId: 'rp-donut', kind: 'menu', name: '글레이즈드 도넛' }],
-      rating: 3,
-      content: '',
-      tags: ['가성비'],
-      photos: [],
-      createdAt: '2026-05-15T20:10:00+09:00',
-      ownerReply: null,
-    },
-  ]
-}
+// ─── multipart 빌더 ───────────────────────────────────────────────────────────
 
-let orders: ReviewableOrder[] = seedOrders()
-let reviews: MyReview[] = seedReviews()
-let seq = 100
-
-/** 테스트 전용 — 모듈 in-memory 상태 초기화 */
-export function resetReviewsForTest() {
-  orders = seedOrders()
-  reviews = seedReviews()
-  seq = 100
-}
-
-/** 작성/수정 공통 입력 검증 — 서버측 미러 검증(별점 필수·후기 상한·사진 장수) */
-function assertReviewInput(input: { rating: number; content: string; photos: string[] }) {
-  if (!Number.isInteger(input.rating) || input.rating < 1 || input.rating > 5) {
-    throw new ApiError(422, 'REVIEW_INVALID_RATING', '별점을 선택해 주세요')
+/**
+ * 리뷰 multipart FormData 조립 (X5-BE 계약).
+ * - request: 텍스트 메타(JSON Blob 파트) — rating·content·tags(+update 의 keepImageUrls)
+ * - photos: 새로 고른 File 들(File 파트). 기존 사진(http URL)은 업로드하지 않고 request 에만 남긴다.
+ */
+function buildReviewForm(request: object, photos: ReviewPhoto[]): FormData {
+  const form = new FormData()
+  form.append('request', new Blob([JSON.stringify(request)], { type: 'application/json' }))
+  for (const photo of photos) {
+    if (photo.kind === 'new') form.append('photos', photo.file)
   }
-  if (input.content.length > REVIEW_CONTENT_MAX) {
-    throw new ApiError(
-      422,
-      'REVIEW_CONTENT_TOO_LONG',
-      `후기는 ${REVIEW_CONTENT_MAX}자 이내로 입력해 주세요`,
-    )
-  }
-  if (input.photos.length > REVIEW_PHOTO_MAX) {
-    throw new ApiError(422, 'REVIEW_TOO_MANY_PHOTOS', `사진은 최대 ${REVIEW_PHOTO_MAX}장까지예요`)
-  }
+  return form
 }
+
+const MULTIPART_HEADERS = { headers: { 'Content-Type': 'multipart/form-data' } }
+
+// ─── API ─────────────────────────────────────────────────────────────────────
 
 export const reviewsApi = {
-  /** 내가 쓴 리뷰 — 최신순(신규가 상단) */
+  /** GET /api/v1/customers/me/reviews — 내가 쓴 리뷰 목록 (최신순) */
   async listMyReviews(): Promise<MyReview[]> {
-    await delay(300)
-    return clone(reviews)
+    const { data } = await apiClient.get('/customers/me/reviews')
+    const list = z.array(myReviewResponseSchema).parse(data)
+    return list.map(mapToMyReview)
   },
 
-  /** 리뷰 작성 대상 완료주문 — 픽업 완료 주문 목록 */
+  /** GET /api/v1/orders/reviewable — 리뷰 작성 가능한 완료 주문 목록 */
   async listReviewableOrders(): Promise<ReviewableOrder[]> {
-    await delay(300)
-    return clone(orders)
+    const { data } = await apiClient.get('/orders/reviewable')
+    const list = z.array(reviewableOrderResponseSchema).parse(data)
+    return list.map(mapToReviewableOrder)
   },
 
-  /** 주문에 연결된 내 리뷰 — 수정 진입 시 기존값 로드(없으면 null) */
+  /**
+   * GET /api/v1/orders/{orderId}/review — 주문별 리뷰.
+   * 204 (리뷰 없음) → null. axios 204 는 data 가 '' 또는 null → !data 로 판별.
+   */
   async getReviewByOrder(orderId: string): Promise<MyReview | null> {
-    await delay(200)
-    const order = orders.find((o) => o.orderId === orderId)
-    if (!order?.reviewId) return null
-    const review = reviews.find((r) => r.id === order.reviewId)
-    return review ? clone(review) : null
+    const res = await apiClient.get(`/orders/${orderId}/review`)
+    if (res.status === 204 || !res.data) return null
+    return mapToMyReview(myReviewResponseSchema.parse(res.data))
   },
 
-  /** 리뷰 작성 — 픽업 완료 주문 1리뷰(재작성 거부), 별점 필수 */
+  /**
+   * POST /api/v1/orders/{orderId}/reviews — 리뷰 작성 (201, multipart/form-data).
+   * 텍스트(별점·후기·태그)는 request JSON 파트, 새 사진은 photos File 파트로 전송 → BE 가 OCI 업로드.
+   * tags: FE 한국어 라벨 → BE enum 코드 변환 후 전송.
+   */
   async createReview(payload: CreateReviewPayload): Promise<MyReview> {
-    await delay(400)
-
-    const order = orders.find((o) => o.orderId === payload.orderId)
-    if (!order) {
-      throw new ApiError(404, 'ORDER_NOT_FOUND', '주문을 찾을 수 없어요')
-    }
-    if (order.reviewed) {
-      throw new ApiError(409, 'REVIEW_ALREADY_EXISTS', '이미 작성한 리뷰가 있어요')
-    }
-    assertReviewInput(payload)
-
-    const review: MyReview = {
-      id: `rv-${seq++}`,
-      storeId: order.storeId,
-      storeName: order.storeName,
-      storeEmoji: order.storeEmoji,
-      items: order.items.map((item) => ({ ...item })),
-      rating: payload.rating,
-      content: payload.content.trim(),
-      tags: [...payload.tags],
-      photos: [...payload.photos],
-      createdAt: new Date().toISOString(),
-      ownerReply: null,
-    }
-    reviews.unshift(review)
-    order.reviewed = true
-    order.reviewId = review.id
-    return clone(review)
+    const form = buildReviewForm(
+      {
+        rating: payload.rating,
+        content: payload.content.trim(),
+        tags: toTagCodes(payload.tags),
+      },
+      payload.photos,
+    )
+    const { data } = await apiClient.post(`/orders/${payload.orderId}/reviews`, form, MULTIPART_HEADERS)
+    return mapToMyReview(myReviewResponseSchema.parse(data))
   },
 
-  /** 리뷰 수정 — 본인 리뷰, 답글 달리기 전까지만(잠금) */
+  /**
+   * PUT /api/v1/reviews/{reviewId} — 리뷰 수정 (200 / 409=답글잠금, multipart/form-data).
+   * 유지할 기존 사진(http URL)은 request.keepImageUrls 로, 새 사진은 photos File 파트로 분리 전송.
+   * 최종 사진 = keepImageUrls + 새 업로드 URL (BE 가 현재 리뷰에 없는 keepUrl 은 무시).
+   * tags: FE 한국어 라벨 → BE enum 코드 변환 후 전송.
+   */
   async updateReview(reviewId: string, payload: UpdateReviewPayload): Promise<MyReview> {
-    await delay(300)
-
-    const review = reviews.find((r) => r.id === reviewId)
-    if (!review) {
-      throw new ApiError(404, 'REVIEW_NOT_FOUND', '리뷰를 찾을 수 없어요')
-    }
-    if (review.ownerReply !== null) {
-      throw new ApiError(409, 'REVIEW_LOCKED', '사장님 답글이 달려 수정할 수 없어요')
-    }
-    assertReviewInput(payload)
-
-    review.rating = payload.rating
-    review.content = payload.content.trim()
-    review.tags = [...payload.tags]
-    review.photos = [...payload.photos]
-    return clone(review)
+    const keepImageUrls = payload.photos
+      .filter((photo): photo is Extract<ReviewPhoto, { kind: 'existing' }> => photo.kind === 'existing')
+      .map((photo) => photo.url)
+    const form = buildReviewForm(
+      {
+        rating: payload.rating,
+        content: payload.content.trim(),
+        tags: toTagCodes(payload.tags),
+        keepImageUrls,
+      },
+      payload.photos,
+    )
+    const { data } = await apiClient.put(`/reviews/${reviewId}`, form, MULTIPART_HEADERS)
+    return mapToMyReview(myReviewResponseSchema.parse(data))
   },
 
-  /** 리뷰 삭제 — 본인 리뷰, 답글 전까지만. 연결 주문은 재작성 가능하게 복원 */
+  /** DELETE /api/v1/reviews/{reviewId} — 리뷰 삭제 (204 / 409=답글잠금) */
   async deleteReview(reviewId: string): Promise<void> {
-    await delay(300)
-
-    const review = reviews.find((r) => r.id === reviewId)
-    if (!review) {
-      throw new ApiError(404, 'REVIEW_NOT_FOUND', '리뷰를 찾을 수 없어요')
-    }
-    if (review.ownerReply !== null) {
-      throw new ApiError(409, 'REVIEW_LOCKED', '사장님 답글이 달려 삭제할 수 없어요')
-    }
-
-    reviews = reviews.filter((r) => r.id !== reviewId)
-    const order = orders.find((o) => o.reviewId === reviewId)
-    if (order) {
-      order.reviewed = false
-      order.reviewId = null
-    }
+    await apiClient.delete(`/reviews/${reviewId}`)
   },
 }

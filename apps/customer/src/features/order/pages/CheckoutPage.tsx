@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import { Navigate, useNavigate } from 'react-router'
 import { ChevronLeft } from 'lucide-react'
 import { ScreenContainer } from '@/shared/components/ScreenContainer'
@@ -17,7 +17,7 @@ import { PayAgreement } from '../components/PayAgreement'
 import { CheckoutSummary } from '../components/CheckoutSummary'
 import { BenefitSection } from '../components/BenefitSection'
 import { CouponPickerSheet } from '../components/CouponPickerSheet'
-import { useCreateOrder } from '../hooks/useCreateOrder'
+import { usePrepareAndPay } from '../hooks/usePrepareAndPay'
 
 const won = (n: number) => `${n.toLocaleString('ko-KR')}원`
 
@@ -33,15 +33,13 @@ export function CheckoutPage() {
   const pickup = useCartStore((s) => s.pickup)
   const [memo, setMemo] = useState('')
   const [agreed, setAgreed] = useState(false)
-  const [selectedCouponId, setSelectedCouponId] = useState<string | null>(null)
+  const [selectedCouponId, setSelectedCouponId] = useState<number | null>(null)
   const [pointInput, setPointInput] = useState(0)
   const [couponSheetOpen, setCouponSheetOpen] = useState(false)
-  const createOrder = useCreateOrder()
+  const prepareAndPay = usePrepareAndPay()
 
   const { data: pointSummary } = usePointSummary()
   const { data: coupons } = useCoupons()
-  // 만료/사용가능 판정 기준 시각 — 마운트 시 1회 고정
-  const now = useMemo(() => new Date(), [])
 
   // 빈 장바구니 결제 진입 불가 (노션). 결제 성공 시엔 장바구니를 비우지 않고 완료 화면으로
   // 이동하므로(클리어는 OrderSuccessPage), 이동 전까지 이 가드가 오작동하지 않는다.
@@ -54,31 +52,35 @@ export function CheckoutPage() {
     coupon: selectedCoupon,
     pointInput,
     pointBalance,
-    now,
   })
 
   const handlePointChange = (value: number) =>
     setPointInput(Math.min(Math.max(0, value), amounts.pointCap))
   const handleUseAllPoints = () => setPointInput(amounts.pointCap)
 
-  const handlePay = () => {
-    if (!agreed || createOrder.isPending) return
-    createOrder.mutate({
-      store: { id: store.id, name: store.name },
-      items,
-      pickup,
-      memo,
-      amounts: {
-        normalTotal: amounts.normalTotal,
-        discountTotal: amounts.dealDiscount,
-        couponDiscount: amounts.couponDiscount,
-        pointUsed: amounts.pointUsed,
-        payTotal: amounts.payTotal,
-        earnedPoints: amounts.earnedPoints,
-      },
-      couponId: amounts.couponApplicable ? selectedCouponId : null,
+  const orderPayload = {
+    store: { id: store.id, name: store.name },
+    items,
+    pickup,
+    memo,
+    amounts: {
+      normalTotal: amounts.normalTotal,
+      discountTotal: amounts.dealDiscount,
+      couponDiscount: amounts.couponDiscount,
       pointUsed: amounts.pointUsed,
-    })
+      payTotal: amounts.payTotal,
+      earnedPoints: amounts.earnedPoints,
+    },
+    couponId: amounts.couponApplicable ? selectedCouponId : null,
+    pointUsed: amounts.pointUsed,
+  } as const
+
+  const handlePay = () => {
+    if (!agreed) return
+    // 실 결제 경로: prepare(AWAITING_PAYMENT) → stash → 토스 결제창(리다이렉트)
+    // → 리다이렉트 콜백(PaymentSuccessPage)에서 confirm 후 완료화면.
+    if (prepareAndPay.isPending) return
+    prepareAndPay.mutate(orderPayload)
   }
 
   return (
@@ -148,11 +150,11 @@ export function CheckoutPage() {
       <div className="fixed bottom-0 left-1/2 z-40 w-full max-w-md -translate-x-1/2 border-t border-border bg-card px-5 pb-[calc(12px+env(safe-area-inset-bottom,24px))] pt-3">
         <Button
           type="button"
-          disabled={!agreed || createOrder.isPending}
+          disabled={!agreed || prepareAndPay.isPending}
           onClick={handlePay}
           className="h-[54px] w-full rounded-[12px] text-base font-bold"
         >
-          {createOrder.isPending ? '결제 중…' : `${won(amounts.payTotal)} 결제하기`}
+          {prepareAndPay.isPending ? '결제 중…' : `${won(amounts.payTotal)} 결제하기`}
         </Button>
       </div>
 
@@ -161,7 +163,6 @@ export function CheckoutPage() {
         onOpenChange={setCouponSheetOpen}
         coupons={coupons ?? []}
         menuSubtotal={amounts.menuSubtotal}
-        now={now}
         selectedCouponId={selectedCouponId}
         onSelect={setSelectedCouponId}
       />

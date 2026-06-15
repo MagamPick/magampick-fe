@@ -2,7 +2,7 @@ import { Fragment, useEffect, useRef, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useNavigate, useSearchParams } from 'react-router'
-import { ChevronLeft, Check } from 'lucide-react'
+import { ChevronLeft, Check, Moon, ShoppingCart, Utensils } from 'lucide-react'
 import {
   Form,
   FormControl,
@@ -79,15 +79,15 @@ export function ClearanceCreatePage() {
   const navigate = useNavigate()
   const [params] = useSearchParams()
   const preselectId = params.get('productId') ?? ''
-  const storeId = useCurrentStoreStore((s) => s.selectedStoreId)
+  const selectedStoreId = useCurrentStoreStore((s) => s.selectedStoreId)
 
-  const { data: products = [], isLoading: loadingProducts } = useProducts(storeId)
-  const { data: clearances = [] } = useClearances(storeId)
-  const { data: status, isLoading: loadingStatus } = useStoreStatus(storeId)
-  const create = useCreateClearance(storeId)
+  const { data: products = [], isLoading: loadingProducts } = useProducts(selectedStoreId)
+  const { data: clearances = [] } = useClearances(selectedStoreId)
+  const { data: status, isLoading: loadingStatus } = useStoreStatus(selectedStoreId)
+  const create = useCreateClearance(selectedStoreId)
 
   const activeProductIds = new Set(
-    clearances.filter((c) => c.status === 'ACTIVE').map((c) => c.productId),
+    clearances.filter((c) => c.status === 'OPEN').map((c) => c.productId),
   )
   const eligible = products.filter((p) => p.onSale && !activeProductIds.has(p.id))
 
@@ -105,37 +105,43 @@ export function ClearanceCreatePage() {
   useEffect(() => {
     if (initRef.current || !preselectId || loadingProducts) return
     initRef.current = true
-    if (eligible.some((p) => p.id === preselectId)) {
+    if (eligible.some((p) => String(p.id) === preselectId)) {
       form.setValue('productId', preselectId, { shouldValidate: true })
       setStep(2)
     }
   }, [preselectId, loadingProducts, eligible, form])
 
   const v = form.watch()
-  const selected = products.find((p) => p.id === v.productId)
+  const selected = products.find((p) => String(p.id) === v.productId)
   const original = selected?.price ?? 0
   const saleNum = Number(v.salePrice || '0')
   const rate = selected && /^\d+$/.test(v.salePrice) ? discountRate(original, saleNum) : null
   const todayClose = status?.todayCloseTime
 
+  // 각 스텝 유효성을 독립 계산 (RHF form.formState.isValid 비의존).
+  // isValid 는 지연 구독·검증 이벤트에서만 갱신돼, 입력 없는 확인(step4) 화면에선
+  // 초기 false 로 고착돼 등록 버튼이 영구 비활성화되던 버그를 피한다.
+  const step1Valid = !!v.productId
+  const step2Valid =
+    /^\d+$/.test(v.totalQty) &&
+    Number(v.totalQty) >= 1 &&
+    /^\d+$/.test(v.salePrice) &&
+    (!selected || (saleNum >= 0 && saleNum < original))
+  const step3Valid =
+    TIME_RE.test(v.closeTime) &&
+    v.closeTime > nowHHMM() &&
+    (!todayClose || v.closeTime <= todayClose)
+
   const stepValid = ((): boolean => {
     switch (step) {
       case 1:
-        return !!v.productId
-      case 2: {
-        const qtyOk = /^\d+$/.test(v.totalQty) && Number(v.totalQty) >= 1
-        const priceOk =
-          /^\d+$/.test(v.salePrice) && (!selected || (saleNum >= 0 && saleNum < original))
-        return qtyOk && priceOk
-      }
+        return step1Valid
+      case 2:
+        return step2Valid
       case 3:
-        return (
-          TIME_RE.test(v.closeTime) &&
-          v.closeTime > nowHHMM() &&
-          (!todayClose || v.closeTime <= todayClose)
-        )
+        return step3Valid
       case 4:
-        return !!selected && form.formState.isValid
+        return !!selected && step1Valid && step2Valid && step3Valid
       default:
         return false
     }
@@ -150,7 +156,7 @@ export function ClearanceCreatePage() {
     setServerError(null)
     create.mutate(
       {
-        productId: v.productId,
+        productId: Number(v.productId),
         salePrice: saleNum,
         totalQty: Number(v.totalQty),
         closeTime: v.closeTime,
@@ -189,7 +195,7 @@ export function ClearanceCreatePage() {
 
       {notOpen ? (
         <div className="flex flex-1 flex-col items-center justify-center px-8 text-center">
-          <p className="text-[40px]">🌙</p>
+          <Moon aria-hidden className="size-10 text-muted-foreground" />
           <p className="mt-3 text-[15px] font-bold text-foreground">지금은 등록할 수 없어요</p>
           <p className="mt-1.5 text-[13.5px] leading-relaxed text-muted-foreground">
             영업 중일 때만 마감 할인을 등록할 수 있어요.
@@ -221,7 +227,7 @@ export function ClearanceCreatePage() {
                       </p>
                     ) : eligible.length === 0 ? (
                       <div className="px-6 py-12 text-center">
-                        <p className="text-[34px]">🛒</p>
+                        <ShoppingCart aria-hidden className="size-9 text-muted-foreground" />
                         <p className="mt-2 text-[13.5px] leading-relaxed text-muted-foreground">
                           마감 할인으로 등록할 수 있는 상품이 없어요.
                           <br />
@@ -231,14 +237,14 @@ export function ClearanceCreatePage() {
                     ) : (
                       <div className="flex flex-col gap-2">
                         {eligible.map((p) => {
-                          const on = v.productId === p.id
+                          const on = v.productId === String(p.id)
                           return (
                             <button
                               key={p.id}
                               type="button"
                               aria-pressed={on}
                               onClick={() =>
-                                form.setValue('productId', p.id, { shouldValidate: true })
+                                form.setValue('productId', String(p.id), { shouldValidate: true })
                               }
                               className={cn(
                                 'flex items-center gap-3 rounded-[14px] border-[1.5px] bg-card p-3 text-left transition',
@@ -253,7 +259,7 @@ export function ClearanceCreatePage() {
                                     className="size-full object-cover"
                                   />
                                 ) : (
-                                  '🍽️'
+                                  <Utensils className="size-6 text-muted-foreground" />
                                 )}
                               </span>
                               <span className="min-w-0 flex-1">

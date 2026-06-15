@@ -4,7 +4,7 @@ import type { Coupon } from '../types'
 
 /** 쿠폰 카드 (프로토타입 `.cp-card`) — 좌측 할인값 + 라벨·조건·만료·상태 */
 export function CouponCard({ coupon }: { coupon: Coupon }) {
-  const dim = coupon.status !== 'usable'
+  const dim = coupon.status !== 'USABLE'
   return (
     <div
       className={cn(
@@ -35,12 +35,12 @@ export function CouponCard({ coupon }: { coupon: Coupon }) {
         <div className="text-xs text-muted-foreground">{couponConditionText(coupon)}</div>
         <div className="mt-auto flex items-center justify-between text-[11.5px] text-muted-foreground">
           <span className="font-semibold">{`~ ${coupon.expiresAt}`}</span>
-          {coupon.status === 'used' && (
+          {coupon.status === 'USED' && (
             <span className="rounded-sm bg-muted px-2 py-0.5 text-[10.5px] font-bold text-muted-foreground">
               사용 완료
             </span>
           )}
-          {coupon.status === 'expired' && (
+          {coupon.status === 'EXPIRED' && (
             <span className="rounded-sm bg-destructive-subtle px-2 py-0.5 text-[10.5px] font-bold text-destructive">
               만료
             </span>

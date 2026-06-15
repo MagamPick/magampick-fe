@@ -9,12 +9,13 @@ vi.mock('../api/storeDetailApi')
 describe('useStoreMenu', () => {
   it('메뉴_목록_조회_성공_카테고리포함', async () => {
     vi.mocked(storeDetailApi.getStoreMenu).mockResolvedValue([
-      { id: 'mn-1', name: '소금빵', imageUrl: null, price: 3000, category: '베이커리' },
+      { id: 1, name: '소금빵', imageUrl: null, price: 3000, category: '베이커리' },
     ])
 
-    const { result } = renderHook(() => useStoreMenu('st-1'), { wrapper: createQueryWrapper() })
+    const { result } = renderHook(() => useStoreMenu(1), { wrapper: createQueryWrapper() })
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true))
     expect(result.current.data?.[0].category).toBe('베이커리')
+    expect(storeDetailApi.getStoreMenu).toHaveBeenCalledWith(1)
   })
 })

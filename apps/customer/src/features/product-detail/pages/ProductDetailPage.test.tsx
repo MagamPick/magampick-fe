@@ -11,8 +11,8 @@ vi.mock('../api/productDetailApi')
 
 const deal: DealProductDetail = {
   kind: 'deal',
-  id: 'sd-1',
-  storeId: 'st-1',
+  id: 1,
+  storeId: 1,
   storeName: '브레드샵',
   distanceKm: 0.3,
   businessStatus: 'OPEN',
@@ -21,6 +21,7 @@ const deal: DealProductDetail = {
   description: '갓 구운 크루아상.',
   rating: 4.8,
   reviewCount: 36,
+  closingTime: '21:00',
   originalPrice: 9000,
   salePrice: 4500,
   discountRate: 50,
@@ -31,8 +32,8 @@ const deal: DealProductDetail = {
 
 const menu: MenuProductDetail = {
   kind: 'menu',
-  id: 'mn-1',
-  storeId: 'st-1',
+  id: 1,
+  storeId: 1,
   storeName: '브레드샵',
   distanceKm: 0.3,
   businessStatus: 'OPEN',
@@ -41,6 +42,7 @@ const menu: MenuProductDetail = {
   description: null,
   rating: 4.5,
   reviewCount: 10,
+  closingTime: '21:00',
   price: 3500,
   isOnSale: true,
 }
@@ -69,7 +71,7 @@ beforeEach(() => vi.clearAllMocks())
 describe('ProductDetailPage', () => {
   it('떨이_카운트다운_남은개수_노출', async () => {
     vi.mocked(productDetailApi.getProductDetail).mockResolvedValue(deal)
-    renderAt('/product/deal/sd-1')
+    renderAt('/product/deal/1')
 
     expect(await screen.findByText('크루아상 세트')).toBeInTheDocument()
     expect(screen.getByText(/마감 ·/)).toBeInTheDocument() // 픽업 마감 + 카운트다운
@@ -78,7 +80,7 @@ describe('ProductDetailPage', () => {
 
   it('일반상품_카운트다운_미노출', async () => {
     vi.mocked(productDetailApi.getProductDetail).mockResolvedValue(menu)
-    renderAt('/product/menu/mn-1')
+    renderAt('/product/menu/1')
 
     expect(await screen.findByText('소금빵')).toBeInTheDocument()
     expect(screen.getByText('3,500원')).toBeInTheDocument()
@@ -88,7 +90,7 @@ describe('ProductDetailPage', () => {
 
   it('잘못된_kind_홈으로_리다이렉트', async () => {
     vi.mocked(productDetailApi.getProductDetail).mockResolvedValue(deal)
-    renderAt('/product/bogus/sd-1')
+    renderAt('/product/bogus/1')
 
     // 라우트 파라미터 Zod 검증 실패 → 본문 렌더 안 됨
     expect(screen.queryByText('크루아상 세트')).toBeNull()
@@ -96,18 +98,18 @@ describe('ProductDetailPage', () => {
 
   it('매장_미리보기_탭하면_매장상세_이동', async () => {
     vi.mocked(productDetailApi.getProductDetail).mockResolvedValue(deal)
-    renderAt('/product/deal/sd-1')
+    renderAt('/product/deal/1')
 
     await userEvent.click(await screen.findByText(/브레드샵/))
-    expect(screen.getByTestId('loc')).toHaveTextContent('/store/st-1')
+    expect(screen.getByTestId('loc')).toHaveTextContent('/store/1')
   })
 
   it('리뷰영역_탭하면_매장_리뷰탭_이동', async () => {
     vi.mocked(productDetailApi.getProductDetail).mockResolvedValue(deal)
-    renderAt('/product/deal/sd-1')
+    renderAt('/product/deal/1')
 
     await screen.findByText('크루아상 세트')
     await userEvent.click(screen.getByText(/리뷰 36개/))
-    expect(screen.getByTestId('loc')).toHaveTextContent('/store/st-1?tab=review')
+    expect(screen.getByTestId('loc')).toHaveTextContent('/store/1?tab=review')
   })
 })

@@ -6,7 +6,7 @@ import { ReviewCard } from './ReviewCard'
 import { TabEmpty, TabLoading } from './TabStates'
 
 /** 리뷰 탭 — 평균/분포 요약 + 리뷰 카드 무한 스크롤 (sentinel 보이면 다음 페이지) */
-export function ReviewTab({ storeId }: { storeId: string }) {
+export function ReviewTab({ storeId }: { storeId: number }) {
   const summaryQuery = useReviewSummary(storeId)
   const reviews = useStoreReviews(storeId)
   const sentinelRef = useRef<HTMLDivElement>(null)

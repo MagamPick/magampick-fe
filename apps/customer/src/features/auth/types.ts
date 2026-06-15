@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { nullableNumber, nullableString } from '@/shared/lib/zodNullable'
 
 /** 비밀번호 룰 (auth.md §8) — 로그인/가입/변경/재설정 공유 */
 export const passwordSchema = z
@@ -11,32 +12,68 @@ export const passwordSchema = z
 /** 약관 type (노션 결정 2026-05-29: 5종 통일 term type) */
 export const TERM_IDS = ['AGE_14', 'TERMS_OF_SERVICE', 'PRIVACY', 'LOCATION', 'MARKETING'] as const
 export type TermId = (typeof TERM_IDS)[number]
-export const REQUIRED_TERM_IDS: TermId[] = ['AGE_14', 'TERMS_OF_SERVICE', 'PRIVACY', 'LOCATION']
+
+export const termSchema = z.object({
+  id: z.number(),
+  type: z.enum(TERM_IDS),
+  version: z.number(),
+  title: z.string(),
+  body: z.string(),
+  required: z.boolean(),
+})
+
+export const termsSchema = z.array(termSchema)
+
+export type SignupTerm = z.infer<typeof termSchema>
+
+export const signupAddressSchema = z.object({
+  // 별칭 상한 20자 — addresses/types.ts aliasSchema 와 동일 기준 (B1-2)
+  label: z.string().min(1, '주소 라벨이 필요합니다').max(20, '별칭은 20자 이하여야 합니다'),
+  roadAddress: z.string().min(1, '도로명 주소를 선택해주세요'),
+  jibunAddress: z.string().optional(),
+  detailAddress: z.string().optional(),
+  zonecode: z.string().optional(),
+  sigunguCode: z.string().regex(/^\d{5}$/, '시군구코드를 확인해주세요'),
+  roadnameCode: z.string().regex(/^\d{1,7}$/, '도로명번호를 확인해주세요'),
+})
+
+export type SignupAddress = z.infer<typeof signupAddressSchema>
+
+export const tokenResponseSchema = z.object({
+  accessToken: z.string(),
+  accessExpiresIn: nullableNumber(),
+})
+
+export const phoneVerificationTokenResponseSchema = z.object({
+  verificationToken: z.string(),
+})
+
+export const emailAvailabilityResponseSchema = z.object({
+  available: z.boolean(),
+})
 
 export const signupInputSchema = z
   .object({
     // Step 1 — 약관
-    agreedTermIds: z.array(z.enum(TERM_IDS)),
+    agreedTermIds: z.array(z.number()),
     // Step 2 — 계정
     email: z.string().email('이메일 형식이 아닙니다'),
     password: passwordSchema,
     passwordConfirm: z.string(),
+    // 중복확인 통과한 이메일 (게이트용 — email 과 같아야 다음 진행, 수정 시 무효화)
+    checkedEmail: z.string().optional(),
     // Step 3 — 본인인증
     name: z.string().min(1, '이름을 입력해주세요'),
     phone: z.string().regex(/^010-\d{4}-\d{4}$/, '휴대폰 번호를 확인해주세요'),
     verificationToken: z.string().min(1, '휴대폰 본인인증이 필요합니다'),
     // Step 4 — 주소
-    address: z.string().min(1, '기본 주소를 등록해주세요'),
+    address: signupAddressSchema.nullable(),
     // Step 5 — 프로필
     nickname: z.string().min(2, '2자 이상이어야 합니다').max(12, '12자 이하여야 합니다'),
   })
   .refine((d) => d.password === d.passwordConfirm, {
     message: '비밀번호가 일치하지 않습니다',
     path: ['passwordConfirm'],
-  })
-  .refine((d) => REQUIRED_TERM_IDS.every((t) => d.agreedTermIds.includes(t)), {
-    message: '필수 약관에 모두 동의해주세요',
-    path: ['agreedTermIds'],
   })
 
 export type SignupInput = z.infer<typeof signupInputSchema>
@@ -66,22 +103,31 @@ export type LoginInput = z.infer<typeof loginInputSchema>
 
 // ── 소셜 로그인 (카카오) ──────────────────────────────────────────────
 /**
- * mock 전용 시나리오 — "카카오 왕복 + BE 콜백"이 돌려줄 결과를 고른다. 실연동 시 제거.
- * (실제 카카오 로그인·동의 화면은 카카오가 호스팅하므로 FE 가 그리지 않는다.)
+ * 카카오 인가코드 교환(POST /auth/kakao) 응답 — BE 계약. status 로 분기.
+ * - EXISTING: 기존 매핑 회원 → access 발급(+refresh 쿠키). accessExpiresIn(초).
+ * - NEW: 신규 → socialToken(15분) + 카카오 프로필(email 필수, nickname 은 미동의 시 생략 가능). 추가정보 위저드로.
  */
-export type KakaoScenario = 'new_email' | 'new_no_email' | 'existing' | 'email_conflict'
+export const kakaoExchangeResultSchema = z.discriminatedUnion('status', [
+  z.object({
+    status: z.literal('EXISTING'),
+    accessToken: z.string(),
+    accessExpiresIn: z.number(),
+  }),
+  z.object({
+    status: z.literal('NEW'),
+    socialToken: z.string(),
+    email: z.string(),
+    nickname: nullableString(),
+  }),
+])
+export type KakaoExchangeResult = z.infer<typeof kakaoExchangeResultSchema>
 
-/** 카카오 + BE 콜백이 신규 회원에 대해 돌려주는 프로필. 이메일은 우리 시스템 필수, 닉네임은 받으면 prefill */
-export interface KakaoProfile {
-  kakaoId: string
+/** 카카오 NEW → 추가정보 위저드로 넘기는 컨텍스트 (소셜 가입 제출 전 보관). socialToken 15분 유효. */
+export interface SocialSignupContext {
+  socialToken: string
   email: string
   nickname?: string
 }
-
-/** kakaoAuthorize 결과 — 기존 매핑이면 바로 토큰, 신규면 추가정보용 프로필 */
-export type KakaoAuthorizeResult =
-  | { status: 'existing'; accessToken: string }
-  | { status: 'new'; profile: KakaoProfile }
 
 /**
  * 소셜 가입 폼 스키마 — 신규 추가정보 4스텝(약관·본인인증·주소·닉네임)을 회원가입 스텝 컴포넌트와
@@ -90,34 +136,35 @@ export type KakaoAuthorizeResult =
  */
 export const socialSignupFormSchema = z
   .object({
-    agreedTermIds: z.array(z.enum(TERM_IDS)),
+    agreedTermIds: z.array(z.number()),
     email: z.string().email('이메일 형식이 아닙니다'),
     password: z.string(),
     passwordConfirm: z.string(),
     name: z.string().min(1, '이름을 입력해주세요'),
     phone: z.string().regex(/^010-\d{4}-\d{4}$/, '휴대폰 번호를 확인해주세요'),
     verificationToken: z.string().min(1, '휴대폰 본인인증이 필요합니다'),
-    address: z.string().min(1, '기본 주소를 등록해주세요'),
+    address: signupAddressSchema.nullable(),
     nickname: z.string().min(2, '2자 이상이어야 합니다').max(12, '12자 이하여야 합니다'),
   })
-  .refine((d) => REQUIRED_TERM_IDS.every((t) => d.agreedTermIds.includes(t)), {
-    message: '필수 약관에 모두 동의해주세요',
-    path: ['agreedTermIds'],
-  })
 
-/** 소셜 가입 제출 payload — 비밀번호 없음(소셜 전용 계정 = password_hash NULL). kakaoId 포함. */
+/** 소셜 가입 제출 payload — 비밀번호 없음(소셜 전용 계정 = password_hash NULL). socialToken 으로 카카오 신원 식별. */
 export interface SocialSignupInput {
-  kakaoId: string
+  socialToken: string
   email: string
-  agreedTermIds: TermId[]
+  agreedTermIds: number[]
   name: string
   phone: string
   verificationToken: string
-  address: string
+  address: SignupAddress
   nickname: string
 }
 
 // ── 비밀번호 재설정 ───────────────────────────────────────────────────
+/** POST /auth/password-resets/verify-identity 응답 스키마 (BE 계약) */
+export const passwordResetVerifyResponseSchema = z.object({
+  resetToken: z.string(),
+})
+
 /** 비밀번호 재설정 에러 코드 (노션 AC) */
 export const PASSWORD_RESET_ERROR = {
   /** 이메일 미등록 또는 이메일↔휴대폰 불일치 — 존재 여부 비노출 위해 동일 코드 */

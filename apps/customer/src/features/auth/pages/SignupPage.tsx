@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useForm } from 'react-hook-form'
+import { useForm, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useNavigate } from 'react-router'
 import { ChevronLeft } from 'lucide-react'
@@ -7,11 +7,10 @@ import { Form } from '@/shared/components/ui/form'
 import {
   signupInputSchema,
   passwordSchema,
-  REQUIRED_TERM_IDS,
   type SignupInput,
-  type TermId,
 } from '../types'
 import { useSignup } from '../hooks/useSignup'
+import { useTerms } from '../hooks/useTerms'
 import { SignupProgress } from '../components/SignupProgress'
 import { Step1Terms } from '../components/Step1Terms'
 import { Step2Account } from '../components/Step2Account'
@@ -26,8 +25,9 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 export function SignupPage() {
   const navigate = useNavigate()
   const signup = useSignup()
+  const terms = useTerms()
   const [step, setStep] = useState(1)
-  const [openTerm, setOpenTerm] = useState<TermId | null>(null)
+  const [openTerm, setOpenTerm] = useState<number | null>(null)
 
   const form = useForm<SignupInput>({
     resolver: zodResolver(signupInputSchema),
@@ -37,32 +37,38 @@ export function SignupPage() {
       email: '',
       password: '',
       passwordConfirm: '',
+      checkedEmail: '',
       name: '',
       phone: '',
       verificationToken: '',
-      address: '',
+      address: null,
       nickname: '',
     },
   })
 
   // 프로토타입 refreshSignupCta — 단계 조건 충족 시에만 「다음」 활성
-  const v = form.watch()
+  const v = useWatch({ control: form.control })
+  const agreedTermIds = v.agreedTermIds ?? []
   const stepValid = ((): boolean => {
     switch (step) {
       case 1:
-        return REQUIRED_TERM_IDS.every((t) => v.agreedTermIds.includes(t))
+        return (
+          (terms.data?.length ?? 0) > 0 &&
+          terms.data!.filter((t) => t.required).every((t) => agreedTermIds.includes(t.id))
+        )
       case 2:
         return (
-          EMAIL_RE.test(v.email) &&
-          passwordSchema.safeParse(v.password).success &&
+          EMAIL_RE.test(v.email ?? '') &&
+          v.checkedEmail === v.email &&
+          passwordSchema.safeParse(v.password ?? '').success &&
           v.password === v.passwordConfirm
         )
       case 3:
         return !!v.verificationToken
       case 4:
-        return v.address.trim().length > 0
+        return v.address !== null
       case 5:
-        return v.nickname.trim().length >= 2
+        return (v.nickname ?? '').trim().length >= 2
       default:
         return false
     }
@@ -97,7 +103,15 @@ export function SignupPage() {
       <Form {...form}>
         <form className="flex min-h-0 flex-1 flex-col" onSubmit={(e) => e.preventDefault()}>
           <div className="flex-1 px-5 pb-4 pt-6">
-            {step === 1 && <Step1Terms form={form} onOpenTerms={setOpenTerm} />}
+            {step === 1 && (
+              <Step1Terms
+                form={form}
+                terms={terms.data ?? []}
+                isLoading={terms.isPending}
+                errorMessage={terms.isError ? '약관을 불러오지 못했어요' : undefined}
+                onOpenTerms={setOpenTerm}
+              />
+            )}
             {step === 2 && <Step2Account form={form} />}
             {step === 3 && <Step3Phone form={form} />}
             {step === 4 && <Step4Address form={form} />}
@@ -128,7 +142,7 @@ export function SignupPage() {
         </form>
       </Form>
 
-      <TermsDialog termId={openTerm} onClose={() => setOpenTerm(null)} />
+      <TermsDialog terms={terms.data ?? []} termId={openTerm} onClose={() => setOpenTerm(null)} />
     </main>
   )
 }

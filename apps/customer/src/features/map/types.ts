@@ -16,19 +16,22 @@ export const DEFAULT_MAP_DISTANCE: MapDistance = 3
 
 /** 지도 마커 + 하단 미니카드용 매장 — 좌표 + 매장 단위 요약 */
 export const mapStoreSchema = z.object({
-  id: z.string(),
+  id: z.number(),
   name: z.string(),
-  imageUrl: z.string().nullable(),
-  latitude: z.number(),
-  longitude: z.number(),
+  imageUrl: z
+    .string()
+    .nullish()
+    .transform((v) => v ?? null),
+  latitude: z.number().default(0),
+  longitude: z.number().default(0),
   /** 중심 좌표 기준 직선거리(km) — BE 계산 */
-  distanceKm: z.number(),
+  distanceKm: z.number().default(0),
   /** 리뷰 평균 평점 (0 = 리뷰 없음) */
-  rating: z.number(),
+  rating: z.number().default(0),
   /** 진행 중(ACTIVE) 마감 할인 개수 — 0이면 회색 기본 마커 */
-  activeDealCount: z.number(),
+  activeDealCount: z.number().default(0),
   /** 활성 떨이 중 최대 할인율(%) — 말풍선 마커 라벨. 0이면 할인 없음 */
-  maxDiscountRate: z.number(),
+  maxDiscountRate: z.number().default(0),
 })
 export type MapStore = z.infer<typeof mapStoreSchema>
 

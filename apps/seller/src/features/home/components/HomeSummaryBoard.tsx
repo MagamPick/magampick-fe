@@ -1,15 +1,35 @@
-/** 오늘 매출 보드 (정적 더미 — 통계 기능 별도) */
-const COLS = [
-  { label: '오늘 매출', value: '₩342,000', accent: true },
-  { label: '오늘 주문', value: '18건' },
-  { label: '픽업 완료율', value: '94%' },
-]
+import { useCurrentStoreStore } from '@/features/store/stores/currentStoreStore'
+import { useAnalytics } from '@/features/analytics/hooks/useAnalytics'
+import {
+  formatWonSymbol,
+  formatUnit,
+  formatPercent,
+  pickupRate,
+} from '@/features/analytics/lib/analyticsFormat'
 
+/** 오늘 매출 보드 — 현재 매장의 오늘 통계 (analytics period=today). 미로딩 시 '—'. */
 export function HomeSummaryBoard() {
+  const selectedStoreId = useCurrentStoreStore((s) => s.selectedStoreId)
+  const storeId = selectedStoreId != null ? String(selectedStoreId) : ''
+  const { data } = useAnalytics(storeId, 'today')
+
+  const cols = [
+    {
+      label: '오늘 매출',
+      value: data ? formatWonSymbol(data.sales.totalSales) : '—',
+      accent: true,
+    },
+    { label: '오늘 주문', value: data ? formatUnit(data.orders.total, '건') : '—' },
+    {
+      label: '픽업 완료율',
+      value: data ? formatPercent(pickupRate(data.orders.pickedUp, data.orders.total)) : '—',
+    },
+  ]
+
   return (
     <section className="mx-5 mt-6">
       <div className="flex items-stretch rounded-xl border border-border bg-card px-2 py-4 shadow-e1">
-        {COLS.map((col, i) => (
+        {cols.map((col, i) => (
           <div
             key={col.label}
             className={`flex flex-1 flex-col items-center gap-1.5 ${i > 0 ? 'border-l border-border' : ''}`}

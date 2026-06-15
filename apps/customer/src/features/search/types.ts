@@ -35,23 +35,23 @@ export type SearchSuggestion = z.infer<typeof searchSuggestionSchema>
 export const searchProductItemSchema = z.discriminatedUnion('kind', [
   z.object({
     kind: z.literal('deal'),
-    id: z.string(),
-    storeId: z.string(),
-    storeName: z.string(),
-    name: z.string(),
-    imageUrl: z.string().nullable(),
-    originalPrice: z.number(),
-    salePrice: z.number(),
-    discountRate: z.number(),
+    id: z.number(),
+    storeId: z.number(),
+    storeName: z.string().default(''),
+    name: z.string().default(''),
+    imageUrl: z.string().nullish().transform((v) => v ?? null),
+    originalPrice: z.number().default(0),
+    salePrice: z.number().default(0),
+    discountRate: z.number().default(0),
   }),
   z.object({
     kind: z.literal('menu'),
-    id: z.string(),
-    storeId: z.string(),
-    storeName: z.string(),
-    name: z.string(),
-    imageUrl: z.string().nullable(),
-    price: z.number(),
+    id: z.number(),
+    storeId: z.number(),
+    storeName: z.string().default(''),
+    name: z.string().default(''),
+    imageUrl: z.string().nullish().transform((v) => v ?? null),
+    price: z.number().default(0),
   }),
 ])
 export type SearchProductItem = z.infer<typeof searchProductItemSchema>
@@ -61,7 +61,7 @@ export type SearchProductItem = z.infer<typeof searchProductItemSchema>
  * 매장 섹션에 들어오지 않음). 매장은 전체 매장 조회 카드(storeListItem)를 그대로 재사용.
  */
 export const searchResultSchema = z.object({
-  stores: z.array(storeListItemSchema),
-  products: z.array(searchProductItemSchema),
+  stores: z.array(storeListItemSchema).default([]),
+  products: z.array(searchProductItemSchema).default([]),
 })
 export type SearchResult = z.infer<typeof searchResultSchema>

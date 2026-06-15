@@ -18,6 +18,20 @@ export const QUICK_TAGS = [
 ] as const
 export type QuickTag = (typeof QUICK_TAGS)[number]
 
+/**
+ * FE 한국어 태그 라벨 → BE enum 코드 매핑 (CreateReviewRequest/UpdateReviewRequest.tags).
+ * BE 응답(MyReviewResponse.tags)은 한국어 라벨로 오므로 변환 불필요.
+ */
+export const REVIEW_TAG_CODE: Record<QuickTag, string> = {
+  맛있어요: 'DELICIOUS',
+  신선해요: 'FRESH',
+  재구매: 'REORDER',
+  '픽업 빨라요': 'FAST_PICKUP',
+  '양 많아요': 'GENEROUS',
+  가성비: 'GOOD_VALUE',
+  친절해요: 'KIND',
+}
+
 /** 후기 상한 — 노션: 하한 없음·최대 300자(프로토타입 "10자/500자"는 교정) */
 export const REVIEW_CONTENT_MAX = 300
 /** 사진 최대 장수 — 노션: 최대 3장 */
@@ -37,17 +51,33 @@ export interface OrderItem {
 }
 
 /**
+ * 리뷰 사진 한 장 — 폼이 보유하는 단위.
+ * - existing: 이미 업로드된 사진(http URL). 수정 시 keepImageUrls 로 전송, 새로 업로드하지 않는다.
+ * - new: 새로 고른 File. multipart 의 photos 파트로 업로드되어 BE 가 OCI URL 로 저장한다.
+ *
+ * dataURL(base64) 모델 폐기 — 사진은 File 그대로 보유하고 BE 가 multipart 로 업로드 (X5-BE 계약).
+ */
+export type ReviewPhoto =
+  | { kind: 'existing'; url: string }
+  | { kind: 'new'; file: File }
+
+export const reviewPhotoSchema = z.union([
+  z.object({ kind: z.literal('existing'), url: z.string() }),
+  z.object({ kind: z.literal('new'), file: z.instanceof(File) }),
+])
+
+/**
  * 리뷰 작성/수정 폼 검증 (노션 리뷰 작성 정책).
  * - rating: 별점 1~5 필수 (0 = 미선택 → 거부, 제출 버튼 비활성)
  * - content: 선택, 하한 없음, 최대 300자
  * - tags: 빠른평가 복수 선택 (QUICK_TAGS 부분집합)
- * - photos: dataURL 최대 3장 (File→dataURL 은 폼 밖에서 변환 후 주입)
+ * - photos: 최대 3장 (기존 URL + 새 File 혼합 — ReviewPhoto)
  */
 export const reviewFormSchema = z.object({
   rating: z.number().int().min(1, '별점을 선택해 주세요').max(5),
   content: z.string().max(REVIEW_CONTENT_MAX, `${REVIEW_CONTENT_MAX}자 이내로 입력해 주세요`),
   tags: z.array(z.enum(QUICK_TAGS)),
-  photos: z.array(z.string()).max(REVIEW_PHOTO_MAX, `사진은 최대 ${REVIEW_PHOTO_MAX}장까지예요`),
+  photos: z.array(reviewPhotoSchema).max(REVIEW_PHOTO_MAX, `사진은 최대 ${REVIEW_PHOTO_MAX}장까지예요`),
 })
 export type ReviewFormValues = z.infer<typeof reviewFormSchema>
 
@@ -60,16 +90,14 @@ export interface MyReview {
   /** 리뷰 대상 매장 */
   storeId: string
   storeName: string
-  /** 매장 썸네일 이모지 (mock — 실연동 시 매장 대표 이미지) */
-  storeEmoji: string
   /** 주문에 포함된 상품들 — 각 상품 상세로 링크 */
   items: OrderItem[]
   /** 별점 1~5 */
   rating: number
   content: string
-  /** 빠른평가 태그 */
+  /** 빠른평가 태그 (BE 응답 한국어 라벨 그대로) */
   tags: string[]
-  /** 첨부 사진 dataURL/URL */
+  /** 첨부 사진 URL */
   photos: string[]
   /** 작성일 (ISO) */
   createdAt: string
@@ -78,14 +106,13 @@ export interface MyReview {
 }
 
 /**
- * 리뷰 작성 대상 — 픽업 완료 주문(주문 탭에 mock 으로 노출).
+ * 리뷰 작성 대상 — 픽업 완료 주문.
  * `reviewed=true` 면 이미 작성 → '리뷰 보기/수정' 진입, false 면 '리뷰 작성'.
  */
 export interface ReviewableOrder {
   orderId: string
   storeId: string
   storeName: string
-  storeEmoji: string
   /** 주문에 포함된 상품들 */
   items: OrderItem[]
   /** 픽업 완료 일시 (ISO) */
@@ -102,7 +129,8 @@ export interface CreateReviewPayload {
   rating: number
   content: string
   tags: string[]
-  photos: string[]
+  /** 기존 URL + 새 File 혼합 — API 레이어가 keepImageUrls / photos 파트로 분리 */
+  photos: ReviewPhoto[]
 }
 
 /** 리뷰 수정 페이로드 — 주문은 고정, 폼값만 변경 */

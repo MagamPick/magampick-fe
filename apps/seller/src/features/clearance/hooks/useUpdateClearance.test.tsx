@@ -24,17 +24,17 @@ describe('useUpdateClearance', () => {
   beforeEach(() => vi.clearAllMocks())
 
   it('수정 성공 시 payload 로 호출하고 상세·떨이목록·상품목록을 무효화한다', async () => {
-    vi.mocked(clearanceApi.updateClearance).mockResolvedValue({ id: 'c1' } as ClearanceView)
+    vi.mocked(clearanceApi.updateClearance).mockResolvedValue({ id: 1 } as ClearanceView)
     const { queryClient, wrapper } = setup()
     const invalidate = vi.spyOn(queryClient, 'invalidateQueries')
-    const { result } = renderHook(() => useUpdateClearance('c1', 's1'), { wrapper })
+    const { result } = renderHook(() => useUpdateClearance(1, 1), { wrapper })
 
-    result.current.mutate({ remainingQty: 5 })
+    result.current.mutate({ remainingQuantity: 5 })
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true))
-    expect(clearanceApi.updateClearance).toHaveBeenCalledWith('c1', { remainingQty: 5 })
-    expect(invalidate).toHaveBeenCalledWith({ queryKey: clearanceKeys.detail('c1') })
-    expect(invalidate).toHaveBeenCalledWith({ queryKey: clearanceKeys.list('s1') })
-    expect(invalidate).toHaveBeenCalledWith({ queryKey: productKeys.list('s1') })
+    expect(clearanceApi.updateClearance).toHaveBeenCalledWith(1, 1, { remainingQuantity: 5 })
+    expect(invalidate).toHaveBeenCalledWith({ queryKey: clearanceKeys.detail(1) })
+    expect(invalidate).toHaveBeenCalledWith({ queryKey: clearanceKeys.list(1) })
+    expect(invalidate).toHaveBeenCalledWith({ queryKey: productKeys.list(1) })
   })
 })

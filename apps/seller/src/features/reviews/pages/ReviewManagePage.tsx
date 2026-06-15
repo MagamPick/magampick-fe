@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router'
-import { ChevronLeft } from 'lucide-react'
+import { ChevronLeft, MessageSquare } from 'lucide-react'
 import { ScreenContainer } from '@/shared/components/ScreenContainer'
 import { EmptyState } from '@/shared/components/EmptyState'
 import { ErrorState } from '@/shared/components/ErrorState'
@@ -19,7 +19,8 @@ import type { SellerReview } from '../types'
  */
 export function ReviewManagePage() {
   const navigate = useNavigate()
-  const storeId = useCurrentStoreStore((s) => s.selectedStoreId)
+  const _storeIdNum = useCurrentStoreStore((s) => s.selectedStoreId)
+  const storeId = _storeIdNum != null ? String(_storeIdNum) : ''
   const { data: summary } = useReviewSummary(storeId)
   const { data: reviews, isPending, isError, refetch } = useStoreReviews(storeId)
   const [replyTarget, setReplyTarget] = useState<SellerReview | null>(null)
@@ -47,7 +48,7 @@ export function ReviewManagePage() {
         ) : isError ? (
           <ErrorState onRetry={() => refetch()}>리뷰를 불러오지 못했어요.</ErrorState>
         ) : !reviews || reviews.length === 0 ? (
-          <EmptyState icon="💬">아직 리뷰가 없어요.</EmptyState>
+          <EmptyState icon={<MessageSquare />}>아직 리뷰가 없어요.</EmptyState>
         ) : (
           reviews.map((review) => (
             <SellerReviewCard key={review.id} review={review} onReply={setReplyTarget} />

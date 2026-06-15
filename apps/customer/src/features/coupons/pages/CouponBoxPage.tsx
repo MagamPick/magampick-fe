@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router'
-import { ChevronLeft } from 'lucide-react'
+import { ChevronLeft, Ticket } from 'lucide-react'
 import { ScreenContainer } from '@/shared/components/ScreenContainer'
 import { SegTabs, type SegTabItem } from '@/shared/components/SegTabs'
 import { EmptyState } from '@/shared/components/EmptyState'
@@ -17,19 +17,19 @@ import { CouponCard } from '../components/CouponCard'
  */
 export function CouponBoxPage() {
   const navigate = useNavigate()
-  const [tab, setTab] = useState<CouponStatus>('usable')
+  const [tab, setTab] = useState<CouponStatus>('USABLE')
   const { data: coupons, isPending, isError, refetch } = useCoupons()
 
   const counts = useMemo(() => {
-    const c = { usable: 0, used: 0, expired: 0 }
+    const c = { USABLE: 0, USED: 0, EXPIRED: 0 }
     for (const coupon of coupons ?? []) c[coupon.status]++
     return c
   }, [coupons])
 
   const tabs: SegTabItem<CouponStatus>[] = [
-    { value: 'usable', label: '사용 가능', count: counts.usable },
-    { value: 'used', label: '사용 완료', count: counts.used },
-    { value: 'expired', label: '만료', count: counts.expired },
+    { value: 'USABLE', label: '사용 가능', count: counts.USABLE },
+    { value: 'USED', label: '사용 완료', count: counts.USED },
+    { value: 'EXPIRED', label: '만료', count: counts.EXPIRED },
   ]
   const visible = (coupons ?? []).filter((c) => c.status === tab)
 
@@ -69,7 +69,7 @@ export function CouponBoxPage() {
           </div>
         ) : (
           <EmptyState
-            icon="🎟"
+            icon={<Ticket />}
             action={
               <button
                 type="button"

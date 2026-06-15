@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router'
-import { ChevronLeft } from 'lucide-react'
+import { ChevronLeft, Wallet } from 'lucide-react'
 import { ScreenContainer } from '@/shared/components/ScreenContainer'
 import { EmptyState } from '@/shared/components/EmptyState'
 import { ErrorState } from '@/shared/components/ErrorState'
@@ -17,7 +17,9 @@ import { FeeGuideCard } from '../components/FeeGuideCard'
  */
 export function SettlementHistoryPage() {
   const navigate = useNavigate()
-  const storeId = useCurrentStoreStore((s) => s.selectedStoreId)
+  const selectedStoreId = useCurrentStoreStore((s) => s.selectedStoreId)
+  // mock hook(string storeId) 전달용 변환 — Step 2 실연동 시 이전
+  const storeId = selectedStoreId != null ? String(selectedStoreId) : ''
   const { data: cycles, isPending, isError, refetch } = useSettlementCycles(storeId)
   const list = cycles ?? []
 
@@ -46,7 +48,7 @@ export function SettlementHistoryPage() {
             정산 내역을 불러오지 못했어요.
           </ErrorState>
         ) : list.length === 0 ? (
-          <EmptyState className="py-8" icon="💰">
+          <EmptyState className="py-8" icon={<Wallet />}>
             정산 내역이 없어요.
           </EmptyState>
         ) : (

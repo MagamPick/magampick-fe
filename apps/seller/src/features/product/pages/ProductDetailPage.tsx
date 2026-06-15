@@ -1,11 +1,12 @@
 import { useState } from 'react'
 import { z } from 'zod'
 import { Link, Navigate, useNavigate, useParams } from 'react-router'
-import { ChevronLeft, Pencil, Trash2, Zap } from 'lucide-react'
+import { ChevronLeft, Pencil, ShoppingBag, Trash2, Utensils, Zap } from 'lucide-react'
 import { ConfirmSheet } from '@/shared/components/ConfirmSheet'
 import { ErrorState } from '@/shared/components/ErrorState'
 import { cn } from '@/shared/lib/utils'
 import { ROUTES } from '@/shared/lib/routes'
+import { ApiError } from '@/shared/lib/apiError'
 import { useCurrentStoreStore } from '@/features/store/stores/currentStoreStore'
 import { useStoreStatus } from '@/features/store/hooks/useStoreStatus'
 import { useClearances } from '@/features/clearance/hooks/useClearances'
@@ -13,9 +14,13 @@ import { DealCard } from '@/features/clearance/components/DealCard'
 import { toDealCardStatus } from '@/features/clearance/lib/clearanceStatus'
 import { useProduct } from '../hooks/useProduct'
 import { useDeleteProduct } from '../hooks/useDeleteProduct'
+import { CATEGORY_LABELS } from '../types'
 
-const paramsSchema = z.object({ id: z.string().min(1) })
+const paramsSchema = z.object({ id: z.coerce.number().int().positive() })
 const won = (n: number) => `₩${n.toLocaleString('ko-KR')}`
+
+const DELETE_BLOCKED_MSG =
+  '진행 중인 마감 할인이 있어 삭제할 수 없어요. 먼저 마감 할인을 마감해 주세요.'
 
 /**
  * 상품 상세 — 정보 + 이 상품의 마감 할인 + 떨이 전환/수정/삭제 진입 (노션: 일반 상품 수정/삭제, 프로토타입 34-product-detail).
@@ -25,20 +30,21 @@ export function ProductDetailPage() {
   const navigate = useNavigate()
   const params = useParams()
   const parsed = paramsSchema.safeParse(params)
-  const id = parsed.success ? parsed.data.id : ''
-  const storeId = useCurrentStoreStore((s) => s.selectedStoreId)
+  const id = parsed.success ? parsed.data.id : 0
+  const selectedStoreId = useCurrentStoreStore((s) => s.selectedStoreId)
 
-  const { data: product, isLoading, isError, refetch } = useProduct(id)
-  const { data: clearances } = useClearances(storeId)
-  const { data: status } = useStoreStatus(storeId)
-  const del = useDeleteProduct(id, storeId)
+  const { data: product, isLoading, isError, refetch } = useProduct(selectedStoreId, id)
+  const { data: clearances } = useClearances(selectedStoreId)
+  const { data: status } = useStoreStatus(selectedStoreId)
+  const del = useDeleteProduct(id, selectedStoreId)
 
   const [sheetOpen, setSheetOpen] = useState(false)
+  const [serverError, setServerError] = useState<string | null>(null)
 
   if (!parsed.success) return <Navigate to={ROUTES.HOME} replace />
 
   const productClearances = (clearances ?? []).filter((c) => c.productId === id)
-  const hasActiveClearance = productClearances.some((c) => c.status === 'ACTIVE')
+  const hasActiveClearance = productClearances.some((c) => c.status === 'OPEN')
 
   // 떨이 전환 CTA 게이팅 사유 (null = 활성)
   const dealReason = !product
@@ -52,7 +58,18 @@ export function ProductDetailPage() {
           : null
 
   const onConfirmDelete = () => {
-    del.mutate(undefined, { onSuccess: () => navigate(ROUTES.PRODUCTS) })
+    setServerError(null)
+    del.mutate(undefined, {
+      onSuccess: () => navigate(ROUTES.PRODUCTS),
+      onError: (e) => {
+        setSheetOpen(false)
+        setServerError(
+          e instanceof ApiError && e.status === 409
+            ? DELETE_BLOCKED_MSG
+            : '삭제 중 문제가 발생했어요. 잠시 후 다시 시도해 주세요.',
+        )
+      },
+    })
   }
 
   return (
@@ -74,7 +91,7 @@ export function ProductDetailPage() {
       )}
 
       {!isLoading && (isError || !product) && (
-        <ErrorState icon="🍞" onRetry={() => refetch()}>
+        <ErrorState icon={<ShoppingBag />} onRetry={() => refetch()}>
           상품을 찾을 수 없어요.
         </ErrorState>
       )}
@@ -88,7 +105,7 @@ export function ProductDetailPage() {
                 {product.imageUrl ? (
                   <img src={product.imageUrl} alt={product.name} className="size-full object-cover" />
                 ) : (
-                  '🍽️'
+                  <Utensils className="size-7 text-muted-foreground" />
                 )}
               </span>
               <div className="flex min-w-0 flex-col items-start gap-1.5">
@@ -110,7 +127,9 @@ export function ProductDetailPage() {
               <dl className="flex flex-col gap-2.5">
                 <div className="flex items-center justify-between">
                   <dt className="text-[13px] text-muted-foreground">카테고리</dt>
-                  <dd className="text-[14px] font-semibold text-foreground">{product.category}</dd>
+                  <dd className="text-[14px] font-semibold text-foreground">
+                    {CATEGORY_LABELS[product.category] ?? product.category}
+                  </dd>
                 </div>
                 <div className="flex items-center justify-between">
                   <dt className="text-[13px] text-muted-foreground">정상가</dt>
@@ -148,7 +167,7 @@ export function ProductDetailPage() {
                     <Link
                       key={c.id}
                       to={ROUTES.CLEARANCE_DETAIL(c.id)}
-                      className={cn('block', c.status !== 'ACTIVE' && 'opacity-60')}
+                      className={cn('block', c.status !== 'OPEN' && 'opacity-60')}
                     >
                       <DealCard
                         name={c.productName}
@@ -196,14 +215,32 @@ export function ProductDetailPage() {
               >
                 <Pencil className="size-[17px]" /> 상품 수정
               </Link>
-              <button
-                type="button"
-                onClick={() => setSheetOpen(true)}
-                className="flex h-[52px] flex-1 items-center justify-center gap-1.5 rounded-xl bg-background text-[15px] font-bold text-destructive transition active:scale-[0.98]"
-              >
-                <Trash2 className="size-[17px]" /> 상품 삭제
-              </button>
+              {hasActiveClearance ? (
+                <button
+                  type="button"
+                  disabled
+                  className="flex h-[52px] flex-1 cursor-not-allowed items-center justify-center gap-1.5 rounded-xl bg-background text-[15px] font-bold text-muted-foreground opacity-50"
+                >
+                  <Trash2 className="size-[17px]" /> 상품 삭제
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setSheetOpen(true)}
+                  className="flex h-[52px] flex-1 items-center justify-center gap-1.5 rounded-xl bg-background text-[15px] font-bold text-destructive transition active:scale-[0.98]"
+                >
+                  <Trash2 className="size-[17px]" /> 상품 삭제
+                </button>
+              )}
             </div>
+            {hasActiveClearance && (
+              <p className="text-center text-[12px] text-muted-foreground">{DELETE_BLOCKED_MSG}</p>
+            )}
+            {!hasActiveClearance && serverError && (
+              <p role="alert" className="text-center text-[12px] text-destructive">
+                {serverError}
+              </p>
+            )}
           </div>
         </>
       )}
@@ -212,7 +249,7 @@ export function ProductDetailPage() {
         open={sheetOpen}
         onOpenChange={setSheetOpen}
         title="이 상품을 삭제할까요?"
-        description="삭제한 상품은 복구할 수 없어요. 진행 중인 마감 할인이 있다면 함께 마감돼요."
+        description="삭제한 상품은 복구할 수 없어요."
         confirmLabel={del.isPending ? '삭제 중…' : '삭제'}
         onConfirm={onConfirmDelete}
         variant="danger"

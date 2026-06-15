@@ -3,18 +3,20 @@ import { Navigate, useNavigate, useParams } from 'react-router'
 import { ChevronLeft } from 'lucide-react'
 import { ROUTES } from '@/shared/lib/routes'
 import { ErrorState } from '@/shared/components/ErrorState'
+import { useCurrentStoreStore } from '@/features/store/stores/currentStoreStore'
 import { useProduct } from '../hooks/useProduct'
 import { ProductForm } from '../components/ProductForm'
 
-const paramsSchema = z.object({ id: z.string().min(1) })
+const paramsSchema = z.object({ id: z.coerce.number().int().positive() })
 
 /** 일반 상품 수정 — 상품 로드 후 등록 폼을 수정 모드로 재사용 (노션: 일반 상품 수정/삭제). */
 export function ProductEditPage() {
   const navigate = useNavigate()
   const params = useParams()
   const parsed = paramsSchema.safeParse(params)
-  const id = parsed.success ? parsed.data.id : ''
-  const { data: product, isLoading, isError, refetch } = useProduct(id)
+  const id = parsed.success ? parsed.data.id : 0
+  const selectedStoreId = useCurrentStoreStore((s) => s.selectedStoreId)
+  const { data: product, isLoading, isError, refetch } = useProduct(selectedStoreId, id)
 
   if (!parsed.success) return <Navigate to={ROUTES.HOME} replace />
 

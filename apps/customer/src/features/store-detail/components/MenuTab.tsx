@@ -21,7 +21,7 @@ export function MenuTab({
   storeId,
   businessStatus,
 }: {
-  storeId: string
+  storeId: number
   businessStatus: BusinessStatus
 }) {
   const { data, isPending, isError } = useStoreMenu(storeId)

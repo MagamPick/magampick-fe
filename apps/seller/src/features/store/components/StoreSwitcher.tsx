@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { ChevronDown, Plus } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { ChevronDown, Plus, Store } from 'lucide-react'
 import { useNavigate } from 'react-router'
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/shared/components/ui/sheet'
 import { cn } from '@/shared/lib/utils'
@@ -26,6 +26,15 @@ export function StoreSwitcher({ variant = 'hero' }: Props) {
   const { data: stores } = useStores()
   const selectedStoreId = useCurrentStoreStore((s) => s.selectedStoreId)
   const selectStore = useCurrentStoreStore((s) => s.selectStore)
+
+  // 로그인 직후 등록순 첫 매장 자동 선택 (보유목록 명세)
+  // useEffect + zustand action → React Compiler useEffect-setState 제약 없음
+  useEffect(() => {
+    if (stores && stores.length > 0 && selectedStoreId == null) {
+      selectStore(stores[0].id)
+    }
+  }, [stores, selectedStoreId, selectStore])
+
   const current = stores?.find((s) => s.id === selectedStoreId)
   const name = current?.name ?? '매장 선택'
 
@@ -38,9 +47,7 @@ export function StoreSwitcher({ variant = 'hero' }: Props) {
           aria-label="매장 전환"
           className="inline-flex h-9 max-w-[200px] items-center gap-1.5 rounded-[18px] border border-[#FFD9C7] bg-secondary px-3 text-[12.5px] font-bold tracking-[-0.2px] text-secondary-foreground transition active:bg-[#FFD9C7]"
         >
-          <span aria-hidden className="text-[14px] leading-none">
-            🏪
-          </span>
+          <Store aria-hidden className="size-[14px] shrink-0" />
           <span className="truncate">{name}</span>
           <ChevronDown className="size-3.5 shrink-0 text-primary" />
         </button>

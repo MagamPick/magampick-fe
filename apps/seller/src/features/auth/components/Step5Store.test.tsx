@@ -1,16 +1,20 @@
-import { render, screen } from '@testing-library/react'
+import { render, screen, waitFor, fireEvent } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, beforeAll } from 'vitest'
 import { Step5Store } from './Step5Store'
 import { authApi } from '../api/authApi'
+import { searchStoreAddress } from '../lib/addressSearch'
 import { ApiError } from '@/shared/lib/apiError'
 import { createQueryWrapper } from '@/shared/test/queryWrapper'
 import { Form } from '@/shared/components/ui/form'
-import { signupInputSchema, type SignupInput } from '../types'
+import { signupInputSchema, type SignupInput, type StoreAddress } from '../types'
 
 vi.mock('../api/authApi')
+vi.mock('../lib/addressSearch', () => ({
+  searchStoreAddress: vi.fn(),
+}))
 
 const defaults: SignupInput = {
   agreedTermIds: [],
@@ -25,10 +29,18 @@ const defaults: SignupInput = {
   openDate: '',
   bizVerified: false,
   storeName: '',
-  storeAddress: '',
+  storeAddress: null,
   storeAddressDetail: '',
   storePhone: '',
-  photoAdded: false,
+  storeImageFile: undefined,
+}
+
+const selectedAddress: StoreAddress = {
+  roadAddress: '서울특별시 강남구 테헤란로 427',
+  jibunAddress: '서울특별시 강남구 삼성동 159-1',
+  zonecode: '06158',
+  sigunguCode: '11680',
+  roadnameCode: '3179999',
 }
 
 function renderStep5(overrides: Partial<SignupInput> = {}) {
@@ -52,15 +64,21 @@ function renderStep5(overrides: Partial<SignupInput> = {}) {
 }
 
 describe('Step5Store', () => {
+  beforeAll(() => {
+    // jsdom 에 createObjectURL 미구현 — 미리보기용 stub
+    URL.createObjectURL = vi.fn(() => 'blob:preview')
+    URL.revokeObjectURL = vi.fn()
+  })
   beforeEach(() => vi.clearAllMocks())
 
-  it('대표사진_영역_클릭_시_등록완료로_토글', async () => {
-    const user = userEvent.setup()
+  it('대표사진_파일_선택_시_미리보기_노출', async () => {
     renderStep5()
+    const input = screen.getByLabelText('매장 대표 사진')
+    const file = new File(['img'], 'store.png', { type: 'image/png' })
 
-    await user.click(screen.getByText('대표 사진 등록'))
+    fireEvent.change(input, { target: { files: [file] } })
 
-    expect(screen.getByText('대표 사진 등록 완료')).toBeInTheDocument()
+    expect(await screen.findByAltText('매장 대표 사진 미리보기')).toBeInTheDocument()
   })
 
   it('대표자명_Step4_사장님_성명으로_자동_채움', () => {
@@ -70,7 +88,7 @@ describe('Step5Store', () => {
   })
 
   it('번호_대표자명_개업일자_갖춘_정상_사업자_조회_성공', async () => {
-    vi.mocked(authApi.checkBusinessNumber).mockResolvedValue({ verified: true })
+    vi.mocked(authApi.checkBusinessNumber).mockResolvedValue(undefined)
     const user = userEvent.setup()
     renderStep5({ name: '김사장', representativeName: '김사장', openDate: '2020-01-01' })
 
@@ -98,5 +116,29 @@ describe('Step5Store', () => {
 
     // 대표자명 미입력 → 조회 비활성 (사업자번호만으로는 진위확인 불가)
     expect(screen.getByRole('button', { name: '조회하기' })).toBeDisabled()
+  })
+
+  it('주소검색_선택_시_도로명주소를_폼에_저장한다', async () => {
+    vi.mocked(searchStoreAddress).mockResolvedValue(selectedAddress)
+    const user = userEvent.setup()
+    renderStep5()
+
+    await user.click(screen.getByRole('button', { name: '주소 검색' }))
+
+    await waitFor(() =>
+      expect(screen.getByRole('textbox', { name: /매장 주소/ })).toHaveValue(
+        '서울특별시 강남구 테헤란로 427',
+      ),
+    )
+  })
+
+  it('주소검색_실패_시_안내를_노출한다', async () => {
+    vi.mocked(searchStoreAddress).mockRejectedValue(new Error('도로명 주소를 선택해주세요'))
+    const user = userEvent.setup()
+    renderStep5()
+
+    await user.click(screen.getByRole('button', { name: '주소 검색' }))
+
+    expect(await screen.findByText('도로명 주소를 선택해주세요')).toBeInTheDocument()
   })
 })

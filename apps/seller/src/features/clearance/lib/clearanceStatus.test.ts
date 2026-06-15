@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { discountRate, nowHHMM, isExpired, toDealCardStatus } from './clearanceStatus'
+import { discountRate, nowHHMM, toDealCardStatus } from './clearanceStatus'
 
 describe('discountRate', () => {
   it('정상가 대비 할인율을 정수%로 계산한다', () => {
@@ -19,17 +19,9 @@ describe('nowHHMM', () => {
   })
 })
 
-describe('isExpired', () => {
-  it('현재 시각이 마감 시각에 도달/초과하면 만료다', () => {
-    expect(isExpired('21:00', '20:59')).toBe(false)
-    expect(isExpired('21:00', '21:00')).toBe(true)
-    expect(isExpired('21:00', '21:01')).toBe(true)
-  })
-})
-
 describe('toDealCardStatus', () => {
-  it('ACTIVE는 진행중(live), 그 외는 마감(ended)으로 매핑한다', () => {
-    expect(toDealCardStatus('ACTIVE')).toBe('live')
+  it('OPEN 은 진행중(live), 그 외는 마감(ended)으로 매핑한다', () => {
+    expect(toDealCardStatus('OPEN')).toBe('live')
     expect(toDealCardStatus('CLOSED')).toBe('ended')
     expect(toDealCardStatus('SOLD_OUT')).toBe('ended')
   })

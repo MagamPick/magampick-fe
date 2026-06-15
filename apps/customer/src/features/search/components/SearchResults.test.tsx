@@ -7,7 +7,7 @@ import type { SearchResult } from '../types'
 import type { StoreListItem } from '@/features/store-list/types'
 
 const store: StoreListItem = {
-  id: 'st-1',
+  id: 101,
   name: '베이커리 브레드샵',
   imageUrl: null,
   distanceKm: 0.3,
@@ -21,8 +21,8 @@ const result: SearchResult = {
   products: [
     {
       kind: 'deal',
-      id: 'p-9',
-      storeId: 'st-7',
+      id: 1009,
+      storeId: 107,
       storeName: '베이글 브라더스',
       name: '플레인 베이글',
       imageUrl: null,

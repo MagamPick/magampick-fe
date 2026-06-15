@@ -2,6 +2,7 @@ import { ChevronRight } from 'lucide-react'
 import { useNavigate } from 'react-router'
 import { Thumbnail } from '@/shared/components/Thumbnail'
 import { ROUTES } from '@/shared/lib/routes'
+import { formatDistance } from '@/shared/lib/formatDistance'
 import type { StoreListItem } from '../types'
 
 /**
@@ -32,7 +33,8 @@ export function StoreListCard({ store }: { store: StoreListItem }) {
           )}
         </span>
         <span className="mt-[3px] block text-xs text-muted-foreground">
-          {store.distanceKm}km{store.rating > 0 && ` · ★ ${store.rating}`}
+          {formatDistance(store.distanceKm)}
+          {store.rating > 0 && ` · ★ ${store.rating}`}
         </span>
         {store.activeDealCount > 0 && (
           <span className="mt-1 block text-xs font-bold text-secondary-foreground">

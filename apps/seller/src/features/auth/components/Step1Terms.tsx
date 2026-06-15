@@ -1,23 +1,25 @@
 import type { UseFormReturn } from 'react-hook-form'
 import { Check } from 'lucide-react'
 import { cn } from '@/shared/lib/utils'
-import { TERMS } from '../constants/terms'
-import type { SignupInput, TermId } from '../types'
+import type { SignupInput, SignupTerm } from '../types'
 
 interface Props {
   form: UseFormReturn<SignupInput>
-  onOpenTerms: (id: TermId) => void
+  terms: SignupTerm[]
+  isLoading?: boolean
+  errorMessage?: string
+  onOpenTerms: (id: number) => void
 }
 
-export function Step1Terms({ form, onOpenTerms }: Props) {
+export function Step1Terms({ form, terms, isLoading = false, errorMessage, onOpenTerms }: Props) {
   const agreed = form.watch('agreedTermIds')
-  const allChecked = TERMS.every((t) => agreed.includes(t.id))
+  const allChecked = terms.length > 0 && terms.every((t) => agreed.includes(t.id))
 
-  const setAgreed = (ids: TermId[]) =>
+  const setAgreed = (ids: number[]) =>
     form.setValue('agreedTermIds', ids, { shouldValidate: true, shouldDirty: true })
-  const toggle = (id: TermId) =>
+  const toggle = (id: number) =>
     setAgreed(agreed.includes(id) ? agreed.filter((x) => x !== id) : [...agreed, id])
-  const toggleAll = () => setAgreed(allChecked ? [] : TERMS.map((t) => t.id))
+  const toggleAll = () => setAgreed(allChecked ? [] : terms.map((t) => t.id))
 
   return (
     <div>
@@ -27,13 +29,26 @@ export function Step1Terms({ form, onOpenTerms }: Props) {
         동의해 주세요
       </h2>
       <p className="mb-7 mt-2 text-sm leading-relaxed text-muted-foreground">
-        마감픽 서비스 이용을 위한 약관입니다.
+        마감픽 사장 서비스 이용을 위한 약관입니다.
       </p>
+
+      {isLoading && (
+        <div className="rounded-xl bg-background p-4 text-sm font-semibold text-muted-foreground">
+          약관을 불러오는 중입니다
+        </div>
+      )}
+
+      {errorMessage && (
+        <div className="rounded-xl bg-destructive/10 p-4 text-sm font-semibold text-destructive">
+          {errorMessage}
+        </div>
+      )}
 
       {/* 전체동의 — 연주황 카드 (chk--sq) */}
       <button
         type="button"
         onClick={toggleAll}
+        disabled={terms.length === 0}
         className="mb-2 flex w-full items-center gap-3 rounded-xl bg-secondary p-4 text-left"
       >
         <span
@@ -49,7 +64,7 @@ export function Step1Terms({ form, onOpenTerms }: Props) {
 
       {/* 개별 약관 — 원형 체크 (chk) */}
       <ul className="px-1">
-        {TERMS.map((term) => {
+        {terms.map((term) => {
           const on = agreed.includes(term.id)
           return (
             <li key={term.id} className="flex items-center gap-3 py-[18px]">

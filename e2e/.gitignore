@@ -1,0 +1,6 @@
+# Playwright 산출물 (커밋 X)
+test-results/
+playwright-report/
+playwright/.cache/
+blob-report/
+.auth/

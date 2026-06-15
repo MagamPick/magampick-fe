@@ -24,13 +24,13 @@ export const ROUTES = {
   NOTIFICATIONS: '/notifications',
 
   // 매장 상세 + 매장 위치 (TabLayout 밖 풀스크린 — 바텀네비 없음)
-  STORE_DETAIL: (id: string) => `/store/${id}`,
-  STORE_LOCATION: (id: string) => `/store/${id}/location`,
+  STORE_DETAIL: (id: number | string) => `/store/${id}`,
+  STORE_LOCATION: (id: number | string) => `/store/${id}/location`,
   /** 매장 상세 리뷰 탭으로 바로 진입 (상품 상세의 평점·리뷰 영역에서) */
-  STORE_DETAIL_REVIEWS: (id: string) => `/store/${id}?tab=review`,
+  STORE_DETAIL_REVIEWS: (id: number | string) => `/store/${id}?tab=review`,
 
   // 상품 상세 (일반/떨이 한 화면, kind 로 분기 — TabLayout 밖 풀스크린)
-  PRODUCT_DETAIL: (kind: 'deal' | 'menu', id: string) => `/product/${kind}/${id}`,
+  PRODUCT_DETAIL: (kind: 'deal' | 'menu', id: number | string) => `/product/${kind}/${id}`,
 
   // 장바구니 (TabLayout 밖 풀스크린 — 바텀네비 없음, 프로토타입 40-cart)
   CART: '/cart',
@@ -38,6 +38,9 @@ export const ROUTES = {
   // 결제 화면 + 주문 완료 (TabLayout 밖 풀스크린, 프로토타입 41-checkout · 42-order-success)
   CHECKOUT: '/checkout',
   ORDER_SUCCESS: '/order/success',
+  // 토스 결제창 리다이렉트 콜백 (prepare→토스 결제창→confirm 경로)
+  PAYMENT_SUCCESS: '/order/payment/success',
+  PAYMENT_FAIL: '/order/payment/fail',
 
   // 주문 상세 (TabLayout 밖 풀스크린, 프로토타입 50-order-detail)
   ORDER_DETAIL: (id: string) => `/orders/${id}`,
@@ -66,7 +69,10 @@ export const ROUTES = {
   // 주소지 관리 (마이페이지/홈 헤더에서 진입 — 진입 링크 연결은 후속)
   ADDRESSES: '/addresses',
   ADDRESS_NEW: '/addresses/new',
-  ADDRESS_EDIT: (id: string) => `/addresses/${id}/edit`,
+  ADDRESS_EDIT: (id: number) => `/addresses/${id}/edit`,
+
+  // 약관 및 정책 — 마이페이지에서 진입, 풀스크린 보호 라우트
+  TERMS: '/mypage/terms',
 
   // 공지사항 조회 + 고객센터(문의하기) — 마이페이지에서 진입, 풀스크린(바텀네비 없음, Phase 11)
   NOTICES: '/notices',

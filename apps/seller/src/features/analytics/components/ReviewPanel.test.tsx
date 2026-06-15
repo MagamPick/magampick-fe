@@ -21,7 +21,7 @@ const review: ReviewMetrics = {
 describe('ReviewPanel', () => {
   it('평균 별점·신규 리뷰·답글률을 보여준다', () => {
     render(<ReviewPanel review={review} />)
-    expect(screen.getByText('⭐ 4.8')).toBeInTheDocument()
+    expect(screen.getByText('4.8')).toBeInTheDocument()
     expect(screen.getByText('14건')).toBeInTheDocument()
     expect(screen.getByText('79%')).toBeInTheDocument()
   })

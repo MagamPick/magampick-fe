@@ -3,7 +3,7 @@ import { z } from 'zod'
 /**
  * 고객센터 도메인 (노션 「문의하기」, Phase 11).
  * FAQ 조회 + 1:1 문의 제출·내 문의 내역·답변 조회. 권한 = 로그인 본인 문의만.
- * 백엔드 support 도메인 미구현 → mock. 소비자 support 미러(카테고리·FAQ 는 사장 맥락).
+ * BE support 도메인 실연동 — apiClient + Zod 응답 검증(supportApi). 소비자 support 미러(카테고리·FAQ 는 사장 맥락).
  */
 
 /** FAQ — 정적 seed(아코디언, 한 번에 하나) */

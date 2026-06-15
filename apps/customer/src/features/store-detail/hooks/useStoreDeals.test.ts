@@ -10,7 +10,7 @@ describe('useStoreDeals', () => {
   it('떨이_목록_조회_성공', async () => {
     vi.mocked(storeDetailApi.getStoreDeals).mockResolvedValue([
       {
-        id: 'sd-1',
+        id: 1,
         name: '크루아상 세트',
         imageUrl: null,
         discountRate: 50,
@@ -21,10 +21,11 @@ describe('useStoreDeals', () => {
       },
     ])
 
-    const { result } = renderHook(() => useStoreDeals('st-1'), { wrapper: createQueryWrapper() })
+    const { result } = renderHook(() => useStoreDeals(1), { wrapper: createQueryWrapper() })
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true))
     expect(result.current.data).toHaveLength(1)
     expect(result.current.data?.[0].name).toBe('크루아상 세트')
+    expect(storeDetailApi.getStoreDeals).toHaveBeenCalledWith(1)
   })
 })

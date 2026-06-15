@@ -1,10 +1,11 @@
+import type { ReactNode } from 'react'
 import { Link } from 'react-router'
 import { ChevronRight } from 'lucide-react'
 import { cn } from '@/shared/lib/utils'
 
 interface MenuRowProps {
-  /** 좌측 이모지 아이콘 */
-  icon: string
+  /** 좌측 아이콘 */
+  icon: ReactNode
   label: string
   /** 우측 보조 값 (미구현 기능은 생략 — 가짜 카운트 X) */
   value?: string
@@ -30,7 +31,7 @@ export function MenuRow({ icon, label, value, to, onClick, danger }: MenuRowProp
 
   const inner = (
     <>
-      <span aria-hidden className="w-[22px] shrink-0 text-center text-[17px]">
+      <span aria-hidden className="flex w-[22px] shrink-0 items-center justify-center [&>svg]:size-[18px] [&>svg]:text-muted-foreground">
         {icon}
       </span>
       <span

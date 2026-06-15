@@ -29,6 +29,8 @@ import { AddressFormPage } from '@/features/addresses/pages/AddressFormPage'
 import { CartPage } from '@/features/cart/pages/CartPage'
 import { CheckoutPage } from '@/features/order/pages/CheckoutPage'
 import { OrderSuccessPage } from '@/features/order/pages/OrderSuccessPage'
+import { PaymentSuccessPage } from '@/features/order/pages/PaymentSuccessPage'
+import { PaymentFailPage } from '@/features/order/pages/PaymentFailPage'
 import { PointHistoryPage } from '@/features/points/pages/PointHistoryPage'
 import { CouponBoxPage } from '@/features/coupons/pages/CouponBoxPage'
 import { EventPage } from '@/features/coupons/pages/EventPage'
@@ -38,6 +40,7 @@ import { InquiryFormPage } from '@/features/support/pages/InquiryFormPage'
 import { InquiryDetailPage } from '@/features/support/pages/InquiryDetailPage'
 import { NotificationCenterPage } from '@/features/notifications/pages/NotificationCenterPage'
 import { NotificationSettingsPage } from '@/features/notifications/pages/NotificationSettingsPage'
+import { TermsPolicyPage } from '@/features/profile/pages/TermsPolicyPage'
 import { NotFoundPage } from '@/shared/components/NotFoundPage'
 import { ROUTES } from '@/shared/lib/routes'
 
@@ -178,6 +181,23 @@ export const router = createBrowserRouter([
       </ProtectedRoute>
     ),
   },
+  // 토스 결제창 리다이렉트 콜백 (prepare→토스 결제창→confirm 경로)
+  {
+    path: ROUTES.PAYMENT_SUCCESS,
+    element: (
+      <ProtectedRoute>
+        <PaymentSuccessPage />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: ROUTES.PAYMENT_FAIL,
+    element: (
+      <ProtectedRoute>
+        <PaymentFailPage />
+      </ProtectedRoute>
+    ),
+  },
   // 주문 상세 — 풀스크린 보호 라우트 (바텀네비 없음, 프로토타입 50-order-detail)
   {
     path: '/orders/:id',
@@ -209,6 +229,15 @@ export const router = createBrowserRouter([
     element: (
       <ProtectedRoute>
         <EventPage />
+      </ProtectedRoute>
+    ),
+  },
+  // 약관 및 정책 — 마이페이지에서 진입, 풀스크린 보호 라우트
+  {
+    path: ROUTES.TERMS,
+    element: (
+      <ProtectedRoute>
+        <TermsPolicyPage />
       </ProtectedRoute>
     ),
   },

@@ -2,6 +2,7 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Routes, Route } from 'react-router'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { ApiError } from '@/shared/lib/apiError'
 
 vi.mock('../hooks/useProduct')
 vi.mock('../hooks/useDeleteProduct')
@@ -17,10 +18,10 @@ import type { Product } from '../types'
 import type { ClearanceView } from '@/features/clearance/types'
 
 const product: Product = {
-  id: 'p1',
-  storeId: 's1',
+  id: 1,
+  storeId: 1,
   name: '통밀 식빵',
-  category: '베이커리',
+  category: 'BAKERY',
   price: 4800,
   onSale: true,
 }
@@ -39,7 +40,7 @@ function setup(opts?: { product?: Product; clearances?: ClearanceView[]; open?: 
   } as unknown as ReturnType<typeof useClearances>)
   vi.mocked(useStoreStatus).mockReturnValue({
     data: {
-      storeId: 's1',
+      storeId: 1,
       operationStatus: opts?.open === false ? 'BREAK' : 'OPEN',
       canOpenToday: true,
       todayCloseTime: '21:00',
@@ -51,7 +52,7 @@ function setup(opts?: { product?: Product; clearances?: ClearanceView[]; open?: 
   } as unknown as ReturnType<typeof useDeleteProduct>)
 
   return render(
-    <MemoryRouter initialEntries={['/products/p1']}>
+    <MemoryRouter initialEntries={['/products/1']}>
       <Routes>
         <Route path="/products/:id" element={<ProductDetailPage />} />
       </Routes>
@@ -60,14 +61,13 @@ function setup(opts?: { product?: Product; clearances?: ClearanceView[]; open?: 
 }
 
 const activeClearance: ClearanceView = {
-  id: 'c1',
-  storeId: 's1',
-  productId: 'p1',
+  id: 1,
+  productId: 1,
   salePrice: 2400,
   totalQty: 20,
   soldQty: 8,
   closeTime: '21:00',
-  status: 'ACTIVE',
+  status: 'OPEN',
   createdAt: '2026-06-01T08:00:00.000Z',
   productName: '통밀 식빵',
   originalPrice: 4800,
@@ -89,11 +89,11 @@ describe('ProductDetailPage', () => {
     expect(screen.getByText('상품 정보')).toBeInTheDocument()
     expect(screen.getByRole('link', { name: /이 상품으로 마감 할인 등록/ })).toHaveAttribute(
       'href',
-      '/clearance/new?productId=p1',
+      '/clearance/new?productId=1',
     )
     expect(screen.getByRole('link', { name: /상품 수정/ })).toHaveAttribute(
       'href',
-      '/products/p1/edit',
+      '/products/1/edit',
     )
   })
 
@@ -116,5 +116,36 @@ describe('ProductDetailPage', () => {
     expect(await screen.findByText('이 상품을 삭제할까요?')).toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: '삭제' }))
     expect(delMutate).toHaveBeenCalled()
+  })
+
+  it('진행 중인 떨이가 있으면 상품 삭제 버튼이 비활성화되고 사유를 보여준다', async () => {
+    const user = userEvent.setup()
+    setup({ clearances: [activeClearance] })
+
+    const deleteBtn = screen.getByRole('button', { name: /상품 삭제/ })
+    expect(deleteBtn).toBeDisabled()
+    expect(
+      screen.getByText('진행 중인 마감 할인이 있어 삭제할 수 없어요. 먼저 마감 할인을 마감해 주세요.'),
+    ).toBeInTheDocument()
+
+    // 비활성 버튼 클릭 시 확인 시트가 열리지 않음
+    await user.click(deleteBtn)
+    expect(screen.queryByText('이 상품을 삭제할까요?')).not.toBeInTheDocument()
+  })
+
+  it('삭제 중 409가 오면 차단 사유 메시지를 보여준다', async () => {
+    const user = userEvent.setup()
+    delMutate.mockImplementation((_: unknown, opts: { onError: (e: unknown) => void }) => {
+      opts.onError(new ApiError(409, 'CONFLICT', '진행 중인 떨이 존재'))
+    })
+    setup()
+
+    await user.click(screen.getByRole('button', { name: /상품 삭제/ }))
+    expect(await screen.findByText('이 상품을 삭제할까요?')).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: '삭제' }))
+
+    expect(
+      await screen.findByRole('alert'),
+    ).toHaveTextContent('진행 중인 마감 할인이 있어 삭제할 수 없어요. 먼저 마감 할인을 마감해 주세요.')
   })
 })

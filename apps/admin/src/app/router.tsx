@@ -1,0 +1,39 @@
+import { createBrowserRouter, Navigate } from 'react-router'
+import { ProtectedRoute } from '@/features/auth/components/ProtectedRoute'
+import { PublicOnlyRoute } from '@/features/auth/components/PublicOnlyRoute'
+import { LoginPage } from '@/features/auth/pages/LoginPage'
+import { AdminShell } from '@/shared/components/AdminShell'
+import { NotFoundPage } from '@/shared/components/NotFoundPage'
+import { EventsPage } from '@/features/events/pages/EventsPage'
+import { AnnouncementsPage } from '@/features/announcements/pages/AnnouncementsPage'
+import { InquiriesPage } from '@/features/inquiries/pages/InquiriesPage'
+import { OpsPage } from '@/features/ops/pages/OpsPage'
+import { ROUTES } from '@/shared/lib/routes'
+
+export const router = createBrowserRouter([
+  {
+    // 인증 가드 + 데스크톱 사이드바 셸 — 자식 라우트가 <Outlet/> 에 렌더
+    // (routing-convention §8 nested layout — pathless 부모 + 절대경로 자식)
+    element: (
+      <ProtectedRoute>
+        <AdminShell />
+      </ProtectedRoute>
+    ),
+    children: [
+      { index: true, element: <Navigate to={ROUTES.EVENTS} replace /> },
+      { path: ROUTES.EVENTS, element: <EventsPage /> },
+      { path: ROUTES.ANNOUNCEMENTS, element: <AnnouncementsPage /> },
+      { path: ROUTES.INQUIRIES, element: <InquiriesPage /> },
+      { path: ROUTES.OPS, element: <OpsPage /> },
+    ],
+  },
+  {
+    path: ROUTES.LOGIN,
+    element: (
+      <PublicOnlyRoute>
+        <LoginPage />
+      </PublicOnlyRoute>
+    ),
+  },
+  { path: '*', element: <NotFoundPage /> },
+])

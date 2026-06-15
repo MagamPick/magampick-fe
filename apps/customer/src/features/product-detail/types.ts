@@ -18,33 +18,34 @@ export type ProductKind = z.infer<typeof productKindSchema>
 export const productBusinessStatusSchema = z.enum(['OPEN', 'BREAK', 'CLOSED_TODAY'])
 export type ProductBusinessStatus = z.infer<typeof productBusinessStatusSchema>
 
-/** 떨이 상태 — ACTIVE 만 구매 가능, 나머지(SOLD_OUT/EXPIRED/MANUAL)는 마감 */
+/** 떨이 상태 — ACTIVE 만 구매 가능, 나머지(SOLD_OUT/EXPIRED/MANUAL)는 마감. BE는 ACTIVE/SOLD_OUT/EXPIRED 반환(MANUAL은 FE 상위집합) */
 export const dealStatusSchema = z.enum(['ACTIVE', 'SOLD_OUT', 'EXPIRED', 'MANUAL'])
 export type DealStatus = z.infer<typeof dealStatusSchema>
 
 /** 일반/떨이 공통 노출 필드 */
 const productCommon = {
-  id: z.string(),
-  /** 소속 매장 — 매장 미리보기 탭 시 매장 상세로 이동 */
-  storeId: z.string(),
-  storeName: z.string(),
+  /** BE int64 → number */
+  id: z.number(),
+  /** 소속 매장 — 매장 상세로 이동 시 사용. BE int64 → number */
+  storeId: z.number(),
+  storeName: z.string().default(''),
   /** 직선거리(km) */
-  distanceKm: z.number(),
+  distanceKm: z.number().default(0),
   businessStatus: productBusinessStatusSchema,
   /** 대표 사진 1장 (없으면 폴백) */
-  imageUrl: z.string().nullable(),
-  name: z.string(),
+  imageUrl: z.string().nullish().transform((v) => v ?? null),
+  name: z.string().default(''),
   /** 상품 설명 (선택 — 있으면 표시) */
-  description: z.string().nullable(),
-  /** 상품 단위 평점 평균 (Phase 6 — 현재 mock) */
-  rating: z.number(),
+  description: z.string().nullish().transform((v) => v ?? null),
+  /** 상품 단위 평점 평균 */
+  rating: z.number().default(0),
   /** 상품 단위 리뷰 개수 */
-  reviewCount: z.number(),
+  reviewCount: z.number().int().default(0),
   /**
-   * 매장 마감 시각 (HH:mm) — 장바구니 픽업 시간 슬롯(영업 종료 전 15분 단위) 생성용.
-   * 담기 시 cart 매장 컨텍스트로 캡처. mock 은 항상 주입하며, BE 연동 시 응답에 포함.
+   * 매장 마감 시각 (HH:mm) — 장바구니 픽업 시간 슬롯 생성용.
+   * BE 가 직접 제공. 오늘 휴무면 null.
    */
-  closingTime: z.string().optional(),
+  closingTime: z.string().nullish().transform((v) => v ?? null),
 }
 
 /** 일반 상품(menu) — 정가 + 판매 여부 */
@@ -52,9 +53,9 @@ export const menuProductDetailSchema = z.object({
   ...productCommon,
   kind: z.literal('menu'),
   /** 정가 */
-  price: z.number(),
+  price: z.number().default(0),
   /** 판매 여부 — OFF 면 담기 차단(정상 흐름엔 노출 X, 직접 링크 진입 시) */
-  isOnSale: z.boolean(),
+  isOnSale: z.boolean().default(true),
 })
 export type MenuProductDetail = z.infer<typeof menuProductDetailSchema>
 
@@ -63,15 +64,15 @@ export const dealProductDetailSchema = z.object({
   ...productCommon,
   kind: z.literal('deal'),
   /** 원가(취소선) */
-  originalPrice: z.number(),
+  originalPrice: z.number().default(0),
   /** 할인가 */
-  salePrice: z.number(),
+  salePrice: z.number().default(0),
   /** 할인율(%) — 원가 대비 자동 계산값 */
-  discountRate: z.number(),
+  discountRate: z.number().int().default(0),
   /** 픽업 마감 시각(ISO) — 실시간 카운트다운 기준 */
   pickupDeadline: z.string(),
   /** 잔여 수량 — 수량 선택 상한 */
-  stockLeft: z.number(),
+  stockLeft: z.number().int().default(0),
   dealStatus: dealStatusSchema,
 })
 export type DealProductDetail = z.infer<typeof dealProductDetailSchema>
@@ -83,7 +84,7 @@ export const productDetailSchema = z.discriminatedUnion('kind', [
 ])
 export type ProductDetail = z.infer<typeof productDetailSchema>
 
-/** 라우트 파라미터 — /product/:kind/:productId (kind 는 enum 검증) */
+/** 라우트 파라미터 — /product/:kind/:productId (kind 는 enum 검증). productId는 URL string → 페이지에서 Number() 변환 */
 export const productDetailParamsSchema = z.object({
   kind: productKindSchema,
   productId: z.string().min(1),

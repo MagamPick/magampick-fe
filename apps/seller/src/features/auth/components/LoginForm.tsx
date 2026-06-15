@@ -10,6 +10,7 @@ import {
   FormMessage,
 } from '@/shared/components/ui/form'
 import { Input } from '@/shared/components/ui/input'
+import { cn } from '@/shared/lib/utils'
 import { ApiError } from '@/shared/lib/apiError'
 import { ROUTES } from '@/shared/lib/routes'
 import { useLogin } from '../hooks/useLogin'
@@ -21,7 +22,7 @@ export function LoginForm() {
 
   const form = useForm<LoginInput>({
     resolver: zodResolver(loginInputSchema),
-    defaultValues: { email: '', password: '' },
+    defaultValues: { email: '', password: '', keepSignedIn: true },
   })
 
   const onSubmit = (values: LoginInput) => {
@@ -77,7 +78,46 @@ export function LoginForm() {
           )}
         />
 
-        <div className="mb-[22px] mt-2 flex justify-end">
+        <div className="mb-[22px] mt-1 flex items-center justify-between">
+          <FormField
+            control={form.control}
+            name="keepSignedIn"
+            render={({ field }) => (
+              <button
+                type="button"
+                role="checkbox"
+                aria-checked={field.value}
+                aria-label="로그인 상태 유지"
+                onClick={() => field.onChange(!field.value)}
+                className="flex min-h-11 items-center gap-2 py-1.5"
+              >
+                <span
+                  className={cn(
+                    'flex size-6 items-center justify-center rounded-[7px] border-[1.5px] transition',
+                    field.value
+                      ? 'border-primary bg-primary text-white'
+                      : 'border-border bg-card text-transparent',
+                  )}
+                >
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="3.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className="size-3.5"
+                    aria-hidden="true"
+                  >
+                    <path d="M5 13l4 4L19 7" />
+                  </svg>
+                </span>
+                <span className="text-[13px] font-semibold text-muted-foreground">
+                  로그인 상태 유지
+                </span>
+              </button>
+            )}
+          />
           <button
             type="button"
             onClick={() => navigate(ROUTES.PASSWORD_RESET)}

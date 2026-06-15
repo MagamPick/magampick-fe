@@ -10,7 +10,7 @@ describe('useNeighborhoodStores', () => {
   it('동네_마감픽_상위목록_조회_성공', async () => {
     vi.mocked(homeApi.getNeighborhoodStores).mockResolvedValue([
       {
-        id: 'nb-1',
+        id: 1,
         name: '북카페 무드',
         imageUrl: null,
         distanceKm: 0.6,

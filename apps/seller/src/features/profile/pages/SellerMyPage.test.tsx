@@ -5,7 +5,15 @@ import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { SellerMyPage } from './SellerMyPage'
-import { __resetProfileStoreForTest } from '../api/profileApi'
+import { apiClient } from '@/shared/lib/axios'
+
+vi.mock('@/shared/lib/axios', () => ({
+  apiClient: {
+    get: vi.fn(),
+    post: vi.fn(),
+    patch: vi.fn(),
+  },
+}))
 
 // 로그아웃은 auth 도메인 — 여기선 "호출됐는지"만 검증 (인증 흐름은 auth 테스트가 커버)
 const { logoutMutate } = vi.hoisted(() => ({ logoutMutate: vi.fn() }))
@@ -27,6 +35,14 @@ vi.mock('@/features/settlement/hooks/useSettlementSummary', () => ({
   }),
 }))
 
+/** BE 응답 shape — phone은 하이픈 없는 원시값 */
+const beProfile = {
+  id: 1,
+  email: 'minsoo@magampick.com',
+  name: '김민수',
+  phone: '01012345678',
+}
+
 function renderMyPage() {
   const qc = new QueryClient({
     defaultOptions: { queries: { retry: false, gcTime: 0 }, mutations: { retry: false } },
@@ -40,10 +56,12 @@ function renderMyPage() {
 }
 
 describe('SellerMyPage (사장 마이 허브)', () => {
-  beforeEach(() => __resetProfileStoreForTest())
+  beforeEach(() => {
+    vi.clearAllMocks()
+    vi.mocked(apiClient.get).mockResolvedValue({ data: beProfile })
+  })
   afterEach(() => {
     cleanup()
-    vi.clearAllMocks()
   })
 
   it('프로필 실명을 보여준다', async () => {

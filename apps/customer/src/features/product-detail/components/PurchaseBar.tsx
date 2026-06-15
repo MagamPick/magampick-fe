@@ -31,13 +31,14 @@ export function PurchaseBar({ product }: { product: ProductDetail }) {
   const purchasable = state.purchasable
   const max = Math.max(1, product.kind === 'deal' ? product.stockLeft : MENU_MAX)
 
+  // cart 스토어는 string id — product의 number id를 경계에서 변환
   const storeCtx = {
-    id: product.storeId,
+    id: String(product.storeId),
     name: product.storeName,
     closingTime: product.closingTime ?? '21:00',
   }
   const cartItem = {
-    id: product.id,
+    id: String(product.id),
     kind: product.kind,
     name: product.name,
     imageUrl: product.imageUrl,

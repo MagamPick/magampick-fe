@@ -6,7 +6,7 @@ import { couponKeys } from './couponKeys'
 export function useClaimEvent() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: (eventId: string) => couponApi.claim(eventId),
+    mutationFn: (couponId: number) => couponApi.claim(couponId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: couponKeys.all })
     },

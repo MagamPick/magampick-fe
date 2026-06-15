@@ -41,8 +41,8 @@ describe('NoticeAccordion', () => {
     expect(screen.queryByText('본문A')).not.toBeInTheDocument()
   })
 
-  it('핀 고정 공지에 📌 를 표시한다', () => {
+  it('핀 고정 공지에 핀 아이콘을 표시한다', () => {
     render(<NoticeAccordion notices={[n({ id: 'a', title: '핀 공지', pinned: true })]} />)
-    expect(screen.getByText('📌')).toBeInTheDocument()
+    expect(document.querySelector('svg')).toBeInTheDocument()
   })
 })

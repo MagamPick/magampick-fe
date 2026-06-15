@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router'
-import { Search, X } from 'lucide-react'
+import { Search, X, ReceiptText } from 'lucide-react'
 import { cn } from '@/shared/lib/utils'
 import { ROUTES } from '@/shared/lib/routes'
 import { ScreenContainer } from '@/shared/components/ScreenContainer'
@@ -45,7 +45,9 @@ function matchesQuery(order: Order, q: string): boolean {
  * 거절은 확인 시트(자동환불), 미수령은 상세에서만. 카드 본문 탭 → 주문 상세.
  */
 export function OrderListPage() {
-  const storeId = useCurrentStoreStore((s) => s.selectedStoreId)
+  const _storeIdNum = useCurrentStoreStore((s) => s.selectedStoreId)
+  // 매장 ID(number)를 URL 보간용 string 으로 변환 (실연동 완료)
+  const storeId = _storeIdNum != null ? String(_storeIdNum) : ''
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
 
@@ -210,13 +212,13 @@ export function OrderListPage() {
           !isError &&
           visible.length === 0 &&
           (searching ? (
-            <EmptyState icon="🔍">
+            <EmptyState icon={<Search />}>
               검색 결과가 없어요.
               <br />
               다른 키워드로 검색해 보세요.
             </EmptyState>
           ) : (
-            <EmptyState icon="🧾">{SEG_EMPTY[seg]}</EmptyState>
+            <EmptyState icon={<ReceiptText />}>{SEG_EMPTY[seg]}</EmptyState>
           ))}
 
         {visible.map((o) => (

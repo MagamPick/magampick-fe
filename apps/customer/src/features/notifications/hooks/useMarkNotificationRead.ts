@@ -6,7 +6,7 @@ import { notificationKeys } from './notificationKeys'
 export function useMarkNotificationRead() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: (id: string) => notificationsApi.markRead(id),
+    mutationFn: (id: number) => notificationsApi.markRead(id),
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: notificationKeys.all })
     },

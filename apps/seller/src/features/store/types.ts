@@ -1,4 +1,6 @@
 import { z } from 'zod'
+import { storeAddressSchema } from '@/features/auth/types'
+export type { StoreAddress } from '@/features/auth/types'
 
 /** 매장 영업 상태 — `stores.operation_status` (노션: 매장 영업 상태 관리) */
 export const OPERATION_STATUSES = ['OPEN', 'BREAK', 'CLOSED_TODAY'] as const
@@ -26,14 +28,14 @@ export const WEEKDAY_LABEL: Record<Weekday, string> = {
 
 /** 보유 매장 요약 — 헤더 매장 선택기·전환 모달용 (영업 상태 라벨 포함) */
 export interface StoreSummary {
-  id: string
+  id: number
   name: string
   operationStatus: OperationStatus
 }
 
 /** 매장 영업 상태 — 카드/시트 렌더 소스 */
 export interface StoreStatus {
-  storeId: string
+  storeId: number
   operationStatus: OperationStatus
   /** 오늘 요일이 영업 요일인가 — OPEN 전환 가능 조건 (영업 요일 0개면 false) */
   canOpenToday: boolean
@@ -99,8 +101,9 @@ export type DayHoursForm = BusinessHoursForm['days'][number]
 
 /**
  * 매장 등록 신청 폼 (경로 B — 로그인 사장 추가 등록). 회원가입 Step5 매장 필드와 동일 골격.
- * 디테일·정책 → 노션 「매장 등록 신청」. 사업자번호는 진위확인(번호+대표자명+개업일자) 후 bizVerified.
- * 대표 사진은 선택(mock) — OCI 업로드/실패 거부는 BE·연동 소관.
+ * 디테일·정책 → 노션 「매장 등록 신청」.
+ * storeAddress: storeAddressSchema.nullable() — null 은 미선택 상태(제출 전 refine 으로 차단).
+ * storeImageFile: 선택 (multipart image 파트). 없어도 등록 완료.
  */
 export const storeRegistrationSchema = z
   .object({
@@ -109,43 +112,85 @@ export const storeRegistrationSchema = z
     openDate: z.string().min(1, '개업일자를 선택해주세요'),
     bizVerified: z.boolean(),
     storeName: z.string().min(1, '매장명을 입력해주세요'),
-    storeAddress: z.string().min(1, '매장 주소를 등록해주세요'),
+    storeAddress: storeAddressSchema.nullable(),
     storeAddressDetail: z.string().optional(),
     storePhone: z.string().min(1, '매장 전화번호를 입력해주세요'),
-    photoAdded: z.boolean().optional(),
+    storeImageFile: z.instanceof(File).optional(),
   })
   .refine((d) => d.bizVerified, {
     message: '사업자등록번호 조회를 완료해주세요',
     path: ['bizVerified'],
   })
+  .refine((d) => d.storeAddress !== null, {
+    message: '매장 주소를 선택해주세요',
+    path: ['storeAddress'],
+  })
 export type StoreRegistrationInput = z.infer<typeof storeRegistrationSchema>
 
-/** createStore API payload — FE 전용 게이트 플래그(bizVerified) 제외 */
-export type CreateStoreInput = Omit<StoreRegistrationInput, 'bizVerified'>
+/**
+ * createStore API payload — BE StoreCreateRequest 기반 구조화 주소.
+ * 회원가입 StoreCreatePayload 와 동일 골격에 imageFile 추가.
+ */
+export interface CreateStoreInput {
+  businessNumber: string
+  representativeName: string
+  openDate: string
+  name: string
+  roadAddress: string
+  jibunAddress?: string
+  detailAddress?: string
+  zonecode: string
+  phone: string
+  sigunguCode: string
+  roadnameCode: string
+  imageFile?: File
+}
 
 /**
- * 매장 정보 수정 폼 (노션 「매장 정보 수정」) — 수정 가능 5필드:
- * 매장명·주소·상세 주소·전화번호·대표 사진. 사업자번호·대표자명·영업상태·영업시간은 비범위(불변/별도 화면).
- * 등록 폼에서 사업자 진위확인(대표자명·번호·개업일자) 블록만 뺀 부분집합.
+ * 매장 정보 수정 폼 (노션 「매장 정보 수정」) — 수정 가능 필드:
+ * 매장명·주소·상세 주소·전화번호·대표 사진.
+ * storeAddress: null = 주소 미변경(PATCH 에서 주소 필드 omit → 지오코딩 재호출 X).
+ * storeImageFile: 새 파일 선택 시만 image 파트 전송.
  */
 export const storeEditSchema = z.object({
   storeName: z.string().min(1, '매장명을 입력해주세요'),
-  storeAddress: z.string().min(1, '매장 주소를 등록해주세요'),
+  storeAddress: storeAddressSchema.nullable(),
   storeAddressDetail: z.string().optional(),
   storePhone: z.string().min(1, '매장 전화번호를 입력해주세요'),
-  photoAdded: z.boolean().optional(),
+  storeImageFile: z.instanceof(File).optional(),
 })
 export type StoreEditInput = z.infer<typeof storeEditSchema>
 
-/** updateStore API payload — 대상 매장 id + 수정 필드 */
-export type UpdateStoreInput = StoreEditInput & { storeId: string }
+/**
+ * updateStore API payload — storeId + 변경 필드만 (부분 수정).
+ * 주소 필드(road+코드들)는 Daum 재검색 시에만 포함 → 미변경 시 지오코딩 재호출 방지.
+ * imageFile: 새 File 선택한 경우에만 포함.
+ */
+export interface UpdateStoreInput {
+  storeId: number
+  name?: string
+  roadAddress?: string
+  jibunAddress?: string
+  detailAddress?: string
+  zonecode?: string
+  phone?: string
+  sigunguCode?: string
+  roadnameCode?: string
+  imageFile?: File
+}
 
-/** 매장 상세 — 수정 폼 미리채움 소스 (getStore 응답). 수정 가능 필드 + id */
+/**
+ * 매장 상세 — BE StoreDetailResponse 기반 FE 도메인 타입.
+ * getStore 응답·수정 폼 미리채움 소스. latitude/longitude/description/createdAt 은 폼 불필요(생략).
+ */
 export interface StoreDetail {
-  id: string
-  storeName: string
-  storeAddress: string
-  storeAddressDetail?: string
-  storePhone: string
-  photoAdded: boolean
+  id: number
+  businessNumber?: string
+  name: string
+  roadAddress: string
+  jibunAddress?: string
+  detailAddress?: string
+  zonecode: string
+  phone: string
+  imageUrl?: string
 }

@@ -1,54 +1,125 @@
-import { describe, it, expect, beforeEach } from 'vitest'
-import { settlementApi, resetSettlementsForTest } from './settlementApi'
-import { calcNet } from '../lib/settlementCalc'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 
-describe('settlementApi (mock)', () => {
-  beforeEach(() => resetSettlementsForTest())
+vi.mock('@/shared/lib/axios')
+
+import { apiClient } from '@/shared/lib/axios'
+import { settlementApi } from './settlementApi'
+
+/** BE SettlementCycleResponse 단건 픽스처 */
+const beCycle = {
+  id: 1,
+  storeId: 1,
+  year: 2026,
+  month: 6,
+  half: 1,
+  periodStart: '2026-06-01T00:00:00.000Z',
+  periodEnd: '2026-06-15T00:00:00.000Z',
+  depositDate: '2026-06-25T00:00:00.000Z',
+  grossAmount: 3_000_000,
+  feeAmount: 195_000,
+  netAmount: 2_805_000,
+  status: 'SCHEDULED',
+}
+
+/** BE SettlementSummaryResponse 픽스처 */
+const beSummary = {
+  cycleId: 1,
+  periodLabel: '6월 1차 · 6/1~6/15',
+  netAmount: 2_805_000,
+  depositDate: '2026-06-25T00:00:00.000Z',
+  status: 'SCHEDULED',
+}
+
+describe('settlementApi', () => {
+  beforeEach(() => vi.clearAllMocks())
 
   describe('listSettlementCycles', () => {
-    it('s1 의 정산 회차를 최신순(periodStart desc)으로 반환한다', async () => {
-      const list = await settlementApi.listSettlementCycles('s1')
-      expect(list.length).toBe(5)
-      expect(list.every((c) => c.storeId === 's1')).toBe(true)
-      const starts = list.map((c) => new Date(c.periodStart).getTime())
-      expect(starts).toEqual([...starts].sort((a, b) => b - a))
+    it('올바른 URL로 GET 요청하고 SettlementCycle[] 로 매핑한다', async () => {
+      vi.mocked(apiClient.get).mockResolvedValue({ data: [beCycle] })
+
+      const result = await settlementApi.listSettlementCycles('1')
+
+      expect(apiClient.get).toHaveBeenCalledWith('/seller/stores/1/settlements')
+      expect(result).toHaveLength(1)
+      expect(result[0]).toMatchObject({
+        id: '1',       // number → string
+        storeId: '1',  // number → string
+        year: 2026,
+        month: 6,
+        half: 1,
+        grossAmount: 3_000_000,
+        feeAmount: 195_000,
+        netAmount: 2_805_000,
+        status: 'SCHEDULED',
+      })
     })
 
-    it('입금 예정일이 지난 회차는 입금완료, 아직 안 지난 회차는 정산예정이다', async () => {
-      const list = await settlementApi.listSettlementCycles('s1')
-      const now = Date.now()
-      for (const c of list) {
-        const expected = new Date(c.depositDate).getTime() <= now ? 'DEPOSITED' : 'SCHEDULED'
-        expect(c.status).toBe(expected)
-      }
-    })
+    it('periodStart·periodEnd·depositDate 를 그대로 매핑한다', async () => {
+      vi.mocked(apiClient.get).mockResolvedValue({ data: [beCycle] })
 
-    it('정산액(net)·수수료(fee)는 결제액에서 산출한 real 값이다', async () => {
-      const list = await settlementApi.listSettlementCycles('s1')
-      for (const c of list) {
-        expect(c.netAmount).toBe(calcNet(c.grossAmount))
-        expect(c.feeAmount).toBe(c.grossAmount - c.netAmount)
-      }
+      const result = await settlementApi.listSettlementCycles('1')
+
+      expect(result[0].periodStart).toBe('2026-06-01T00:00:00.000Z')
+      expect(result[0].periodEnd).toBe('2026-06-15T00:00:00.000Z')
+      expect(result[0].depositDate).toBe('2026-06-25T00:00:00.000Z')
     })
 
     it('정산 데이터가 없는 매장은 빈 목록을 반환한다', async () => {
-      expect(await settlementApi.listSettlementCycles('s2')).toEqual([])
+      vi.mocked(apiClient.get).mockResolvedValue({ data: [] })
+
+      const result = await settlementApi.listSettlementCycles('2')
+
+      expect(result).toEqual([])
+    })
+
+    it('strict status: enum 밖 값이면 parse 에서 throw 한다', async () => {
+      vi.mocked(apiClient.get).mockResolvedValue({
+        data: [{ ...beCycle, status: 'UNKNOWN' }],
+      })
+
+      await expect(settlementApi.listSettlementCycles('1')).rejects.toThrow()
     })
   })
 
   describe('getSettlementSummary', () => {
-    it('이번 회차 요약 = 입금 대기(정산예정) 중 가장 최근 회차다', async () => {
-      const list = await settlementApi.listSettlementCycles('s1')
-      const summary = await settlementApi.getSettlementSummary('s1')
-      const expected = list.find((c) => c.status === 'SCHEDULED') ?? list[0]
-      expect(summary).not.toBeNull()
-      expect(summary?.cycleId).toBe(expected.id)
-      expect(summary?.netAmount).toBe(expected.netAmount)
-      expect(summary?.periodLabel).toMatch(/\d+월 [12]차/)
+    it('올바른 URL로 GET 요청하고 SettlementSummary 로 매핑한다', async () => {
+      vi.mocked(apiClient.get).mockResolvedValue({ status: 200, data: beSummary })
+
+      const result = await settlementApi.getSettlementSummary('1')
+
+      expect(apiClient.get).toHaveBeenCalledWith('/seller/stores/1/settlements/summary')
+      expect(result).toMatchObject({
+        cycleId: '1',  // number → string
+        periodLabel: '6월 1차 · 6/1~6/15',
+        netAmount: 2_805_000,
+        depositDate: '2026-06-25T00:00:00.000Z',
+        status: 'SCHEDULED',
+      })
     })
 
-    it('정산 데이터가 없는 매장은 null 을 반환한다', async () => {
-      expect(await settlementApi.getSettlementSummary('s2')).toBeNull()
+    it('204 응답이면 null 을 반환한다', async () => {
+      vi.mocked(apiClient.get).mockResolvedValue({ status: 204, data: null })
+
+      const result = await settlementApi.getSettlementSummary('1')
+
+      expect(result).toBeNull()
+    })
+
+    it('data 가 없으면(빈 응답) null 을 반환한다', async () => {
+      vi.mocked(apiClient.get).mockResolvedValue({ status: 200, data: null })
+
+      const result = await settlementApi.getSettlementSummary('1')
+
+      expect(result).toBeNull()
+    })
+
+    it('strict status: enum 밖 값이면 parse 에서 throw 한다', async () => {
+      vi.mocked(apiClient.get).mockResolvedValue({
+        status: 200,
+        data: { ...beSummary, status: 'PENDING' },
+      })
+
+      await expect(settlementApi.getSettlementSummary('1')).rejects.toThrow()
     })
   })
 })

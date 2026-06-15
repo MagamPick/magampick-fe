@@ -4,7 +4,7 @@ import { cartItemSchema, pickupSchema } from '@/features/cart/types'
 /**
  * 주문 도메인 타입 (노션: 주문 생성 · 주문 결제, Phase 5).
  * 결제 성공 = 주문접수(PENDING) 확정 + 픽업 코드 4자리 발급.
- * 백엔드 order 도메인 미구현 → 클라이언트 mock/stub 으로 생성(노션 "stub 우선").
+ * BE order 도메인 실연동 — apiClient + Zod 응답 검증(orderApi), 결제는 Toss 결제창(always-real).
  */
 
 /** 결제 수단 — 토스페이 단일 (노션) */
@@ -24,6 +24,11 @@ export const orderAmountsSchema = z.object({
   /** 사용 포인트 (1P=1원, Phase 8) */
   pointUsed: z.number().optional(),
   payTotal: z.number(),
+  /**
+   * 실결제액 — 실제 토스 청구액(= payTotal − couponDiscount − pointUsed, ≥0). BE OrderResponse 가 제공(X1-BE).
+   * 옵셔널: 형제 혜택 필드와 동일하게 기존 seed/fixture 후방 호환 — 미지정이면 표시단에서 payTotal 로 폴백(혜택 미적용 주문은 finalAmount==payTotal).
+   */
+  finalAmount: z.number().optional(),
   /** 적립 예정 포인트 — 픽업완료 시 적립(실결제액 1% floor, Phase 8) */
   earnedPoints: z.number().optional(),
 })

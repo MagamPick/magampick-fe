@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Link, useSearchParams } from 'react-router'
+import { Flame, Plus, ShoppingBag } from 'lucide-react'
 import { cn } from '@/shared/lib/utils'
 import { ROUTES } from '@/shared/lib/routes'
 import { ScreenContainer } from '@/shared/components/ScreenContainer'
@@ -12,7 +13,7 @@ import { DealCard } from '@/features/clearance/components/DealCard'
 import { toDealCardStatus } from '@/features/clearance/lib/clearanceStatus'
 import { useProducts } from '../hooks/useProducts'
 import { ProductCard } from '../components/ProductCard'
-import { PRODUCT_CATEGORIES } from '../types'
+import { PRODUCT_CATEGORIES, CATEGORY_LABELS } from '../types'
 import type { ProductCategory } from '../types'
 
 type CategoryFilter = ProductCategory | 'all'
@@ -20,7 +21,7 @@ type Tab = 'normal' | 'deal'
 
 const FILTERS: { value: CategoryFilter; label: string }[] = [
   { value: 'all', label: '전체' },
-  ...PRODUCT_CATEGORIES.map((c) => ({ value: c, label: c })),
+  ...PRODUCT_CATEGORIES.map((c) => ({ value: c, label: CATEGORY_LABELS[c] })),
 ]
 
 /**
@@ -51,15 +52,15 @@ export function ProductListPage() {
   const [filter, setFilter] = useState<CategoryFilter>('all')
 
   const activeProductIds = new Set(
-    (clearances ?? []).filter((c) => c.status === 'ACTIVE').map((c) => c.productId),
+    (clearances ?? []).filter((c) => c.status === 'OPEN').map((c) => c.productId),
   )
   const visibleProducts = (products ?? []).filter(
     (p) => filter === 'all' || p.category === filter,
   )
   const productsEmpty = !loadingProducts && !productsError && visibleProducts.length === 0
 
-  const liveDeals = (clearances ?? []).filter((c) => c.status === 'ACTIVE')
-  const endedDeals = (clearances ?? []).filter((c) => c.status !== 'ACTIVE')
+  const liveDeals = (clearances ?? []).filter((c) => c.status === 'OPEN')
+  const endedDeals = (clearances ?? []).filter((c) => c.status !== 'OPEN')
 
   return (
     <ScreenContainer variant="tab">
@@ -103,7 +104,7 @@ export function ProductListPage() {
             to={ROUTES.PRODUCT_NEW}
             className="mx-5 mt-4 mb-1 flex h-12 items-center justify-center gap-1.5 rounded-[12px] border-[1.5px] border-dashed border-primary text-[14px] font-bold text-primary transition active:bg-secondary"
           >
-            <span aria-hidden>➕</span> 상품 등록하기
+            <Plus aria-hidden className="size-4" /> 상품 등록하기
           </Link>
 
           <div className="flex gap-1.5 overflow-x-auto px-5 pt-3 pb-1 [&::-webkit-scrollbar]:hidden">
@@ -137,13 +138,13 @@ export function ProductListPage() {
 
             {productsEmpty &&
               ((products?.length ?? 0) === 0 ? (
-                <EmptyState icon="🍞">
+                <EmptyState icon={<ShoppingBag />}>
                   아직 등록된 상품이 없어요.
                   <br />
                   첫 상품을 등록해 보세요.
                 </EmptyState>
               ) : (
-                <EmptyState icon="🍞">이 카테고리에는 상품이 없어요.</EmptyState>
+                <EmptyState icon={<ShoppingBag />}>이 카테고리에는 상품이 없어요.</EmptyState>
               ))}
 
             {visibleProducts.map((p) => (
@@ -169,7 +170,7 @@ export function ProductListPage() {
             to={ROUTES.CLEARANCE_NEW}
             className="mx-5 mt-4 mb-1 flex h-12 items-center justify-center gap-1.5 rounded-[12px] border-[1.5px] border-dashed border-primary text-[14px] font-bold text-primary transition active:bg-secondary"
           >
-            <span aria-hidden>🔥</span> 마감 할인 등록하기
+            <Flame aria-hidden className="size-4" /> 마감 할인 등록하기
           </Link>
 
           {loadingClearances && <ListRowSkeleton className="py-2" />}
@@ -184,7 +185,7 @@ export function ProductListPage() {
             !clearancesError &&
             liveDeals.length === 0 &&
             endedDeals.length === 0 && (
-              <EmptyState icon="🔥">
+              <EmptyState icon={<Flame />}>
                 진행 중인 마감 할인이 없어요.
                 <br />
                 판매 중인 상품을 마감 할인으로 등록해 보세요.

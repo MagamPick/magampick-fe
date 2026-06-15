@@ -9,7 +9,7 @@ import { toDealCardStatus } from '@/features/clearance/lib/clearanceStatus'
 export function HomeDealList() {
   const storeId = useCurrentStoreStore((s) => s.selectedStoreId)
   const { data: clearances, isLoading } = useClearances(storeId)
-  const live = (clearances ?? []).filter((c) => c.status === 'ACTIVE')
+  const live = (clearances ?? []).filter((c) => c.status === 'OPEN')
 
   return (
     <section className="mx-5 mt-6">

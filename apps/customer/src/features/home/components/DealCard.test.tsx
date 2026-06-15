@@ -6,7 +6,7 @@ import { DealCard } from './DealCard'
 import type { ClosingDeal } from '../types'
 
 const deal: ClosingDeal = {
-  id: 'cd-1',
+  id: 1,
   storeName: '브레드샵',
   productName: '크루아상 세트',
   imageUrl: null,
@@ -49,6 +49,6 @@ describe('DealCard', () => {
     renderCard()
 
     await user.click(screen.getByRole('button'))
-    expect(screen.getByTestId('loc')).toHaveTextContent('/product/deal/cd-1')
+    expect(screen.getByTestId('loc')).toHaveTextContent('/product/deal/1')
   })
 })

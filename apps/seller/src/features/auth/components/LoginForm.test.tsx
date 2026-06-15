@@ -46,11 +46,41 @@ describe('LoginForm', () => {
     await fillCredentials(user)
     await user.click(screen.getByRole('button', { name: '로그인' }))
 
-    // 사장 로그인은 이메일+비번만 (auth.md §6 — 카카오·상태유지 없음)
+    // 상태 유지 토글 기본 ON → keepSignedIn:true 와 함께 호출 (B1-5, 소비자와 동일)
     await waitFor(() =>
       expect(authApi.login).toHaveBeenCalledWith({
         email: 'owner@magampick.com',
         password: 'abcd1234!',
+        keepSignedIn: true,
+      }),
+    )
+  })
+
+  it('로그인상태유지_토글_기본ON_클릭시_OFF', async () => {
+    const user = userEvent.setup()
+    renderForm()
+
+    const toggle = screen.getByRole('checkbox', { name: '로그인 상태 유지' })
+    expect(toggle).toBeChecked()
+
+    await user.click(toggle)
+    expect(toggle).not.toBeChecked()
+  })
+
+  it('토글_OFF_후_제출_시_keepSignedIn_false_전송', async () => {
+    const user = userEvent.setup()
+    vi.mocked(authApi.login).mockResolvedValue({ accessToken: 'access-123' })
+    renderForm()
+
+    await user.click(screen.getByRole('checkbox', { name: '로그인 상태 유지' }))
+    await fillCredentials(user)
+    await user.click(screen.getByRole('button', { name: '로그인' }))
+
+    await waitFor(() =>
+      expect(authApi.login).toHaveBeenCalledWith({
+        email: 'owner@magampick.com',
+        password: 'abcd1234!',
+        keepSignedIn: false,
       }),
     )
   })

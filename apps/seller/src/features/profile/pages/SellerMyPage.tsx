@@ -1,3 +1,17 @@
+import {
+  Store,
+  MessageSquare,
+  ArrowLeftRight,
+  Wallet,
+  Bell,
+  Lock,
+  FileText,
+  Megaphone,
+  Headphones,
+  Info,
+  LogOut,
+  Trash2,
+} from 'lucide-react'
 import { ComingSoonProvider } from '@/shared/components/ComingSoonToast'
 import { ScreenContainer } from '@/shared/components/ScreenContainer'
 import { useComingSoon } from '@/shared/hooks/useComingSoon'
@@ -46,24 +60,24 @@ function SellerMyPageContent() {
       <SettlementSummaryCard className="mx-5 mt-1" />
 
       <MenuGroup title="매장 관리">
-        <MenuRow icon="🏪" label="보유 매장" to={ROUTES.STORE_MANAGE} />
-        <MenuRow icon="💬" label="리뷰 관리" to={ROUTES.REVIEWS} />
-        <MenuRow icon="💸" label="환불 관리" to={ROUTES.REFUNDS} />
-        <MenuRow icon="💰" label="정산 내역" to={ROUTES.SETTLEMENT} />
+        <MenuRow icon={<Store />} label="보유 매장" to={ROUTES.STORE_MANAGE} />
+        <MenuRow icon={<MessageSquare />} label="리뷰 관리" to={ROUTES.REVIEWS} />
+        <MenuRow icon={<ArrowLeftRight />} label="환불 관리" to={ROUTES.REFUNDS} />
+        <MenuRow icon={<Wallet />} label="정산 내역" to={ROUTES.SETTLEMENT} />
       </MenuGroup>
 
       <MenuGroup title="설정">
-        <MenuRow icon="🔔" label="알림 설정" to={ROUTES.NOTIFICATION_SETTINGS} />
-        <MenuRow icon="🔒" label="비밀번호 변경" to={ROUTES.PASSWORD_CHANGE} />
-        <MenuRow icon="📄" label="약관 및 정책" onClick={soon} />
+        <MenuRow icon={<Bell />} label="알림 설정" to={ROUTES.NOTIFICATION_SETTINGS} />
+        <MenuRow icon={<Lock />} label="비밀번호 변경" to={ROUTES.PASSWORD_CHANGE} />
+        <MenuRow icon={<FileText />} label="약관 및 정책" to={ROUTES.TERMS} />
       </MenuGroup>
 
       <MenuGroup title="지원">
-        <MenuRow icon="📢" label="공지사항" to={ROUTES.NOTICES} />
-        <MenuRow icon="🎧" label="고객센터" to={ROUTES.SUPPORT} />
-        <MenuRow icon="ℹ️" label="앱 버전" value="v1.0.0" />
-        <MenuRow icon="🚪" label="로그아웃" danger onClick={handleLogout} />
-        <MenuRow icon="🗑️" label="회원 탈퇴" danger onClick={soon} />
+        <MenuRow icon={<Megaphone />} label="공지사항" to={ROUTES.NOTICES} />
+        <MenuRow icon={<Headphones />} label="고객센터" to={ROUTES.SUPPORT} />
+        <MenuRow icon={<Info />} label="앱 버전" value="v1.0.0" />
+        <MenuRow icon={<LogOut />} label="로그아웃" danger onClick={handleLogout} />
+        <MenuRow icon={<Trash2 />} label="회원 탈퇴" danger onClick={soon} />
       </MenuGroup>
     </ScreenContainer>
   )

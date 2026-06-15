@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router'
-import { ChevronLeft } from 'lucide-react'
+import { ChevronLeft, Megaphone } from 'lucide-react'
 import { ScreenContainer } from '@/shared/components/ScreenContainer'
 import { EmptyState } from '@/shared/components/EmptyState'
 import { ErrorState } from '@/shared/components/ErrorState'
@@ -37,7 +37,7 @@ export function NoticeListPage() {
         ) : notices && notices.length > 0 ? (
           <NoticeAccordion notices={notices} />
         ) : (
-          <EmptyState icon="📢">공지사항이 없어요.</EmptyState>
+          <EmptyState icon={<Megaphone />}>공지사항이 없어요.</EmptyState>
         )}
       </main>
     </ScreenContainer>

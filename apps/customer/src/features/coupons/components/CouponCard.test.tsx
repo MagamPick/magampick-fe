@@ -4,9 +4,9 @@ import { CouponCard } from './CouponCard'
 import type { Coupon } from '../types'
 
 const coupon = (over: Partial<Coupon> = {}): Coupon => ({
-  id: 'cp1',
-  status: 'usable',
-  discountType: 'rate',
+  id: 1,
+  status: 'USABLE',
+  discountType: 'RATE',
   value: 30,
   minOrder: 5000,
   label: '신규 가입 축하 쿠폰',
@@ -23,8 +23,8 @@ describe('CouponCard', () => {
     expect(screen.getByText('~ 2026-06-30')).toBeInTheDocument()
   })
 
-  it('정액 할인값을 표시', () => {
-    render(<CouponCard coupon={coupon({ discountType: 'amount', value: 2000 })} />)
+  it('정액(AMOUNT) 할인값을 표시', () => {
+    render(<CouponCard coupon={coupon({ discountType: 'AMOUNT', value: 2000 })} />)
     expect(screen.getByText('2,000원')).toBeInTheDocument()
   })
 
@@ -33,10 +33,10 @@ describe('CouponCard', () => {
     expect(screen.getByText('최소 주문 없음')).toBeInTheDocument()
   })
 
-  it('사용 완료 / 만료 상태 태그', () => {
-    const { rerender } = render(<CouponCard coupon={coupon({ status: 'used' })} />)
+  it('사용 완료(USED) / 만료(EXPIRED) 상태 태그', () => {
+    const { rerender } = render(<CouponCard coupon={coupon({ status: 'USED' })} />)
     expect(screen.getByText('사용 완료')).toBeInTheDocument()
-    rerender(<CouponCard coupon={coupon({ status: 'expired' })} />)
+    rerender(<CouponCard coupon={coupon({ status: 'EXPIRED' })} />)
     expect(screen.getByText('만료')).toBeInTheDocument()
   })
 })

@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import { cn } from '@/shared/lib/utils'
 import type { DeltaTone } from '../lib/analyticsFormat'
 
@@ -15,8 +16,8 @@ const DELTA_TONE_LABEL: Record<DeltaTone, string> = {
 
 interface Props {
   label: string
-  /** 큰 숫자 표시값 (이미 포맷됨 — "₩380,000", "⭐ 4.8") */
-  value: string
+  /** 큰 숫자 표시값 (이미 포맷됨 — "₩380,000", 또는 아이콘+숫자 ReactNode) */
+  value: ReactNode
   /** 전기 대비 증감 (매출 패널만; 리뷰 등은 생략) */
   delta?: { tone: DeltaTone; arrow: string; text: string }
 }

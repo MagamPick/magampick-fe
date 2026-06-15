@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Navigate, useNavigate, useParams } from 'react-router'
-import { ChevronLeft, Phone } from 'lucide-react'
+import { ChevronLeft, Phone, ReceiptText, User } from 'lucide-react'
 import { cn } from '@/shared/lib/utils'
 import { ROUTES } from '@/shared/lib/routes'
 import { ConfirmSheet } from '@/shared/components/ConfirmSheet'
@@ -45,7 +45,9 @@ export function OrderDetailPage() {
   const params = useParams()
   const parsed = orderParamsSchema.safeParse(params)
   const id = parsed.success ? parsed.data.id : ''
-  const storeId = useCurrentStoreStore((s) => s.selectedStoreId)
+  const _storeIdNum = useCurrentStoreStore((s) => s.selectedStoreId)
+  // 매장 ID(number)를 URL 보간용 string 으로 변환 (실연동 완료)
+  const storeId = _storeIdNum != null ? String(_storeIdNum) : ''
 
   const { data: order, isLoading, isError, refetch } = useOrder(id)
   const actions = useOrderActions(storeId)
@@ -76,7 +78,7 @@ export function OrderDetailPage() {
       )}
 
       {!isLoading && (isError || !order) && (
-        <ErrorState icon="🧾" onRetry={() => refetch()}>
+        <ErrorState icon={<ReceiptText />} onRetry={() => refetch()}>
           주문을 찾을 수 없어요.
         </ErrorState>
       )}
@@ -126,8 +128,8 @@ export function OrderDetailPage() {
             <section className="mt-3 rounded-[16px] border border-border bg-card px-[18px] py-4">
               <div className="mb-2.5 text-[13px] font-bold text-muted-foreground">고객 정보</div>
               <div className="mb-2.5 flex items-center gap-3 rounded-xl bg-background p-3.5">
-                <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#ffd9c7] to-[#ffb088] text-[22px]">
-                  👤
+                <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#ffd9c7] to-[#ffb088]">
+                  <User className="size-5 text-secondary-foreground" />
                 </span>
                 <div className="min-w-0 flex-1">
                   <div className="truncate text-[14px] font-bold text-foreground">

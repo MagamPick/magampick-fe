@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { nullableString } from '@/shared/lib/zodNullable'
 
 /**
  * 소비자 프로필(마이페이지) 도메인 타입 / Zod 스키마.
@@ -6,6 +7,20 @@ import { z } from 'zod'
  * - 프로필 수정 범위 = 닉네임 조회·수정 (노션 "소비자 프로필 관리"). 사진·전화·주소는 비범위.
  * - 통계(이번 달 절약·구한 음식·단골)는 주문/단골 도메인 연동 전까지 mock (profileApi 참조).
  */
+
+/** BE CustomerProfileResponse DTO 스키마 (GET /customers/me, PATCH /customers/me 공통) */
+export const profileResponseSchema = z.object({
+  id: z.number(),
+  email: z.string(),
+  nickname: z.string(),
+  phone: z.string().nullable().optional(), // 가입 직후 null 가능
+  phoneVerifiedAt: nullableString(),
+  createdAt: nullableString(),
+})
+export type ProfileResponse = z.infer<typeof profileResponseSchema>
+
+/** 클라이언트 기본 아바타 이모지 (BE 아바타 필드 없음 — 사진 업로드는 비범위) */
+export const DEFAULT_AVATAR_EMOJI = '🐶'
 
 /** 닉네임 2~12자 (노션 AC) — 중복 허용 */
 export const nicknameSchema = z
@@ -17,18 +32,29 @@ export const nicknameSchema = z
 export const profileSchema = z.object({
   nickname: z.string(),
   email: z.string(), // 대표 이메일 = 계정 식별자 (읽기 전용)
-  phone: z.string(), // 휴대폰 번호 (표시용 — 변경은 비범위, OTP 별도)
+  phone: z.string(), // 휴대폰 번호 (표시용 — BE null → '' 변환, 변경은 비범위)
   avatarEmoji: z.string(), // 아바타 이모지 (사진 업로드는 비범위)
 })
 export type Profile = z.infer<typeof profileSchema>
 
-/** 마이페이지 통계 (mock — 주문/단골 도메인 연동 시 교체) */
+/** 마이페이지 통계 (GET /customers/me/stats 매핑 결과) */
 export const profileStatsSchema = z.object({
-  monthlySavings: z.number(), // 이번 달 절약 (원)
-  rescuedCount: z.number(), // 구한 음식 (개)
+  monthlySavings: z.number(), // 이번 달 절약 (원) — BE: 마감할인 합
+  rescuedCount: z.number(), // 구한 음식 (개) — BE: 누적
   favoriteCount: z.number(), // 단골 가게 (곳)
 })
 export type ProfileStats = z.infer<typeof profileStatsSchema>
+
+/**
+ * BE CustomerStatsResponse DTO (GET /customers/me/stats).
+ * 세 값 모두 BE 가 0 보장하나, 생성 스펙상 optional + 과거 null 사례가 있어 nullish 로 받고 매핑 시 ?? 0.
+ */
+export const customerStatsResponseSchema = z.object({
+  monthlySavings: z.number().nullish(),
+  rescuedCount: z.number().nullish(),
+  favoriteCount: z.number().nullish(),
+})
+export type CustomerStatsResponse = z.infer<typeof customerStatsResponseSchema>
 
 /** 닉네임 수정 폼 (react-hook-form) */
 export const nicknameFormSchema = z.object({

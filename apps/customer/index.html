@@ -2,8 +2,14 @@
 <html lang="ko">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/png" href="/favicon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- PWA (pwa-convention §3). manifest 링크/SW 등록은 vite-plugin-pwa 가 자동 주입. iOS 는 아래 메타 필요. -->
+    <meta name="theme-color" content="#ff6b35" />
+    <link rel="apple-touch-icon" href="/icons/icon-192.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="마감픽" />
     <link
       rel="stylesheet"
       as="style"
@@ -15,6 +21,8 @@
       type="text/javascript"
       src="//dapi.kakao.com/v2/maps/sdk.js?appkey=%VITE_KAKAO_MAP_KEY%&autoload=false"
     ></script>
+    <!-- Daum 우편번호 서비스 — 회원가입/주소 입력에서 도로명주소와 지오코딩 키를 받는다. -->
+    <script src="//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
     <title>마감픽</title>
   </head>
   <body>

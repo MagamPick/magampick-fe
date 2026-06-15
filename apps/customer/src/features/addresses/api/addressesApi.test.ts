@@ -1,172 +1,177 @@
-import { describe, it, expect, beforeEach } from 'vitest'
-import { addressesApi, __resetAddressesStoreForTest } from './addressesApi'
-import { ADDRESS_ERROR, MAX_ADDRESSES, type Address } from '../types'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { ApiError } from '@/shared/lib/apiError'
 
-/** 테스트용 주소 빌더 */
-const addr = (over: Partial<Address> = {}): Address => ({
-  id: 'a1',
+// apiClient 목킹 — axios 인스턴스를 간단한 vi.fn() 객체로 대체
+vi.mock('@/shared/lib/axios', () => ({
+  apiClient: {
+    get: vi.fn(),
+    post: vi.fn(),
+    patch: vi.fn(),
+    delete: vi.fn(),
+  },
+}))
+
+import { apiClient } from '@/shared/lib/axios'
+import { addressesApi } from './addressesApi'
+
+/** BE AddressResponse 픽처 */
+const addressFixture = {
+  id: 1,
   label: '우리집',
   roadAddress: '서울 마포구 양화로 23',
-  detail: '101동 1203호',
+  detailAddress: '101동 1203호',
+  jibunAddress: '서울 마포구 서교동 123-1',
+  zonecode: '04031',
   latitude: 37.556,
   longitude: 126.923,
   isDefault: true,
-  ...over,
-})
+}
 
-/** 유효한 추가 입력 */
-const validInput = (over: Partial<Parameters<typeof addressesApi.create>[0]> = {}) => ({
-  roadAddress: '서울 마포구 와우산로 94',
-  latitude: 37.5512,
-  longitude: 126.9246,
-  label: '새집',
-  detail: '202호',
-  ...over,
-})
+describe('addressesApi (실 BE 연동)', () => {
+  beforeEach(() => vi.clearAllMocks())
 
-describe('addressesApi (mock)', () => {
-  beforeEach(() => __resetAddressesStoreForTest())
+  describe('list', () => {
+    it('GET /customers/me/addresses 를 호출하고 id 가 number 인 Address[] 반환', async () => {
+      vi.mocked(apiClient.get).mockResolvedValue({ data: [addressFixture] })
+      const result = await addressesApi.list()
+      expect(apiClient.get).toHaveBeenCalledWith('/customers/me/addresses')
+      expect(result).toHaveLength(1)
+      expect(result[0].id).toBe(1)
+      expect(typeof result[0].id).toBe('number')
+    })
 
-  describe('list / 기본 불변식', () => {
-    it('주소 목록을 반환하고 기본 주소는 정확히 1개', async () => {
-      const list = await addressesApi.list()
-      expect(list.length).toBeGreaterThanOrEqual(1)
-      expect(list.filter((a) => a.isDefault)).toHaveLength(1)
+    it('detailAddress 없으면 빈 문자열로 정규화', async () => {
+      const noDetail = { ...addressFixture, detailAddress: undefined }
+      vi.mocked(apiClient.get).mockResolvedValue({ data: [noDetail] })
+      const result = await addressesApi.list()
+      expect(result[0].detailAddress).toBe('')
+    })
+
+    it('jibunAddress 가 null 이어도 throw 없이 undefined 로 정규화 (BE jibunAddress: null)', async () => {
+      const nullJibun = { ...addressFixture, jibunAddress: null }
+      vi.mocked(apiClient.get).mockResolvedValue({ data: [nullJibun] })
+      const result = await addressesApi.list()
+      expect(result[0].jibunAddress).toBeUndefined()
+    })
+
+    it('zonecode 가 null 이어도 throw 없이 undefined 로 정규화한다 (BE null-trap 회귀)', async () => {
+      const nullZonecode = { ...addressFixture, zonecode: null }
+      vi.mocked(apiClient.get).mockResolvedValue({ data: [nullZonecode] })
+      const result = await addressesApi.list()
+      expect(result[0].zonecode).toBeUndefined()
+    })
+
+    it('createdAt · updatedAt 이 null 이어도 throw 없이 undefined 로 정규화한다', async () => {
+      const nullDates = { ...addressFixture, createdAt: null, updatedAt: null }
+      vi.mocked(apiClient.get).mockResolvedValue({ data: [nullDates] })
+      const result = await addressesApi.list()
+      expect(result[0].createdAt).toBeUndefined()
+      expect(result[0].updatedAt).toBeUndefined()
+    })
+
+    it('isDefault 가 boolean 으로 파싱됨', async () => {
+      vi.mocked(apiClient.get).mockResolvedValue({ data: [addressFixture] })
+      const result = await addressesApi.list()
+      expect(typeof result[0].isDefault).toBe('boolean')
     })
   })
 
   describe('create', () => {
-    it('추가 성공 시 목록 개수가 1 증가한다', async () => {
-      const before = (await addressesApi.list()).length
-      const created = await addressesApi.create(validInput())
-      expect(created.id).toBeTruthy()
-      expect((await addressesApi.list()).length).toBe(before + 1)
+    it('POST /customers/me/addresses 에 sigunguCode·roadnameCode 포함 전송, Address 반환', async () => {
+      vi.mocked(apiClient.post).mockResolvedValue({ data: { ...addressFixture, isDefault: false, id: 2 } })
+      const input = {
+        label: '새집',
+        roadAddress: '서울 마포구 와우산로 94',
+        jibunAddress: '서울 마포구 서교동 357-2',
+        zonecode: '04067',
+        sigunguCode: '11440',
+        roadnameCode: '114403003003',
+        detailAddress: '202호',
+      }
+      const result = await addressesApi.create(input)
+      expect(apiClient.post).toHaveBeenCalledWith('/customers/me/addresses', input)
+      expect(typeof result.id).toBe('number')
     })
 
-    it('첫 주소(빈 목록에서 추가)는 자동으로 기본이 된다', async () => {
-      __resetAddressesStoreForTest([])
-      const created = await addressesApi.create(validInput())
-      expect(created.isDefault).toBe(true)
-    })
-
-    it('이미 주소가 있으면 새 주소는 기본이 아니다', async () => {
-      const created = await addressesApi.create(validInput())
-      expect(created.isDefault).toBe(false)
-    })
-
-    it('최대 3개 초과(4개째)면 ADDRESS_LIMIT_EXCEEDED', async () => {
-      __resetAddressesStoreForTest([
-        addr({ id: 'a1', isDefault: true }),
-        addr({ id: 'a2', isDefault: false }),
-        addr({ id: 'a3', isDefault: false }),
-      ])
-      expect((await addressesApi.list()).length).toBe(MAX_ADDRESSES)
-      await expect(addressesApi.create(validInput())).rejects.toMatchObject({
-        code: ADDRESS_ERROR.LIMIT_EXCEEDED,
-      })
-    })
-
-    it('별칭이 10자 초과면 ALIAS_LENGTH', async () => {
-      await expect(
-        addressesApi.create(validInput({ label: '12345678901' })),
-      ).rejects.toMatchObject({ code: ADDRESS_ERROR.ALIAS_LENGTH })
-    })
-
-    it('별칭이 비어있으면 ALIAS_LENGTH', async () => {
-      await expect(addressesApi.create(validInput({ label: '' }))).rejects.toMatchObject({
-        code: ADDRESS_ERROR.ALIAS_LENGTH,
-      })
-    })
-
-    it('좌표가 없으면 GEOCODING_FAILED', async () => {
-      await expect(
-        addressesApi.create(validInput({ latitude: Number.NaN, longitude: Number.NaN })),
-      ).rejects.toMatchObject({ code: ADDRESS_ERROR.GEOCODING_FAILED })
-    })
-  })
-
-  describe('setDefault', () => {
-    it('다른 주소를 기본으로 선택하면 기존 기본은 즉시 해제되어 항상 1개만 기본', async () => {
-      const list = await addressesApi.list()
-      const nonDefault = list.find((a) => !a.isDefault)!
-      await addressesApi.setDefault(nonDefault.id)
-      const after = await addressesApi.list()
-      expect(after.filter((a) => a.isDefault)).toHaveLength(1)
-      expect(after.find((a) => a.id === nonDefault.id)!.isDefault).toBe(true)
+    it('GPS 경로: roadAddress + 좌표(latitude/longitude) 전송(코드 미전송), 201 반환', async () => {
+      vi.mocked(apiClient.post).mockResolvedValue({ data: { ...addressFixture, id: 3 } })
+      const input = {
+        label: '현재위치',
+        roadAddress: '서울 마포구 양화로 45',
+        latitude: 37.5571,
+        longitude: 126.925,
+      }
+      await addressesApi.create(input)
+      expect(apiClient.post).toHaveBeenCalledWith('/customers/me/addresses', input)
     })
   })
 
   describe('update', () => {
-    it('별칭·상세·도로명·좌표를 변경한다 (노션 2026-05-31: 도로명 수정 허용)', async () => {
-      const target = (await addressesApi.list()).find((a) => !a.isDefault)!
-      const updated = await addressesApi.update(target.id, {
-        roadAddress: '서울 종로구 세종대로 1',
-        latitude: 37.5717,
-        longitude: 126.9769,
-        label: '직장',
-        detail: '9층',
-      })
-      expect(updated.label).toBe('직장')
-      expect(updated.detail).toBe('9층')
-      expect(updated.roadAddress).toBe('서울 종로구 세종대로 1')
-      expect(updated.latitude).toBe(37.5717)
+    it('PATCH /customers/me/addresses/:id 호출, 수정된 Address 반환', async () => {
+      vi.mocked(apiClient.patch).mockResolvedValue({ data: { ...addressFixture, label: '직장' } })
+      const input = { label: '직장', detailAddress: '9층' }
+      const result = await addressesApi.update(1, input)
+      expect(apiClient.patch).toHaveBeenCalledWith('/customers/me/addresses/1', input)
+      expect(result.label).toBe('직장')
     })
 
-    it('없는 주소 수정은 ADDRESS_NOT_FOUND', async () => {
-      await expect(
-        addressesApi.update('nope', {
-          roadAddress: '서울 종로구 세종대로 1',
-          latitude: 37.5717,
-          longitude: 126.9769,
-          label: '집',
-          detail: '',
-        }),
-      ).rejects.toMatchObject({ code: ADDRESS_ERROR.NOT_FOUND })
+    it('도로명 변경 수정 시 sigunguCode·roadnameCode 동반', async () => {
+      vi.mocked(apiClient.patch).mockResolvedValue({
+        data: { ...addressFixture, roadAddress: '서울 종로구 세종대로 1' },
+      })
+      const input = {
+        label: '직장',
+        roadAddress: '서울 종로구 세종대로 1',
+        sigunguCode: '11110',
+        roadnameCode: '111102003001',
+      }
+      await addressesApi.update(1, input)
+      expect(apiClient.patch).toHaveBeenCalledWith('/customers/me/addresses/1', input)
     })
   })
 
   describe('remove', () => {
-    it('기본 주소 삭제는 DEFAULT_ADDRESS_DELETE_BLOCKED', async () => {
-      const def = (await addressesApi.list()).find((a) => a.isDefault)!
-      await expect(addressesApi.remove(def.id)).rejects.toMatchObject({
-        code: ADDRESS_ERROR.DEFAULT_DELETE_BLOCKED,
-      })
-    })
-
-    it('기본이 아닌 주소는 삭제되어 개수가 1 감소', async () => {
-      const before = await addressesApi.list()
-      const nonDefault = before.find((a) => !a.isDefault)!
-      await addressesApi.remove(nonDefault.id)
-      const after = await addressesApi.list()
-      expect(after.length).toBe(before.length - 1)
-      expect(after.find((a) => a.id === nonDefault.id)).toBeUndefined()
-    })
-
-    it('마지막 1개 주소 삭제는 LAST_ADDRESS_DELETE_BLOCKED', async () => {
-      __resetAddressesStoreForTest([addr({ id: 'only', isDefault: true })])
-      await expect(addressesApi.remove('only')).rejects.toMatchObject({
-        code: ADDRESS_ERROR.LAST_DELETE_BLOCKED,
-      })
+    it('DELETE /customers/me/addresses/:id 호출, void 반환 (204 바디 없음)', async () => {
+      vi.mocked(apiClient.delete).mockResolvedValue({ data: undefined })
+      const result = await addressesApi.remove(1)
+      expect(apiClient.delete).toHaveBeenCalledWith('/customers/me/addresses/1')
+      expect(result).toBeUndefined()
     })
   })
 
-  describe('searchAddress / reverseGeocodeCurrentPosition', () => {
-    it('검색어가 있으면 좌표 포함 결과를 반환한다', async () => {
-      const results = await addressesApi.searchAddress('마포')
-      expect(results.length).toBeGreaterThan(0)
-      expect(Number.isFinite(results[0].latitude)).toBe(true)
-      expect(Number.isFinite(results[0].longitude)).toBe(true)
+  describe('setDefault', () => {
+    it('POST /customers/me/addresses/:id/default 호출', async () => {
+      vi.mocked(apiClient.post).mockResolvedValue({ data: {} })
+      await addressesApi.setDefault(2)
+      expect(apiClient.post).toHaveBeenCalledWith('/customers/me/addresses/2/default')
+    })
+  })
+
+  describe('reverseGeocode', () => {
+    it('POST /customers/me/addresses/reverse-geocode 에 좌표 전송, {roadAddress} 반환', async () => {
+      vi.mocked(apiClient.post).mockResolvedValue({ data: { roadAddress: '서울 마포구 양화로 45' } })
+      const result = await addressesApi.reverseGeocode({ latitude: 37.5571, longitude: 126.925 })
+      expect(apiClient.post).toHaveBeenCalledWith('/customers/me/addresses/reverse-geocode', {
+        latitude: 37.5571,
+        longitude: 126.925,
+      })
+      expect(result.roadAddress).toBe('서울 마포구 양화로 45')
+    })
+  })
+
+  describe('에러 전파', () => {
+    it('apiClient 에러는 ApiError 로 전파된다 (인터셉터 정규화 결과)', async () => {
+      const err = new ApiError(404, 'ADDRESS_NOT_FOUND', '주소를 찾을 수 없어요')
+      vi.mocked(apiClient.get).mockRejectedValue(err)
+      await expect(addressesApi.list()).rejects.toMatchObject({ code: 'ADDRESS_NOT_FOUND' })
     })
 
-    it('빈 검색어는 빈 배열', async () => {
-      expect(await addressesApi.searchAddress('   ')).toEqual([])
-    })
-
-    it('현재 위치 역지오코딩은 도로명+좌표를 반환한다', async () => {
-      const pos = await addressesApi.reverseGeocodeCurrentPosition()
-      expect(pos.roadAddress).toBeTruthy()
-      expect(Number.isFinite(pos.latitude)).toBe(true)
-      expect(Number.isFinite(pos.longitude)).toBe(true)
+    it('delete 에러도 ApiError 로 전파된다', async () => {
+      const err = new ApiError(409, 'DEFAULT_ADDRESS_DELETE_BLOCKED', '기본 주소는 삭제할 수 없어요')
+      vi.mocked(apiClient.delete).mockRejectedValue(err)
+      await expect(addressesApi.remove(1)).rejects.toMatchObject({
+        code: 'DEFAULT_ADDRESS_DELETE_BLOCKED',
+      })
     })
   })
 })

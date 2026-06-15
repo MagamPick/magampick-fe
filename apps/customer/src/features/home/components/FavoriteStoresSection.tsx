@@ -1,17 +1,20 @@
+import { Heart } from 'lucide-react'
 import { ROUTES } from '@/shared/lib/routes'
 import { useFavorites } from '@/features/favorites/hooks/useFavorites'
 import { FavoriteStoreCard } from './FavoriteStoreCard'
 import { SectionEmpty } from './SectionEmpty'
 import { SectionHeader } from './SectionHeader'
 
-/** ② 내 단골 가게 — 단골 목록(단일 소스) 상위 4개 프리뷰. 더보기 → 단골 탭. 추가/해제는 매장 상세에서. */
+/** ② 내 단골 가게 — 단골 목록(단일 소스) 중 5km 이내 상위 4개 프리뷰. 더보기 → 단골 탭. */
 export function FavoriteStoresSection() {
   const { data, isPending, isError } = useFavorites()
-  const stores = data?.stores.slice(0, 4) ?? []
+  // 5km 이내 필터 (BE 단골 API 는 반경 제한 없이 전체 단골 반환 — 홈은 근처만 노출)
+  // activeDealCount>0 우선 정렬은 BE 가 이미 처리 ("떨이 활성 우선 → 등록순")
+  const stores = (data?.stores ?? []).filter((s) => s.distanceKm <= 5).slice(0, 4)
 
   return (
     <section className="px-5 pt-[22px]">
-      <SectionHeader title="⭐ 내 단골 가게" moreTo={ROUTES.FAVS} />
+      <SectionHeader title={<span className="inline-flex items-center gap-1.5"><Heart aria-hidden className="size-[14px] fill-primary text-primary" />내 단골 가게</span>} moreTo={ROUTES.FAVS} />
       {isPending ? (
         <div className="grid grid-cols-2 gap-[10px]">
           {[0, 1].map((i) => (

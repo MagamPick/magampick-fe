@@ -11,7 +11,7 @@ describe('useBusinessCheck', () => {
   beforeEach(() => vi.clearAllMocks())
 
   it('정상_사업자_조회_성공', async () => {
-    vi.mocked(authApi.checkBusinessNumber).mockResolvedValue({ verified: true })
+    vi.mocked(authApi.checkBusinessNumber).mockResolvedValue(undefined)
     const { result } = renderHook(() => useBusinessCheck(), { wrapper: createQueryWrapper() })
 
     result.current.mutate({
@@ -21,7 +21,6 @@ describe('useBusinessCheck', () => {
     })
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true))
-    expect(result.current.data?.verified).toBe(true)
   })
 
   it('조회되지_않는_사업자_에러', async () => {

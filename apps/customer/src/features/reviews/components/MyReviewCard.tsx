@@ -1,4 +1,5 @@
 import { Link } from 'react-router'
+import { Store } from 'lucide-react'
 import { ROUTES } from '@/shared/lib/routes'
 import type { MyReview } from '../types'
 
@@ -30,8 +31,8 @@ export function MyReviewCard({ review, onEdit, onDelete }: Props) {
     <div className="mb-2 rounded-[12px] border border-border bg-card px-[14px] py-[13px]">
       {/* 매장 헤더 */}
       <div className="flex items-center gap-2">
-        <span className="flex size-7 items-center justify-center rounded-lg bg-cream text-[15px]">
-          {review.storeEmoji}
+        <span className="flex size-7 items-center justify-center rounded-lg bg-cream">
+          <Store className="size-[18px] text-secondary-foreground" />
         </span>
         <span className="min-w-0 flex-1 truncate text-[13px] font-extrabold">
           {review.storeName}

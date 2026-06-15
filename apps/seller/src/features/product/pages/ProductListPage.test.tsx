@@ -31,23 +31,22 @@ function renderPage(initial = '/products') {
 }
 
 const product: Product = {
-  id: 'p1',
-  storeId: 's1',
+  id: 1,
+  storeId: 1,
   name: '통밀 식빵',
-  category: '베이커리',
+  category: 'BAKERY',
   price: 4800,
   onSale: true,
 }
 
 const liveClearance: ClearanceView = {
-  id: 'c1',
-  storeId: 's1',
-  productId: 'p1',
+  id: 1,
+  productId: 1,
   salePrice: 2400,
   totalQty: 20,
   soldQty: 8,
   closeTime: '21:00',
-  status: 'ACTIVE',
+  status: 'OPEN',
   createdAt: '2026-06-01T08:00:00.000Z',
   productName: '통밀 식빵',
   originalPrice: 4800,
@@ -86,7 +85,7 @@ describe('ProductListPage', () => {
   it('일반 상품을 카드로 보여주고 판매 상태 배지를 표시한다', () => {
     mockProducts([
       product,
-      { id: 'p2', storeId: 's1', name: '카페라떼', category: '음료', price: 4000, onSale: false },
+      { id: 2, storeId: 1, name: '카페라떼', category: 'BEVERAGE', price: 4000, onSale: false },
     ])
     renderPage()
     expect(screen.getByText('통밀 식빵')).toBeInTheDocument()
@@ -104,7 +103,7 @@ describe('ProductListPage', () => {
   it('상품 카드를 누르면 상품 상세로 연결된다', () => {
     mockProducts([product])
     renderPage()
-    expect(screen.getByRole('link', { name: /통밀 식빵/ })).toHaveAttribute('href', '/products/p1')
+    expect(screen.getByRole('link', { name: /통밀 식빵/ })).toHaveAttribute('href', '/products/1')
   })
 
   it('마감 할인 탭으로 전환하면 떨이 등록 CTA 와 진행중 떨이가 보인다', async () => {

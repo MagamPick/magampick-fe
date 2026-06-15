@@ -11,7 +11,7 @@ vi.mock('react-router', async (orig) => ({
 }))
 
 const base: StoreListItem = {
-  id: 'st-1',
+  id: 1,
   name: '브레드샵',
   imageUrl: null,
   distanceKm: 0.3,
@@ -31,7 +31,7 @@ describe('StoreListCard', () => {
     expect(screen.getByText('0.3km · ★ 4.6')).toBeInTheDocument()
 
     await user.click(screen.getByRole('button'))
-    expect(mockNavigate).toHaveBeenCalledWith('/store/st-1')
+    expect(mockNavigate).toHaveBeenCalledWith('/store/1')
   })
 
   it('진행중_할인_있으면_표시_0건이면_생략', () => {

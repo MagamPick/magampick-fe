@@ -1,8 +1,9 @@
 import { cn } from '@/shared/lib/utils'
+import { formatDistance } from '@/shared/lib/formatDistance'
 import type { StoreDetail } from '../types'
 import { businessStatusLabel, businessStatusTone } from '../lib/businessStatus'
 
-/** 매장명 + 한 줄 메타 (영업상태 라벨 · 마감 시각 · 평점(리뷰수) · 거리) */
+/** 매장명 + 한 줄 메타 (영업상태 라벨 · 마감 시각(오늘 휴무면 생략) · 평점(리뷰수) · 거리) */
 export function StoreHeadMeta({ store }: { store: StoreDetail }) {
   return (
     <div className="px-5 pb-1 pt-4">
@@ -11,14 +12,18 @@ export function StoreHeadMeta({ store }: { store: StoreDetail }) {
         <span className={cn('font-bold', businessStatusTone(store.businessStatus))}>
           {businessStatusLabel(store.businessStatus)}
         </span>
-        <Dot />
-        <span>{store.closingTime} 마감</span>
+        {store.closingTime && (
+          <>
+            <Dot />
+            <span>{store.closingTime} 마감</span>
+          </>
+        )}
         <Dot />
         <span>
           ★ {store.rating} ({store.reviewCount})
         </span>
         <Dot />
-        <span>{store.distanceKm}km</span>
+        <span>{formatDistance(store.distanceKm)}</span>
       </div>
     </div>
   )

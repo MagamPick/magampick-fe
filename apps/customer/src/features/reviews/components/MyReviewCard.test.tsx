@@ -10,7 +10,6 @@ const base: MyReview = {
   id: 'rv-1',
   storeId: 'st-1',
   storeName: '브레드샵',
-  storeEmoji: '🥐',
   items: [
     { productId: 'sd-1', kind: 'deal', name: '크루아상 세트' },
     { productId: 'mn-1', kind: 'menu', name: '플레인 크루아상' },

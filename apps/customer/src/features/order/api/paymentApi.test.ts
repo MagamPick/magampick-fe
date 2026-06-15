@@ -1,0 +1,189 @@
+import { describe, it, expect, vi } from 'vitest'
+import { paymentApi, mapToClientOrder, type TossConfirmResponse } from './paymentApi'
+import { apiClient } from '@/shared/lib/axios'
+
+vi.mock('@/shared/lib/axios', () => ({
+  apiClient: { post: vi.fn() },
+}))
+const mockedPost = vi.mocked(apiClient.post)
+
+const mockOrderResponse: TossConfirmResponse = {
+  id: 42,
+  orderNo: '0042',
+  storeId: 1,
+  storeName: '브레드샵',
+  storePhone: '02-1234-5678',
+  items: [
+    {
+      id: 10,
+      kind: 'DEAL',
+      name: '크루아상 세트',
+      imageUrl: null,
+      originalPrice: 10000,
+      salePrice: 6000,
+      qty: 2,
+    },
+  ],
+  pickup: { type: 'SLOT', time: '18:30' },
+  memo: '포장 부탁드려요',
+  amounts: { normalTotal: 20000, discountTotal: 8000, payTotal: 12000 },
+  pickupCode: '3827',
+  status: 'PENDING',
+  paymentMethod: 'toss',
+  createdAt: '2026-06-10T10:00:00.000Z',
+}
+
+describe('paymentApi.confirm', () => {
+  it('POST /payments/toss/confirm 로 body 를 전달하고 응답을 Zod parse', async () => {
+    mockedPost.mockResolvedValueOnce({ data: mockOrderResponse })
+    const result = await paymentApi.confirm({ paymentKey: 'pk_123', orderId: 42, amount: 12000 })
+    expect(mockedPost).toHaveBeenCalledWith('/payments/toss/confirm', {
+      paymentKey: 'pk_123',
+      orderId: 42,
+      amount: 12000,
+    })
+    expect(result.id).toBe(42)
+    expect(result.storeName).toBe('브레드샵')
+  })
+})
+
+describe('mapToClientOrder', () => {
+  it('BE OrderResponse → 클라이언트 Order 타입으로 변환', () => {
+    const order = mapToClientOrder(mockOrderResponse)
+    expect(order.id).toBe('42')
+    expect(order.storeId).toBe('1')
+    expect(order.storeName).toBe('브레드샵')
+    expect(order.pickupCode).toBe('3827')
+    expect(order.status).toBe('PENDING')
+    expect(order.paymentMethod).toBe('toss')
+  })
+
+  it('items: id 문자열 변환 · kind 소문자 변환', () => {
+    const order = mapToClientOrder(mockOrderResponse)
+    expect(order.items[0].id).toBe('10')
+    expect(order.items[0].kind).toBe('deal')
+    expect(order.items[0].qty).toBe(2)
+  })
+
+  it('pickup SLOT → type slot + time 포함', () => {
+    const order = mapToClientOrder(mockOrderResponse)
+    expect(order.pickup.type).toBe('slot')
+    if (order.pickup.type === 'slot') {
+      expect(order.pickup.time).toBe('18:30')
+    }
+  })
+
+  it('pickup ASAP → type asap', () => {
+    const order = mapToClientOrder({ ...mockOrderResponse, pickup: { type: 'ASAP' } })
+    expect(order.pickup.type).toBe('asap')
+  })
+
+  it('amounts 정상가·할인·결제액 매핑', () => {
+    const order = mapToClientOrder(mockOrderResponse)
+    expect(order.amounts.normalTotal).toBe(20000)
+    expect(order.amounts.discountTotal).toBe(8000)
+    expect(order.amounts.payTotal).toBe(12000)
+  })
+
+  it('amounts 혜택 필드(couponDiscount·pointUsed·finalAmount) 를 매핑한다 (X1-BE 응답)', () => {
+    const res: TossConfirmResponse = {
+      ...mockOrderResponse,
+      amounts: {
+        normalTotal: 20000,
+        discountTotal: 8000,
+        payTotal: 12000,
+        couponDiscount: 2000,
+        pointUsed: 500,
+        finalAmount: 9500,
+      },
+    }
+    const order = mapToClientOrder(res)
+    expect(order.amounts.couponDiscount).toBe(2000)
+    expect(order.amounts.pointUsed).toBe(500)
+    expect(order.amounts.finalAmount).toBe(9500)
+  })
+
+  it('혜택 없는 응답이면 혜택 금액 필드는 undefined (하위호환)', () => {
+    const order = mapToClientOrder(mockOrderResponse)
+    expect(order.amounts.couponDiscount).toBeUndefined()
+    expect(order.amounts.pointUsed).toBeUndefined()
+    expect(order.amounts.finalAmount).toBeUndefined()
+  })
+
+  it('qty 범위 초과 시 1~10 클램핑', () => {
+    const res: TossConfirmResponse = {
+      ...mockOrderResponse,
+      items: [{ ...mockOrderResponse.items![0], qty: 15 }],
+    }
+    const order = mapToClientOrder(res)
+    expect(order.items[0].qty).toBe(10)
+  })
+
+  it('필수 필드 없을 때 기본값으로 구성', () => {
+    const order = mapToClientOrder({})
+    expect(order.id).toBe('0')
+    expect(order.storeName).toBe('')
+    expect(order.pickupCode).toBe('0000')
+    expect(order.status).toBe('PENDING')
+  })
+
+  it('completedAt 없고 cancelledAt 있으면 cancelledAt 을 completedAt 으로 흡수', () => {
+    const res: TossConfirmResponse = {
+      ...mockOrderResponse,
+      status: 'CANCELLED',
+      completedAt: undefined,
+      cancelledAt: '2026-06-10T11:00:00.000Z',
+    }
+    const order = mapToClientOrder(res)
+    expect(order.completedAt).toBe('2026-06-10T11:00:00.000Z')
+  })
+
+  it('completedAt 과 cancelledAt 둘 다 있으면 completedAt 우선', () => {
+    const res: TossConfirmResponse = {
+      ...mockOrderResponse,
+      completedAt: '2026-06-10T10:30:00.000Z',
+      cancelledAt: '2026-06-10T11:00:00.000Z',
+    }
+    const order = mapToClientOrder(res)
+    expect(order.completedAt).toBe('2026-06-10T10:30:00.000Z')
+  })
+
+  it('refund 있으면 도메인 Refund 로 매핑한다', () => {
+    const res: TossConfirmResponse = {
+      ...mockOrderResponse,
+      status: 'COMPLETED',
+      refund: {
+        status: 'REQUESTED',
+        reason: '상품 상태가 설명과 달라요.',
+        requestedAt: '2026-06-09T12:00:00.000Z',
+      },
+    }
+    const order = mapToClientOrder(res)
+    expect(order.refund?.status).toBe('REQUESTED')
+    expect(order.refund?.reason).toBe('상품 상태가 설명과 달라요.')
+    expect(order.refund?.requestedAt).toBe('2026-06-09T12:00:00.000Z')
+  })
+
+  it('refund REJECTED 이면 rejectReason 포함', () => {
+    const res: TossConfirmResponse = {
+      ...mockOrderResponse,
+      status: 'COMPLETED',
+      refund: {
+        status: 'REJECTED',
+        reason: '단순 변심이에요.',
+        requestedAt: '2026-06-08T12:00:00.000Z',
+        rejectReason: '이미 수령한 상품이에요.',
+        resolvedAt: '2026-06-09T09:00:00.000Z',
+      },
+    }
+    const order = mapToClientOrder(res)
+    expect(order.refund?.status).toBe('REJECTED')
+    expect(order.refund?.rejectReason).toBe('이미 수령한 상품이에요.')
+    expect(order.refund?.resolvedAt).toBe('2026-06-09T09:00:00.000Z')
+  })
+
+  it('refund 없으면 도메인 Order 의 refund 가 undefined', () => {
+    const order = mapToClientOrder(mockOrderResponse)
+    expect(order.refund).toBeUndefined()
+  })
+})

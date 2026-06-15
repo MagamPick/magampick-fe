@@ -11,7 +11,6 @@ vi.mock('../hooks/useMarkNotificationRead', () => ({
 const make = (id: string, title: string): Notification => ({
   id,
   category: 'notice',
-  icon: '📢',
   title,
   body: '본문',
   createdAt: new Date().toISOString(),

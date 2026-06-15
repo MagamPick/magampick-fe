@@ -16,14 +16,13 @@ import { ClearanceDetailPage } from './ClearanceDetailPage'
 import type { ClearanceView } from '../types'
 
 const active: ClearanceView = {
-  id: 'c1',
-  storeId: 's1',
-  productId: 'p1',
+  id: 1,
+  productId: 1,
   salePrice: 2400,
   totalQty: 20,
   soldQty: 8,
   closeTime: '21:00',
-  status: 'ACTIVE',
+  status: 'OPEN',
   createdAt: '2026-06-01T08:00:00.000Z',
   productName: '통밀 식빵',
   originalPrice: 4800,
@@ -40,7 +39,7 @@ function setup(clearance: ClearanceView) {
     isError: false,
   } as unknown as ReturnType<typeof useClearance>)
   vi.mocked(useStoreStatus).mockReturnValue({
-    data: { storeId: 's1', operationStatus: 'OPEN', canOpenToday: true, todayCloseTime: '21:00' },
+    data: { storeId: 1, operationStatus: 'OPEN', canOpenToday: true, todayCloseTime: '21:00' },
   } as unknown as ReturnType<typeof useStoreStatus>)
   vi.mocked(useUpdateClearance).mockReturnValue({
     mutate: updateMutate,
@@ -53,7 +52,7 @@ function setup(clearance: ClearanceView) {
   } as unknown as ReturnType<typeof useCloseClearance>)
 
   return render(
-    <MemoryRouter initialEntries={['/clearance/c1']}>
+    <MemoryRouter initialEntries={['/clearance/1']}>
       <Routes>
         <Route path="/clearance/:id" element={<ClearanceDetailPage />} />
       </Routes>
@@ -79,7 +78,7 @@ describe('ClearanceDetailPage', () => {
   })
 
   it('마감된 떨이는 읽기전용 — 수정·마감 버튼이 없다', () => {
-    setup({ ...active, status: 'CLOSED', closeReason: 'MANUAL' })
+    setup({ ...active, status: 'CLOSED' })
     expect(screen.getByText('마감된 마감 할인')).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: '변경 저장' })).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: '마감 할인 조기 마감' })).not.toBeInTheDocument()
@@ -105,5 +104,60 @@ describe('ClearanceDetailPage', () => {
 
     expect(screen.getByText(/정상가.*보다 낮은 금액/)).toBeInTheDocument()
     expect(screen.getByRole('button', { name: '변경 저장' })).toBeDisabled()
+  })
+
+  it('closeReason=EXPIRED 이면 픽업 마감 시각 경과 문구를 보여준다', () => {
+    setup({ ...active, status: 'CLOSED', closeReason: 'EXPIRED' })
+    expect(screen.getByText(/픽업 마감 시각이 지나 마감됐어요/)).toBeInTheDocument()
+    expect(screen.getByText(/마감된 마감 할인은 수정하거나 다시 시작할 수 없어요/)).toBeInTheDocument()
+  })
+
+  it('closeReason=SOLD_OUT 이면 수량 소진 문구를 보여준다', () => {
+    setup({ ...active, status: 'SOLD_OUT', closeReason: 'SOLD_OUT' })
+    expect(screen.getByText(/수량이 모두 소진되어 마감됐어요/)).toBeInTheDocument()
+  })
+
+  it('closeReason=MANUAL 이면 사장 직접 마감 문구를 보여준다', () => {
+    setup({ ...active, status: 'CLOSED', closeReason: 'MANUAL' })
+    expect(screen.getByText(/사장님이 직접 마감했어요/)).toBeInTheDocument()
+  })
+
+  it('closeReason 이 없으면 폴백 문구를 보여준다', () => {
+    setup({ ...active, status: 'CLOSED' })
+    expect(screen.getByText(/마감된 마감 할인이에요/)).toBeInTheDocument()
+  })
+
+  it('남은 수량을 수정하고 변경 저장하면 새 남은 수량(remainingQuantity)을 그대로 전송한다', async () => {
+    // sold=8, remaining=12 인 떨이의 남은 수량을 5 로 줄임 → sold 를 더하지 않고 5 를 그대로 보낸다.
+    const user = userEvent.setup()
+    setup(active)
+
+    const remainingInput = await screen.findByDisplayValue('12')
+    await user.clear(remainingInput)
+    await user.type(remainingInput, '5')
+
+    await user.click(screen.getByRole('button', { name: '변경 저장' }))
+
+    expect(updateMutate).toHaveBeenCalledWith(
+      { salePrice: 2400, remainingQuantity: 5, closeTime: '21:00' },
+      expect.anything(),
+    )
+  })
+
+  it('남은 수량을 0 으로 입력하면 변경 저장이 막힌다 (≥1)', async () => {
+    const user = userEvent.setup()
+    setup(active)
+
+    const remainingInput = await screen.findByDisplayValue('12')
+    await user.clear(remainingInput)
+    await user.type(remainingInput, '0')
+
+    expect(screen.getByRole('button', { name: '변경 저장' })).toBeDisabled()
+  })
+
+  it('"0 저장=품절" 문구는 없고 조기 마감으로 마감하라는 안내를 보여준다', () => {
+    setup(active)
+    expect(screen.queryByText(/0으로 저장하면 품절/)).not.toBeInTheDocument()
+    expect(screen.getByText(/다 팔렸으면.*마감해 주세요/)).toBeInTheDocument()
   })
 })

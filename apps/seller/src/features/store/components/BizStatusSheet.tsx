@@ -18,7 +18,7 @@ const SHEET_DESC: Record<OperationStatus, string> = {
 interface Props {
   open: boolean
   onOpenChange: (open: boolean) => void
-  storeId: string
+  storeId: number
   status: StoreStatus
 }
 

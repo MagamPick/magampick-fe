@@ -8,9 +8,9 @@ import type { Coupon } from '../types'
 vi.mock('../api/couponApi')
 
 const claimed: Coupon = {
-  id: 'cp_new',
-  status: 'usable',
-  discountType: 'rate',
+  id: 99,
+  status: 'USABLE',
+  discountType: 'RATE',
   value: 30,
   minOrder: 5000,
   label: '신규 가입 축하 쿠폰',
@@ -20,13 +20,13 @@ const claimed: Coupon = {
 describe('useClaimEvent', () => {
   beforeEach(() => vi.clearAllMocks())
 
-  it('이벤트 id 로 쿠폰을 받는다', async () => {
+  it('couponId(number)로 쿠폰을 받는다', async () => {
     vi.mocked(couponApi.claim).mockResolvedValue(claimed)
 
     const { result } = renderHook(() => useClaimEvent(), { wrapper: createQueryWrapper() })
-    result.current.mutate('ev1')
+    result.current.mutate(10)
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true))
-    expect(couponApi.claim).toHaveBeenCalledWith('ev1')
+    expect(couponApi.claim).toHaveBeenCalledWith(10)
   })
 })

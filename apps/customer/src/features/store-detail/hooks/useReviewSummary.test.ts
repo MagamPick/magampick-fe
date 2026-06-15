@@ -20,10 +20,11 @@ describe('useReviewSummary', () => {
       ],
     })
 
-    const { result } = renderHook(() => useReviewSummary('st-1'), { wrapper: createQueryWrapper() })
+    const { result } = renderHook(() => useReviewSummary(1), { wrapper: createQueryWrapper() })
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true))
     expect(result.current.data?.average).toBe(4.8)
     expect(result.current.data?.distribution).toHaveLength(5)
+    expect(storeDetailApi.getReviewSummary).toHaveBeenCalledWith(1)
   })
 })

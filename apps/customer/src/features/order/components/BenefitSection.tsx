@@ -1,4 +1,4 @@
-import { ChevronRight } from 'lucide-react'
+import { ChevronRight, Ticket, Wallet } from 'lucide-react'
 import { couponValueText } from '@/features/coupons/lib/couponCalc'
 import type { Coupon } from '@/features/coupons/types'
 
@@ -44,9 +44,7 @@ export function BenefitSection({
         onClick={onOpenCoupon}
         className="flex w-full items-center gap-2 px-4 py-3 text-left"
       >
-        <span className="text-[18px]" aria-hidden>
-          🎟
-        </span>
+        <Ticket aria-hidden className="size-[18px] shrink-0 text-muted-foreground" />
         <span className="text-sm font-semibold text-foreground">쿠폰</span>
         <span className="ml-auto truncate text-[13px] font-medium text-muted-foreground">
           {couponSummary}
@@ -57,9 +55,7 @@ export function BenefitSection({
       <div className="mx-4 h-px bg-border" />
 
       <div className="flex items-center gap-2 px-4 py-3.5">
-        <span className="text-[18px]" aria-hidden>
-          🪙
-        </span>
+        <Wallet aria-hidden className="size-[18px] shrink-0 text-muted-foreground" />
         <span className="text-sm font-semibold text-foreground">포인트</span>
         <span className="ml-auto flex items-center gap-1">
           <input

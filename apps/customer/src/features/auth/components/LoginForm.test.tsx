@@ -69,15 +69,16 @@ describe('LoginForm', () => {
     expect(await screen.findByText('이메일 또는 비밀번호가 일치하지 않습니다')).toBeInTheDocument()
   })
 
-  it('카카오_클릭_시_콜백으로_이동', async () => {
+  it('카카오_클릭_시_카카오로그인_시작(키없음→콜백+더미code)', async () => {
     const user = userEvent.setup()
     renderForm()
 
     await user.click(screen.getByRole('button', { name: /카카오로 시작하기/ }))
 
-    expect(mockNavigate).toHaveBeenCalledWith('/login/kakao/callback', {
-      state: { scenario: 'new_email' },
-    })
+    // 테스트 env 엔 VITE_KAKAO_CLIENT_ID 없음 → dev 우회: 콜백으로 더미 code 전달
+    expect(mockNavigate).toHaveBeenCalledWith(
+      expect.objectContaining({ pathname: '/login/kakao/callback' }),
+    )
     expect(authApi.login).not.toHaveBeenCalled()
   })
 

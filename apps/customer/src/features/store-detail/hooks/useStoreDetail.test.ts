@@ -8,7 +8,7 @@ import type { StoreDetail } from '../types'
 vi.mock('../api/storeDetailApi')
 
 const STORE: StoreDetail = {
-  id: 'st-1',
+  id: 1,
   name: '브레드샵',
   imageUrl: null,
   businessStatus: 'OPEN',
@@ -29,10 +29,11 @@ describe('useStoreDetail', () => {
   it('매장상세_조회_성공', async () => {
     vi.mocked(storeDetailApi.getStoreDetail).mockResolvedValue(STORE)
 
-    const { result } = renderHook(() => useStoreDetail('st-1'), { wrapper: createQueryWrapper() })
+    const { result } = renderHook(() => useStoreDetail(1), { wrapper: createQueryWrapper() })
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true))
     expect(result.current.data?.name).toBe('브레드샵')
     expect(result.current.data?.businessStatus).toBe('OPEN')
+    expect(storeDetailApi.getStoreDetail).toHaveBeenCalledWith(1)
   })
 })

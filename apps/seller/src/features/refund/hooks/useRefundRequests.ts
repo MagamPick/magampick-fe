@@ -7,5 +7,6 @@ export function useRefundRequests(storeId: string) {
   return useQuery({
     queryKey: refundKeys.list(storeId),
     queryFn: () => refundApi.listRefundRequests(storeId),
+    enabled: !!storeId,
   })
 }

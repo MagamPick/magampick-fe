@@ -1,3 +1,5 @@
+import type { ReactNode } from 'react'
+import { UtensilsCrossed } from 'lucide-react'
 import { discountRate } from '../lib/clearanceStatus'
 
 /**
@@ -6,8 +8,8 @@ import { discountRate } from '../lib/clearanceStatus'
  */
 export interface DealCardProps {
   name: string
-  /** mock 썸네일 이모지 (사진 없을 때 폴백) */
-  thumbnail?: string
+  /** 사진 없을 때 폴백 아이콘 */
+  thumbnail?: ReactNode
   /** 대표 사진 URL — 있으면 이모지 대신 표시 */
   imageUrl?: string
   /** 정가 (원) */
@@ -28,7 +30,7 @@ const won = (n: number) => `₩${n.toLocaleString('ko-KR')}`
 
 export function DealCard({
   name,
-  thumbnail = '🍞',
+  thumbnail = <UtensilsCrossed className="size-7 text-muted-foreground" />,
   imageUrl,
   originalPrice,
   salePrice,

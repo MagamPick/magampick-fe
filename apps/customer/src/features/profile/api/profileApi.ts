@@ -1,55 +1,59 @@
-import { ApiError } from '@/shared/lib/apiError'
-import { PROFILE_ERROR, type Profile, type ProfileStats } from '../types'
+import { apiClient } from '@/shared/lib/axios'
+import {
+  profileResponseSchema,
+  customerStatsResponseSchema,
+  type Profile,
+  type ProfileStats,
+  type ProfileResponse,
+  type CustomerStatsResponse,
+  DEFAULT_AVATAR_EMOJI,
+} from '../types'
 
 /**
- * ⚠️ Mock 스텁 — 백엔드 customer 프로필 API 가 아직 연동 전이라 가짜 응답.
- * 모듈 인메모리 `profile` 로 닉네임 수정을 흉내낸다(세션 내 유지). 닉네임 2~12자(노션 AC)는 여기서 enforce.
- * 통계(`getStats`)는 주문/단골 도메인 연동 전까지 고정 mock — 연동 시 orders/favorite 에서 산출.
- * 연동 PR 에서 각 함수 본문을 apiClient 호출 + Zod 응답 검증으로 교체(시그니처 유지). SEED/store/__reset 제거.
+ * 소비자 프로필 API.
+ *
+ * - getProfile / updateNickname: 실 BE 호출 (GET/PATCH /customers/me).
+ *   응답 인터셉터가 envelope {success,data} 를 자동 unwrap → res.data = DTO. Zod 로 검증 후 FE Profile 반환.
+ *   에러(400/404)는 인터셉터가 ApiError 로 정규화 → 그대로 throw 전파 (도메인 catch 없음).
+ *
+ * - getStats: 실 BE 호출 (GET /customers/me/stats). 절약=마감할인 합, 구출=누적 (BE 확정 정책).
  */
 
-const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
-const clone = <T>(value: T): T => JSON.parse(JSON.stringify(value)) as T
-
-/** 시드 프로필 (연동 시 제거) */
-const SEED_PROFILE: Profile = {
-  nickname: '마감픽사용자',
-  email: 'user@magampick.com',
-  phone: '010-1234-5678',
-  avatarEmoji: '🐶',
+/** BE DTO → FE Profile 변환. phone null/undefined 은 표시상 안전하게 '' 처리. */
+function toProfile(dto: ProfileResponse): Profile {
+  return {
+    nickname: dto.nickname,
+    email: dto.email,
+    phone: dto.phone ?? '',
+    avatarEmoji: DEFAULT_AVATAR_EMOJI,
+  }
 }
 
-/** 시드 통계 (연동 시 orders/favorite 도메인에서 산출) */
-const SEED_STATS: ProfileStats = {
-  monthlySavings: 14300,
-  rescuedCount: 4,
-  favoriteCount: 4,
+/** BE CustomerStatsResponse → FE ProfileStats. 누락/null 은 0 (BE 빈 데이터 0 보장 + 방어). */
+function toStats(dto: CustomerStatsResponse): ProfileStats {
+  return {
+    monthlySavings: dto.monthlySavings ?? 0,
+    rescuedCount: dto.rescuedCount ?? 0,
+    favoriteCount: dto.favoriteCount ?? 0,
+  }
 }
-
-let profile: Profile = clone(SEED_PROFILE)
 
 export const profileApi = {
+  /** 내 프로필 조회 (GET /customers/me). */
   async getProfile(): Promise<Profile> {
-    await delay(200)
-    return clone(profile)
+    const res = await apiClient.get('/customers/me')
+    return toProfile(profileResponseSchema.parse(res.data))
   },
 
+  /** 마이페이지 통계 조회 (GET /customers/me/stats). */
   async getStats(): Promise<ProfileStats> {
-    await delay(200)
-    return clone(SEED_STATS)
+    const res = await apiClient.get('/customers/me/stats')
+    return toStats(customerStatsResponseSchema.parse(res.data))
   },
 
+  /** 닉네임 수정 (PATCH /customers/me). 길이 검증은 폼 Zod + BE 담당. */
   async updateNickname(nickname: string): Promise<Profile> {
-    await delay(300)
-    if (nickname.length < 2 || nickname.length > 12) {
-      throw new ApiError(400, PROFILE_ERROR.NICKNAME_LENGTH, '닉네임은 2~12자여야 해요')
-    }
-    profile = { ...profile, nickname }
-    return clone(profile)
+    const res = await apiClient.patch('/customers/me', { nickname })
+    return toProfile(profileResponseSchema.parse(res.data))
   },
-}
-
-/** 테스트 전용 — `profile` 을 시드(또는 주어진 값)로 리셋. 연동 PR 에서 제거. */
-export function __resetProfileStoreForTest(seed: Profile = SEED_PROFILE): void {
-  profile = clone(seed)
 }

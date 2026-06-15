@@ -33,6 +33,7 @@ import { InquiryFormPage } from '@/features/support/pages/InquiryFormPage'
 import { InquiryDetailPage } from '@/features/support/pages/InquiryDetailPage'
 import { NotificationCenterPage } from '@/features/notifications/pages/NotificationCenterPage'
 import { NotificationSettingsPage } from '@/features/notifications/pages/NotificationSettingsPage'
+import { TermsPolicyPage } from '@/features/profile/pages/TermsPolicyPage'
 
 export const router = createBrowserRouter([
   {
@@ -203,6 +204,15 @@ export const router = createBrowserRouter([
     element: (
       <ProtectedRoute>
         <InquiryDetailPage />
+      </ProtectedRoute>
+    ),
+  },
+  // 약관 및 정책 — 마이 허브에서 진입, 풀스크린 보호 라우트
+  {
+    path: ROUTES.TERMS,
+    element: (
+      <ProtectedRoute>
+        <TermsPolicyPage />
       </ProtectedRoute>
     ),
   },

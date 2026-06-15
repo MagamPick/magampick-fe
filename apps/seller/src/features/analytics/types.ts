@@ -1,9 +1,8 @@
 /**
  * 통계(analytics) 도메인 타입 — 노션 「사장 통계 대시보드」(사장, Phase 10).
  * 사장이 현재 선택 매장의 매출·주문·떨이·리뷰 지표를 기간(오늘·주·달·올해)별로 본다.
- * 백엔드 analytics 도메인 미구현 → 자체 in-memory mock(정산·매장 mock과 동일 방침).
+ * BE analytics 도메인 실연동 — apiClient + Zod 응답 검증(analyticsApi).
  * 숫자(raw)만 보관하고 표시 포맷(원/%/증감)은 lib/analyticsFormat 의 순수 함수가 담당.
- * 실연동 시 apiClient + Zod 응답 검증으로 교체(api-client-convention).
  */
 
 /** 기간 토글 — 오늘·이번 주·이번 달·올해. 사용자 지정 임의 기간(날짜 범위)은 백로그. */

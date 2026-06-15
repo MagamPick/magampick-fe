@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router'
-import { ChevronLeft } from 'lucide-react'
+import { ChevronLeft, Wallet } from 'lucide-react'
 import { ScreenContainer } from '@/shared/components/ScreenContainer'
 import { SegTabs, type SegTabItem } from '@/shared/components/SegTabs'
 import { EmptyState } from '@/shared/components/EmptyState'
@@ -13,9 +13,9 @@ import { PointHero } from '../components/PointHero'
 import { PointHistoryRow } from '../components/PointHistoryRow'
 
 const TABS: SegTabItem<PointHistoryFilter>[] = [
-  { value: 'all', label: '전체' },
-  { value: 'earn', label: '적립' },
-  { value: 'use', label: '사용' },
+  { value: 'ALL', label: '전체' },
+  { value: 'EARN', label: '적립' },
+  { value: 'USE', label: '사용' },
 ]
 
 /**
@@ -24,7 +24,7 @@ const TABS: SegTabItem<PointHistoryFilter>[] = [
  */
 export function PointHistoryPage() {
   const navigate = useNavigate()
-  const [filter, setFilter] = useState<PointHistoryFilter>('all')
+  const [filter, setFilter] = useState<PointHistoryFilter>('ALL')
   const { data: summary } = usePointSummary()
   const { data: history, isPending, isError, refetch } = usePointHistory(filter)
 
@@ -43,7 +43,7 @@ export function PointHistoryPage() {
       </header>
 
       <main className="flex-1 pb-6">
-        <PointHero balance={summary?.balance ?? 0} />
+        <PointHero balance={summary?.balance ?? 0} pendingPoints={summary?.pendingPoints ?? 0} />
         <div className="mt-4">
           <SegTabs ariaLabel="포인트 내역 필터" tabs={TABS} value={filter} onChange={setFilter} />
         </div>
@@ -59,7 +59,7 @@ export function PointHistoryPage() {
             ))}
           </ul>
         ) : (
-          <EmptyState icon="🪙">해당 내역이 없어요.</EmptyState>
+          <EmptyState icon={<Wallet />}>해당 내역이 없어요.</EmptyState>
         )}
       </main>
     </ScreenContainer>

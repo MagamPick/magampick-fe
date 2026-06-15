@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router'
-import { ChevronLeft } from 'lucide-react'
+import { ChevronLeft, Gift, Ticket } from 'lucide-react'
 import { ScreenContainer } from '@/shared/components/ScreenContainer'
 import { EmptyState } from '@/shared/components/EmptyState'
 import { ErrorState } from '@/shared/components/ErrorState'
@@ -11,16 +11,24 @@ import { EventCard } from '../components/EventCard'
 /**
  * 이벤트 — 쿠폰 받기 (노션 「쿠폰 발급」 소비자 다운로드, 프로토타입 57-events).
  * 진행 중 이벤트 쿠폰을 [받기]로 쿠폰함에 담는다(1인 1회). 마이/쿠폰함에서 진입.
+ * claim 실패(409 이미받음/마감/발급불가 등) 시 인라인 에러 메시지로 표면화.
  */
 export function EventPage() {
   const navigate = useNavigate()
   const { data: events, isPending, isError, refetch } = useEvents()
   const claim = useClaimEvent()
 
-  const handleClaim = (id: string) => {
+  const handleClaim = (couponId: number) => {
     if (claim.isPending) return
-    claim.mutate(id)
+    claim.mutate(couponId)
   }
+
+  const claimErrorMessage =
+    claim.isError && claim.error instanceof Error
+      ? claim.error.message
+      : claim.isError
+        ? '쿠폰을 받지 못했어요. 다시 시도해 주세요.'
+        : null
 
   return (
     <ScreenContainer variant="page">
@@ -38,9 +46,7 @@ export function EventPage() {
 
       <main className="flex-1 pb-6">
         <div className="mx-5 mb-1.5 mt-3.5 flex items-center gap-3 rounded-[14px] border border-[#FFD9BD] bg-gradient-to-br from-[#FFF6EE] to-[#FFE7D6] px-4 py-3.5">
-          <span className="text-[28px] leading-none" aria-hidden>
-            🎁
-          </span>
+          <Gift aria-hidden className="size-7 shrink-0 text-primary" />
           <div className="min-w-0 flex-1">
             <div className="text-sm font-extrabold text-foreground">진행 중인 쿠폰 이벤트</div>
             <div className="mt-0.5 text-xs leading-[1.45] text-muted-foreground">
@@ -48,6 +54,12 @@ export function EventPage() {
             </div>
           </div>
         </div>
+
+        {claimErrorMessage && (
+          <p role="alert" className="mx-5 mb-2 rounded-md bg-destructive/10 px-3 py-2 text-sm font-semibold text-destructive">
+            {claimErrorMessage}
+          </p>
+        )}
 
         {isPending ? (
           <CardSkeleton className="px-5 pt-1.5" />
@@ -57,15 +69,15 @@ export function EventPage() {
           <div className="flex flex-col gap-2.5 px-5 pb-6 pt-1.5">
             {events.map((event) => (
               <EventCard
-                key={event.id}
+                key={event.couponId}
                 event={event}
                 onClaim={handleClaim}
-                claiming={claim.isPending && claim.variables === event.id}
+                claiming={claim.isPending && claim.variables === event.couponId}
               />
             ))}
           </div>
         ) : (
-          <EmptyState icon="🎉">진행 중인 이벤트가 없어요.</EmptyState>
+          <EmptyState icon={<Ticket />}>진행 중인 이벤트가 없어요.</EmptyState>
         )}
       </main>
     </ScreenContainer>

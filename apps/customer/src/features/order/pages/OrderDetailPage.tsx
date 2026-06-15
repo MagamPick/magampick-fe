@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { z } from 'zod'
 import { Navigate, useNavigate, useParams } from 'react-router'
-import { ChevronLeft } from 'lucide-react'
+import { ChevronLeft, Phone, ReceiptText } from 'lucide-react'
 import { cn } from '@/shared/lib/utils'
 import { ErrorState } from '@/shared/components/ErrorState'
 import { ROUTES } from '@/shared/lib/routes'
@@ -97,7 +97,7 @@ export function OrderDetailPage() {
         )}
 
         {!isLoading && (isError || !order) && (
-          <ErrorState icon="🧾" onRetry={() => refetch()}>
+          <ErrorState icon={<ReceiptText />} onRetry={() => refetch()}>
             주문을 찾을 수 없어요.
           </ErrorState>
         )}
@@ -130,10 +130,10 @@ export function OrderDetailPage() {
                 {order.storePhone && (
                   <a
                     href={`tel:${order.storePhone}`}
-                    className="flex size-10 items-center justify-center rounded-full bg-primary/10 text-[18px] transition active:bg-primary/20"
+                    className="flex size-10 items-center justify-center rounded-full bg-primary/10 transition active:bg-primary/20"
                     aria-label="매장에 전화"
                   >
-                    📞
+                    <Phone className="size-[18px] text-primary" />
                   </a>
                 )}
               </section>
@@ -183,7 +183,10 @@ export function OrderDetailPage() {
                   )}
                   <div className="flex justify-between pt-1 text-[14px] font-extrabold">
                     <span>결제 금액</span>
-                    <span className="text-primary">{won(order.amounts.payTotal)}</span>
+                    {/* 실청구액(finalAmount) — 쿠폰·포인트 차감 반영. 혜택 미적용/구주문은 payTotal 폴백(A4-2) */}
+                    <span className="text-primary">
+                      {won(order.amounts.finalAmount ?? order.amounts.payTotal)}
+                    </span>
                   </div>
                 </div>
               </section>

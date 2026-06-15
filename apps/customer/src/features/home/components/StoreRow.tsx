@@ -2,6 +2,7 @@ import { ChevronRight } from 'lucide-react'
 import { useNavigate } from 'react-router'
 import { Thumbnail } from '@/shared/components/Thumbnail'
 import { ROUTES } from '@/shared/lib/routes'
+import { formatDistance } from '@/shared/lib/formatDistance'
 import type { NeighborhoodStore } from '../types'
 
 /** ③ 우리 동네 마감픽 — 매장 단위 리스트 row(거리·평점·할인수). 0건이면 배지 생략. 탭 시 매장 상세. */
@@ -21,7 +22,7 @@ export function StoreRow({ store }: { store: NeighborhoodStore }) {
       <span className="min-w-0 flex-1">
         <span className="block text-sm font-bold">{store.name}</span>
         <span className="mt-[3px] block text-xs text-muted-foreground">
-          {store.distanceKm}km · ★ {store.rating}
+          {formatDistance(store.distanceKm)} · ★ {store.rating}
         </span>
         {store.activeDealCount > 0 && (
           <span className="mt-1 block text-xs font-bold text-secondary-foreground">

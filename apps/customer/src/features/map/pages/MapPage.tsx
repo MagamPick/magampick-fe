@@ -8,6 +8,7 @@ import { StorePreviewCard } from '../components/StorePreviewCard'
 import { useGeolocation } from '@/shared/hooks/useGeolocation'
 import { useMapStores } from '../hooks/useMapStores'
 import { DEFAULT_MAP_DISTANCE, type MapDistance, type MapStore } from '../types'
+import { useAddresses } from '@/features/addresses/hooks/useAddresses'
 
 /**
  * 지도 기반 매장 조회 (소비자) — 탭 셸 `/map`. 카카오맵 위 현재 위치(GPS, fallback 기본 주소지) 중심 매장 마커.
@@ -22,7 +23,13 @@ export function MapPage() {
   const [distance, setDistance] = useState<MapDistance>(DEFAULT_MAP_DISTANCE)
   const [dealsOnly, setDealsOnly] = useState(true)
   const [selected, setSelected] = useState<MapStore | null>(null)
-  const { position, isReady } = useGeolocation()
+
+  // GPS 거부/실패 시 기본 주소지 좌표로 fallback (노션 정책)
+  const { data: addresses } = useAddresses()
+  const defaultAddress = addresses?.find((a) => a.isDefault)
+  const { position, isReady } = useGeolocation(
+    defaultAddress ? { latitude: defaultAddress.latitude, longitude: defaultAddress.longitude } : null,
+  )
 
   const { data: stores = [] } = useMapStores(
     isReady

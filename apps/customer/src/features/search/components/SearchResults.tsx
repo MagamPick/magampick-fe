@@ -1,3 +1,4 @@
+import { Search } from 'lucide-react'
 import { EmptyState } from '@/shared/components/EmptyState'
 import { StoreListCard } from '@/features/store-list/components/StoreListCard'
 import { StoreSortTabs } from '@/features/store-list/components/StoreSortTabs'
@@ -20,7 +21,7 @@ export function SearchResults({ result, sort, onSortChange }: SearchResultsProps
 
   if (stores.length === 0 && products.length === 0) {
     return (
-      <EmptyState icon="🔍">
+      <EmptyState icon={<Search />}>
         검색 결과가 없어요.
         <br />
         다른 키워드로 검색해 보세요.

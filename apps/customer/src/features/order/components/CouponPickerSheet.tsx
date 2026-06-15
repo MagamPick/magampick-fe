@@ -12,13 +12,12 @@ import type { Coupon } from '@/features/coupons/types'
 interface Props {
   open: boolean
   onOpenChange: (open: boolean) => void
-  /** 보유 쿠폰 전체 (usable 만 노출) */
+  /** 보유 쿠폰 전체 (USABLE 만 노출) */
   coupons: Coupon[]
   /** 일반 상품 합계 — 적용 가능 여부·최소주문 판정 기준 */
   menuSubtotal: number
-  now: Date
-  selectedCouponId: string | null
-  onSelect: (couponId: string | null) => void
+  selectedCouponId: number | null
+  onSelect: (couponId: number | null) => void
 }
 
 /**
@@ -30,13 +29,12 @@ export function CouponPickerSheet({
   onOpenChange,
   coupons,
   menuSubtotal,
-  now,
   selectedCouponId,
   onSelect,
 }: Props) {
-  const usable = coupons.filter((c) => c.status === 'usable')
+  const usable = coupons.filter((c) => c.status === 'USABLE')
 
-  const choose = (id: string | null) => {
+  const choose = (id: number | null) => {
     onSelect(id)
     onOpenChange(false)
   }
@@ -75,7 +73,7 @@ export function CouponPickerSheet({
           )}
 
           {usable.map((coupon) => {
-            const applicable = isCouponUsable(coupon, menuSubtotal, now)
+            const applicable = isCouponUsable(coupon, menuSubtotal)
             const reason =
               menuSubtotal <= 0
                 ? '쿠폰 적용 가능한 일반 상품이 없어요'

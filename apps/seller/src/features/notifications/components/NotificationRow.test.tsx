@@ -13,7 +13,6 @@ vi.mock('../hooks/useMarkNotificationRead', () => ({
 const baseNotification: Notification = {
   id: 'sn1',
   category: 'order',
-  icon: '🧾',
   title: '새 주문이 들어왔어요',
   body: '빵순이님 · 버터 크루아상 외 2건',
   createdAt: new Date().toISOString(),
@@ -57,5 +56,15 @@ describe('NotificationRow', () => {
     await user.click(screen.getByRole('button'))
     expect(mockMutate).not.toHaveBeenCalled()
     expect(screen.getByText('주문 화면')).toBeInTheDocument()
+  })
+
+  it('알려진 category(order)는 lucide 아이콘(svg)이 렌더된다', () => {
+    renderRow(baseNotification)
+    expect(document.querySelectorAll('svg').length).toBeGreaterThan(0)
+  })
+
+  it('알 수 없는 category는 Bell 기본 아이콘(svg)을 렌더한다', () => {
+    renderRow({ ...baseNotification, category: 'unknown_type' })
+    expect(document.querySelectorAll('svg').length).toBeGreaterThan(0)
   })
 })

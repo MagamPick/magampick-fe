@@ -5,7 +5,24 @@ import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { MyPage } from './MyPage'
-import { __resetProfileStoreForTest } from '../api/profileApi'
+
+// profileApi 전체 mock — 실 BE 호출 없이 컴포넌트 렌더 검증
+vi.mock('../api/profileApi', () => ({
+  profileApi: {
+    getProfile: vi.fn().mockResolvedValue({
+      nickname: '마감픽사용자',
+      email: 'user@magampick.com',
+      phone: '010-1234-5678',
+      avatarEmoji: '🐶',
+    }),
+    getStats: vi.fn().mockResolvedValue({
+      monthlySavings: 14300,
+      rescuedCount: 4,
+      favoriteCount: 4,
+    }),
+    updateNickname: vi.fn(),
+  },
+}))
 
 // 로그아웃은 auth 도메인 — MyPage 관점에선 "호출됐는지"만 검증 (인증 흐름은 auth 테스트가 커버)
 const { logoutMutate } = vi.hoisted(() => ({ logoutMutate: vi.fn() }))
@@ -34,10 +51,11 @@ function renderMyPage() {
 }
 
 describe('MyPage (마이페이지 허브)', () => {
-  beforeEach(() => __resetProfileStoreForTest())
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
   afterEach(() => {
     cleanup()
-    vi.clearAllMocks()
   })
 
   it('프로필 닉네임과 통계 라벨을 보여준다', async () => {

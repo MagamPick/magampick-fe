@@ -1,20 +1,61 @@
 import { useNavigate } from 'react-router'
+import {
+  Flame,
+  ShoppingBag,
+  MessageSquare,
+  Gift,
+  Megaphone,
+  RotateCcw,
+  Wallet,
+  MessageCircle,
+  Bell,
+} from 'lucide-react'
 import { cn } from '@/shared/lib/utils'
 import { formatRelativeTime } from '../lib/formatRelativeTime'
 import { useMarkNotificationRead } from '../hooks/useMarkNotificationRead'
+import { resolveNotificationLink } from '../lib/resolveNotificationLink'
 import type { Notification } from '../types'
 
 /**
  * 알림 1건 행 (프로토타입 `.notif-row`) — 아이콘 원형 + 제목/본문/상대시각 + 미읽음 dot.
- * 클릭 = 읽음 처리 + (link 있으면) 관련 화면 딥링크.
+ * 클릭 = 읽음 처리 + 하이브리드 라우팅 (BE link 우선 → category fallback, [[resolveNotificationLink]]).
+ * icon 필드는 BE 응답에 없음 — category 로 파생.
  */
+
+const ICON_CLASS = 'size-[18px] text-muted-foreground'
+
+function renderCategoryIcon(category: string) {
+  switch (category.toLowerCase()) {
+    case 'deal':
+      return <Flame className={ICON_CLASS} aria-hidden />
+    case 'order':
+      return <ShoppingBag className={ICON_CLASS} aria-hidden />
+    case 'review':
+      return <MessageSquare className={ICON_CLASS} aria-hidden />
+    case 'benefit':
+      return <Gift className={ICON_CLASS} aria-hidden />
+    case 'system':
+    case 'notice':
+      return <Megaphone className={ICON_CLASS} aria-hidden />
+    case 'refund':
+      return <RotateCcw className={ICON_CLASS} aria-hidden />
+    case 'settlement':
+      return <Wallet className={ICON_CLASS} aria-hidden />
+    case 'inquiry':
+      return <MessageCircle className={ICON_CLASS} aria-hidden />
+    default:
+      return <Bell className={ICON_CLASS} aria-hidden />
+  }
+}
+
 export function NotificationRow({ notification }: { notification: Notification }) {
   const navigate = useNavigate()
   const markRead = useMarkNotificationRead()
 
   const handleClick = () => {
     if (!notification.read) markRead.mutate(notification.id)
-    if (notification.link) navigate(notification.link)
+    const route = resolveNotificationLink(notification)
+    if (route) navigate(route)
   }
 
   return (
@@ -28,9 +69,9 @@ export function NotificationRow({ notification }: { notification: Notification }
     >
       <span
         aria-hidden
-        className="flex size-10 shrink-0 items-center justify-center rounded-full bg-muted text-[18px]"
+        className="flex size-10 shrink-0 items-center justify-center rounded-full bg-muted"
       >
-        {notification.icon}
+        {renderCategoryIcon(notification.category)}
       </span>
       <span className="flex min-w-0 flex-1 flex-col gap-0.5">
         <span className="text-sm font-bold text-foreground">{notification.title}</span>

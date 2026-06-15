@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { ChevronDown } from 'lucide-react'
+import { ChevronDown, Pin } from 'lucide-react'
 import { cn } from '@/shared/lib/utils'
 import type { Notice } from '../types'
 import { NoticeTagBadge } from './NoticeTagBadge'
@@ -25,9 +25,7 @@ export function NoticeAccordion({ notices }: { notices: Notice[] }) {
             >
               <span className="flex items-center gap-2">
                 {notice.pinned && (
-                  <span aria-hidden className="text-[13px] leading-none">
-                    📌
-                  </span>
+                  <Pin aria-hidden className="size-[13px] shrink-0 text-primary" />
                 )}
                 <NoticeTagBadge tag={notice.tag} />
                 <span className="ml-auto text-[12.5px] font-semibold text-muted-foreground">
