@@ -34,7 +34,7 @@ export function StoreListCard({ store }: { store: StoreListItem }) {
         </span>
         <span className="mt-[3px] block text-xs text-muted-foreground">
           {formatDistance(store.distanceKm)}
-          {store.rating > 0 && ` · ★ ${store.rating}`}
+          {store.rating > 0 && ` · ★ ${store.rating.toFixed(1)}`}
         </span>
         {store.activeDealCount > 0 && (
           <span className="mt-1 block text-xs font-bold text-secondary-foreground">
