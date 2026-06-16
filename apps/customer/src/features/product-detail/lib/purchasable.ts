@@ -14,10 +14,13 @@ export function getPurchaseState(product: ProductDetail, nowMs: number): Purchas
     return { purchasable: false, reason: '지금은 주문할 수 없는 매장이에요.' }
   }
 
-  // 일반 상품 — 판매 여부 OFF 면 차단
+  // 일반 상품 — 판매 여부 OFF 또는 활성 떨이 존재 시 차단
   if (product.kind === 'menu') {
     if (!product.isOnSale) {
       return { purchasable: false, reason: '현재 판매하지 않는 상품이에요.' }
+    }
+    if (product.hasActiveDeal) {
+      return { purchasable: false, reason: '현재 떨이 판매 중인 상품입니다.' }
     }
     return { purchasable: true }
   }
