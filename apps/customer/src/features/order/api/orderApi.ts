@@ -43,6 +43,7 @@ interface CreateOrderBody {
     couponDiscount?: number
     pointUsed?: number
     earnedPoints?: number
+    finalAmount?: number
   }
   userCouponId?: number
   pointToUse?: number
@@ -79,6 +80,9 @@ export function buildCreateOrderRequest(input: PrepareInput): CreateOrderBody {
       ...(input.amounts.pointUsed !== undefined ? { pointUsed: input.amounts.pointUsed } : {}),
       ...(input.amounts.earnedPoints !== undefined
         ? { earnedPoints: input.amounts.earnedPoints }
+        : {}),
+      ...(input.amounts.finalAmount !== undefined
+        ? { finalAmount: input.amounts.finalAmount }
         : {}),
     },
     ...(input.couponId ? { userCouponId: input.couponId } : {}),
