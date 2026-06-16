@@ -20,7 +20,7 @@ export function StoreHeadMeta({ store }: { store: StoreDetail }) {
         )}
         <Dot />
         <span>
-          ★ {store.rating} ({store.reviewCount})
+          ★ {store.rating.toFixed(1)} ({store.reviewCount})
         </span>
         <Dot />
         <span>{formatDistance(store.distanceKm)}</span>
