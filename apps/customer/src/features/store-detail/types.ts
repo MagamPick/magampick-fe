@@ -88,20 +88,24 @@ export type StoreMenuItem = z.infer<typeof storeMenuItemSchema>
 /** 리뷰 카드 — 사장 답글이 있으면 함께 노출 */
 export const storeReviewSchema = z.object({
   /** BE int64 → number */
-  id: z.number(),
+  id: z.number().default(0),
   authorNickname: z.string().default(''),
   /** 별점 1~5 */
   rating: z.number().int().default(0),
   content: z.string().default(''),
   /** 작성일 (M/D 표기용 ISO) */
-  createdAt: z.string(),
+  createdAt: z.string().default(''),
   /** 주문 상품들 — 각 상품 상세 링크(kind 로 경로 분기) */
   products: z
     .array(
       z.object({
         /** BE int64 → number */
-        productId: z.number(),
-        kind: z.enum(['deal', 'menu']),
+        productId: z.number().nullish().transform((v) => v ?? 0),
+        /** BE null/대문자('DEAL'/'MENU') 방어 */
+        kind: z
+          .string()
+          .nullish()
+          .transform((v) => (v?.toLowerCase() === 'deal' ? 'deal' : 'menu') as 'deal' | 'menu'),
         name: z.string().default(''),
       }),
     )
