@@ -85,7 +85,7 @@ describe('CheckoutPage', () => {
     expect(mutate).toHaveBeenCalledWith(
       expect.objectContaining({
         store: { id: 'st-1', name: '브레드샵' },
-        amounts: expect.objectContaining({ payTotal: 12000, normalTotal: 20000 }),
+        amounts: expect.objectContaining({ payTotal: 12000, normalTotal: 20000, finalAmount: 12000 }),
       }),
     )
   })
