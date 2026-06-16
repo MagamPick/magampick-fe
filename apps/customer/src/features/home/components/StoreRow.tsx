@@ -22,7 +22,7 @@ export function StoreRow({ store }: { store: NeighborhoodStore }) {
       <span className="min-w-0 flex-1">
         <span className="block text-sm font-bold">{store.name}</span>
         <span className="mt-[3px] block text-xs text-muted-foreground">
-          {formatDistance(store.distanceKm)} · ★ {store.rating}
+          {formatDistance(store.distanceKm)} · ★ {store.rating.toFixed(1)}
         </span>
         {store.activeDealCount > 0 && (
           <span className="mt-1 block text-xs font-bold text-secondary-foreground">

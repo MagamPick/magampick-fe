@@ -204,4 +204,17 @@ describe('buildCreateOrderRequest', () => {
     const body = buildCreateOrderRequest(prepareInput)
     expect(body.userCouponId).toBeUndefined()
   })
+
+  it('finalAmount 있으면 amounts.finalAmount 포함', () => {
+    const body = buildCreateOrderRequest({
+      ...prepareInput,
+      amounts: { ...prepareInput.amounts, finalAmount: 4100 },
+    })
+    expect(body.amounts.finalAmount).toBe(4100)
+  })
+
+  it('finalAmount 없으면 amounts.finalAmount 없음', () => {
+    const body = buildCreateOrderRequest(prepareInput)
+    expect(body.amounts.finalAmount).toBeUndefined()
+  })
 })

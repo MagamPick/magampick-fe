@@ -6,5 +6,7 @@ export function useOrders() {
   return useQuery({
     queryKey: orderKeys.list(),
     queryFn: () => orderApi.listOrders(),
+    refetchInterval: 30_000,
+    staleTime: 0,
   })
 }

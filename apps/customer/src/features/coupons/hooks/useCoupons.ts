@@ -7,5 +7,6 @@ export function useCoupons() {
   return useQuery({
     queryKey: couponKeys.list(),
     queryFn: () => couponApi.listCoupons(),
+    staleTime: 0,
   })
 }

@@ -62,7 +62,7 @@ export function StoreLocationPage() {
         <div className="rounded-[16px] border border-border bg-card p-4 shadow-[0_4px_12px_rgb(15_15_15/0.06)]">
           <div className="text-base font-extrabold tracking-[-0.3px]">{store?.name ?? '매장'}</div>
           <div className="mt-1.5 text-[13px] font-semibold text-muted-foreground">
-            ★ {store?.rating ?? '-'} · {gpsDistanceKm != null ? formatDistance(gpsDistanceKm) : '-'}
+            ★ {store?.rating != null ? store.rating.toFixed(1) : '-'} · {gpsDistanceKm != null ? formatDistance(gpsDistanceKm) : '-'}
           </div>
           <div className="mt-2 text-[13px] font-bold text-secondary-foreground">
             🚶 {gpsDistanceKm != null ? walkAndDistanceLabel(gpsDistanceKm) : '도보 정보 계산 중…'}
