@@ -19,6 +19,7 @@ const baseMenu: MenuProductDetail = {
   closingTime: '21:00',
   price: 3000,
   isOnSale: true,
+  hasActiveDeal: false,
 }
 
 const baseDeal: DealProductDetail = {
@@ -69,6 +70,20 @@ describe('getPurchaseState', () => {
 
   it('일반상품_판매OFF_차단', () => {
     expect(getPurchaseState({ ...baseMenu, isOnSale: false }, NOW)).toEqual({
+      purchasable: false,
+      reason: '현재 판매하지 않는 상품이에요.',
+    })
+  })
+
+  it('일반상품_활성떨이_차단', () => {
+    expect(getPurchaseState({ ...baseMenu, hasActiveDeal: true }, NOW)).toEqual({
+      purchasable: false,
+      reason: '현재 떨이 판매 중인 상품입니다.',
+    })
+  })
+
+  it('일반상품_판매OFF가_활성떨이보다_우선', () => {
+    expect(getPurchaseState({ ...baseMenu, isOnSale: false, hasActiveDeal: true }, NOW)).toEqual({
       purchasable: false,
       reason: '현재 판매하지 않는 상품이에요.',
     })

@@ -10,9 +10,9 @@ import type { StoreMenuItem } from '../types'
 vi.mock('../hooks/useStoreMenu')
 
 const menu: StoreMenuItem[] = [
-  { id: 1, name: '소금빵', imageUrl: null, price: 3000, category: '베이커리' },
-  { id: 2, name: '통밀 캄파뉴', imageUrl: null, price: 8000, category: '베이커리' },
-  { id: 3, name: '아메리카노', imageUrl: null, price: 4000, category: '음료' },
+  { id: 1, name: '소금빵', imageUrl: null, price: 3000, category: '베이커리', hasActiveDeal: false },
+  { id: 2, name: '통밀 캄파뉴', imageUrl: null, price: 8000, category: '베이커리', hasActiveDeal: false },
+  { id: 3, name: '아메리카노', imageUrl: null, price: 4000, category: '음료', hasActiveDeal: false },
 ]
 
 function LocationDisplay() {
