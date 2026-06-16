@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { z } from 'zod'
 import { Navigate, useNavigate, useParams } from 'react-router'
-import { ChevronLeft, Phone, ReceiptText } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Phone, ReceiptText } from 'lucide-react'
 import { cn } from '@/shared/lib/utils'
 import { ErrorState } from '@/shared/components/ErrorState'
 import { ROUTES } from '@/shared/lib/routes'
@@ -123,10 +123,17 @@ export function OrderDetailPage() {
             <div className="flex flex-col gap-3 px-5">
               {/* 매장 정보 */}
               <section className="flex items-center justify-between rounded-[14px] border border-border bg-card px-4 py-3.5">
-                <div>
-                  <p className="text-[13px] text-muted-foreground">매장</p>
-                  <p className="mt-0.5 text-[15px] font-bold text-foreground">{order.storeName}</p>
-                </div>
+                <button
+                  type="button"
+                  onClick={() => navigate(ROUTES.STORE_DETAIL(order.storeId))}
+                  className="flex flex-1 items-center gap-1 text-left active:opacity-70"
+                >
+                  <div>
+                    <p className="text-[13px] text-muted-foreground">매장</p>
+                    <p className="mt-0.5 text-[15px] font-bold text-foreground">{order.storeName}</p>
+                  </div>
+                  <ChevronRight className="ml-0.5 size-[16px] text-muted-foreground" />
+                </button>
                 {order.storePhone && (
                   <a
                     href={`tel:${order.storePhone}`}

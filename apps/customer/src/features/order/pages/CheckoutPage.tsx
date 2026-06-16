@@ -68,7 +68,7 @@ export function CheckoutPage() {
       discountTotal: amounts.dealDiscount,
       couponDiscount: amounts.couponDiscount,
       pointUsed: amounts.pointUsed,
-      payTotal: amounts.payTotal,
+      payTotal: amounts.payProductTotal,
       earnedPoints: amounts.earnedPoints,
     },
     couponId: amounts.couponApplicable ? selectedCouponId : null,

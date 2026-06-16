@@ -8,5 +8,7 @@ export function useRefundRequests(storeId: string) {
     queryKey: refundKeys.list(storeId),
     queryFn: () => refundApi.listRefundRequests(storeId),
     enabled: !!storeId,
+    refetchInterval: 5_000,
+    staleTime: 0,
   })
 }

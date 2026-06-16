@@ -8,5 +8,7 @@ export function useOrders(storeId: string) {
     queryKey: orderKeys.list(storeId),
     queryFn: () => orderApi.listOrders(storeId),
     enabled: !!storeId,
+    refetchInterval: 5_000,
+    staleTime: 0,
   })
 }
