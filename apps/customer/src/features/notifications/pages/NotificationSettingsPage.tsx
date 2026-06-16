@@ -1,6 +1,8 @@
 import { useNavigate } from 'react-router'
 import { ChevronLeft } from 'lucide-react'
+import { Switch } from '@/shared/components/ui/switch'
 import { ScreenContainer } from '@/shared/components/ScreenContainer'
+import { useLocationStore } from '@/features/location/stores/locationStore'
 import { NotificationSettingItem } from '../components/NotificationSettingItem'
 import { useNotificationSettings } from '../hooks/useNotificationSettings'
 import { useUpdateNotificationSetting } from '../hooks/useUpdateNotificationSetting'
@@ -14,6 +16,8 @@ export function NotificationSettingsPage() {
   const navigate = useNavigate()
   const { data: settings } = useNotificationSettings()
   const update = useUpdateNotificationSetting()
+  const shareLocation = useLocationStore((s) => s.shareLocation)
+  const setShareLocation = useLocationStore((s) => s.setShareLocation)
 
   return (
     <ScreenContainer variant="page">
@@ -42,6 +46,23 @@ export function NotificationSettingsPage() {
               onCheckedChange={(on) => update.mutate({ key: meta.key, on })}
             />
           ))}
+        </div>
+
+        <p className="px-5 pb-2 pt-6 text-[13px] font-semibold text-muted-foreground">위치</p>
+        <div className="divide-y divide-border border-t border-border">
+          <div className="flex items-center gap-3 px-5 py-4">
+            <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+              <span className="text-sm font-bold text-foreground">현재 위치 공유</span>
+              <span className="text-[13px] leading-snug text-muted-foreground">
+                앱 사용 중 위치를 서버에 전송해 주변 떨이 알림을 더 정확히 받아요
+              </span>
+            </div>
+            <Switch
+              checked={shareLocation}
+              onCheckedChange={setShareLocation}
+              aria-label="현재 위치 공유"
+            />
+          </div>
         </div>
       </main>
     </ScreenContainer>

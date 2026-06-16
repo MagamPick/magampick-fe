@@ -56,6 +56,8 @@ export const menuProductDetailSchema = z.object({
   price: z.number().default(0),
   /** 판매 여부 — OFF 면 담기 차단(정상 흐름엔 노출 X, 직접 링크 진입 시) */
   isOnSale: z.boolean().default(true),
+  /** 활성 떨이가 존재하는 상품 — true 면 담기 차단(떨이 먼저 소진 유도) */
+  hasActiveDeal: z.boolean().default(false),
 })
 export type MenuProductDetail = z.infer<typeof menuProductDetailSchema>
 

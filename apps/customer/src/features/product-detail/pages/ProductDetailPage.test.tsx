@@ -45,6 +45,7 @@ const menu: MenuProductDetail = {
   closingTime: '21:00',
   price: 3500,
   isOnSale: true,
+  hasActiveDeal: false,
 }
 
 function LocationDisplay() {

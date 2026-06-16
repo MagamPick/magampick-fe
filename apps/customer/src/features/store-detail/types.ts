@@ -82,6 +82,8 @@ export const storeMenuItemSchema = z.object({
   price: z.number().default(0),
   /** 카테고리 (베이커리·음료·디저트 등) — 그룹화 키 */
   category: z.string().default(''),
+  /** 활성 떨이가 존재하는 상품 — true 면 상품 상세 진입 후 담기 차단 */
+  hasActiveDeal: z.boolean().default(false),
 })
 export type StoreMenuItem = z.infer<typeof storeMenuItemSchema>
 

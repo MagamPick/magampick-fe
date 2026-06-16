@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import { useAuthStore } from '@/features/auth/stores/authStore'
-import { useNotificationSettings } from '@/features/notifications/hooks/useNotificationSettings'
+import { useLocationStore } from '../stores/locationStore'
 import { locationApi } from '../api/locationApi'
 
 /** 보고 주기 — 포그라운드 유지 중 5분 */
@@ -19,7 +19,7 @@ const GEO_OPTIONS: PositionOptions = {
  *
  * 게이트:
  *  - ROLE_CUSTOMER 로그인 상태일 때만 (useAuthStore.isAuthenticated)
- *  - 알림 설정 "주변 떨이(nearbyDeal)" ON 일 때만 — OFF 면 위치 자체를 보내지 않음(프라이버시·네트워크)
+ *  - 알림 설정 "현재 위치 공유" 로컬 토글 ON 일 때만 (locationStore.shareLocation)
  *
  * 동작 (BE 계약: 포그라운드 진입 1회 + 유지 중 5분 주기):
  *  - 마운트(=런치 포그라운드) 즉시 1회 + 5분 인터벌 시작
@@ -30,8 +30,8 @@ const GEO_OPTIONS: PositionOptions = {
  */
 export function useLocationReporter(): void {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
-  const { data: settings } = useNotificationSettings()
-  const enabled = isAuthenticated && settings?.nearbyDeal === true
+  const shareLocation = useLocationStore((s) => s.shareLocation)
+  const enabled = isAuthenticated && shareLocation
 
   useEffect(() => {
     if (!enabled) return
